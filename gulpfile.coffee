@@ -14,7 +14,7 @@ $logger  = $.util.log
 
 
 gulp.task 'compile::sources', ->
-  gulp.src(['src/chinchilla.coffee', 'src/chinchilla/*.coffee'])
+  gulp.src(['src/ch.coffee', 'src/chinchilla/*.coffee'])
   .pipe($.plumber(errorHandler: $.notify.onError("Error: <%= error.message %>")))
   .pipe($.coffee(bare: false, sourceMap: false).on('error', $logger))
   .pipe($.ngmin({dynamic: false}))
