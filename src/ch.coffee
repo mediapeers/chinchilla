@@ -3,19 +3,32 @@ module = angular.module('chinchilla', [])
 module.provider '$ch', () ->
   provider = @
 
-  @.defaults = {}
-  @.endpoints = {}
+  @options =
+    entryPoints: {}
 
-  @.setEndpoint = (moduleName, url) ->
-    console.log('Setting endpoint')
+  @entryPointManager = null
+  @contextManager = null
 
-    provider.endpoints[moduleName] = url
+  @setEntryPoint = (name, url) ->
+    @options.entryPoints[name] = url
 
-  @.$get = ['ch_Chinchilla', (ch_Chinchilla, ch_EntryPointRegistry, ch_ContextRegistry) ->
-    provider.contextEntryPointRegistry = new ch_EntryPointRegistry(provider.endpoints)
-    provider.contextRegistry = new ch_ContextRegistry()
+  @.$get = ['ch_Chinchilla', 'ch_EntryPointManager', 'ch_ContextManager', (ch_Chinchilla, ch_EntryPointManager, ch_ContextManager) ->
+    provider.entryPointManager = new ch_EntryPointManager(provider.options.entryPoints)
+    provider.contextManager = new ch_ContextManager()
 
-    (definition) -> new ch_Chinchilla(definition, provider)
+    (args...) ->
+      options =
+        entryPointManager: provider.entryPointManager
+        contextManager: provider.entryPointManager
+
+      [arg1, arg2, arg3] = args
+
+      switch args.length
+        when 0 then return new ch_Chinchilla(options)
+        when 1 then return new ch_Chinchilla(arg1, options)
+        when 2 then return new ch_Chinchilla(arg1, arg2, options)
+        when 3 then return new ch_Chinchilla(arg1, arg2, arg3, options)
+        else throw Error("Wrong number of args (#{args.length}) for $ch")
   ]
 
   return provider
