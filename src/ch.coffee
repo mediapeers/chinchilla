@@ -1,34 +1,18 @@
 module = angular.module('chinchilla', [])
 
 module.provider '$ch', () ->
-  provider = @
+  # holds the urls to different application entry point contexts
+  entryPoints = {}
 
-  @options =
-    entryPoints: {}
+  @setEntryPoint = (systemId, url) ->
+    entryPoints[systemId] = url
 
-  @entryPointManager = null
-  @contextManager = null
+  @.$get = ['ChContextOp', (ChContextOp) ->
+    (systemId) ->
+      contextUrl = entryPoints[systemId]
+      throw new Error("no entry point url defined for #{systemId}") unless contextUrl
 
-  @setEntryPoint = (name, url) ->
-    @options.entryPoints[name] = url
-
-  @.$get = ['ch_Chinchilla', 'ch_EntryPointManager', 'ch_ContextManager', (ch_Chinchilla, ch_EntryPointManager, ch_ContextManager) ->
-    provider.entryPointManager = new ch_EntryPointManager(provider.options.entryPoints)
-    provider.contextManager = new ch_ContextManager()
-
-    (args...) ->
-      options =
-        entryPointManager: provider.entryPointManager
-        contextManager: provider.entryPointManager
-
-      [arg1, arg2, arg3] = args
-
-      switch args.length
-        when 0 then return new ch_Chinchilla(options)
-        when 1 then return new ch_Chinchilla(arg1, options)
-        when 2 then return new ch_Chinchilla(arg1, arg2, options)
-        when 3 then return new ch_Chinchilla(arg1, arg2, arg3, options)
-        else throw Error("Wrong number of args (#{args.length}) for $ch")
+      new ChContextOp(null, { __context__: contextUrl })
   ]
 
-  return provider
+  @

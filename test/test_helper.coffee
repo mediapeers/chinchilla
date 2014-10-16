@@ -14,6 +14,9 @@ fnRejectable = ($q) ->
     q.reject(data)
     q.promise
 
+dump = (obj) -> JSON.stringify(obj)
+
+throwDump = (obj) -> throw new Error(dump(obj))
 
 _.extend(window, {
   expect: expect,

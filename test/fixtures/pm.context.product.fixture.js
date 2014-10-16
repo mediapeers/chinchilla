@@ -2,19 +2,19 @@ defineFixture('pm.context.product', {
   "@context": {
     "@type": "http://pm.mpx.dev/v20140601/context/product",
     "constants": {
-        "access_levels": [
-            "private",
-            "company",
-            "viewable",
-            "accessible"
-        ],
-        "types": [
-            "product/motion_picture/format",
-            "product/motion_picture/program",
-            "product/motion_picture/series",
-            "product/motion_picture/season",
-            "product/motion_picture/episode"
-        ]
+      "access_levels": [
+          "private",
+          "company",
+          "viewable",
+          "accessible"
+      ],
+      "types": [
+          "product/motion_picture/format",
+          "product/motion_picture/program",
+          "product/motion_picture/series",
+          "product/motion_picture/season",
+          "product/motion_picture/episode"
+      ]
     },
     "properties": {
       "id": {
