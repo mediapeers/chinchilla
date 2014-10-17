@@ -12,7 +12,7 @@ module.provider '$ch', () ->
       contextUrl = entryPoints[systemId]
       throw new Error("no entry point url defined for #{systemId}") unless contextUrl
 
-      new ChContextOp(null, { __context__: contextUrl })
+      new ChContextOp(null, { '@context': contextUrl })
   ]
 
   @

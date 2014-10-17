@@ -1,8 +1,9 @@
-angular.module('chinchilla').factory 'ChActionOp', (ChOperation) ->
+angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilder) ->
   class ChActionOp extends ChOperation
-    constructor: (@$parent, @$type, @$subject, @$params = {}) ->
+    constructor: (@$parent, @$type, @$action, @$params = {}) ->
       super
 
+      @$subject = null
       @$data = null
       @$arr = []
       @$obj = {}
@@ -10,6 +11,9 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation) ->
       if @$parent
         success = =>
           @$context = @$parent.$context
+
+          # use subject from parent only if object or array (no string!)
+          @$subject = @$parent.$subject unless _.isString(@$parent.$subject)
 
           if _.isNull(@$type) && (association = @$parent.$association)
             # if type is not specified, try to guess from association info (one vs many)
@@ -23,6 +27,7 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation) ->
         @$parent.$promise.then success, error
 
     __run__: ->
-      # actually executes the action request
-      # does sth here, then...
-      @$deferred.resolve({})
+      builder = ChRequestBuilder.init(@$context, @$subject, @$type, @$action, @$params)
+      builder.performRequest().then (response) =>
+        @$data = response.data
+        @$deferred.resolve(@)

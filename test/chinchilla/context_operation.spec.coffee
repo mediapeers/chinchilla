@@ -22,22 +22,21 @@ describe 'ChContextOp', ->
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
 
-  describe '$ch', ->
-    beforeEach ->
-      inject ($injector) ->
-        $ch = $injector.get('$ch')
-        $httpBackend = $injector.get('$httpBackend')
-        ChContext = $injector.get('ChContext')
-        ChContextOp = $injector.get('ChContextOp')
+  beforeEach ->
+    inject ($injector) ->
+      $ch = $injector.get('$ch')
+      $httpBackend = $injector.get('$httpBackend')
+      ChContext = $injector.get('ChContext')
+      ChContextOp = $injector.get('ChContextOp')
 
-        entryPointContext = loadFixture('pm.context.entry_point')
-        $httpBackend.whenGET(EP).respond(entryPointContext)
+      entryPointContext = loadFixture('pm.context.entry_point')
+      $httpBackend.whenGET(EP).respond(entryPointContext)
 
-        $pm = $ch('pm')
+      $pm = $ch('pm')
 
-    it 'requests the context for product', ->
-      $httpBackend.expectGET(ProductContextUrl).respond(null)
-      operation = $pm.$('products')
+  it 'requests the context for product', ->
+    $httpBackend.expectGET(ProductContextUrl).respond(null)
+    operation = $pm.$('products')
 
-    it 'responds to $$', ->
-      expect($pm).to.respondTo('$$')
+  it 'responds to $$', ->
+    expect($pm).to.respondTo('$$')

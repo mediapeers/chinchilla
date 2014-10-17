@@ -36,7 +36,7 @@ defineFixture('pm.context.product', {
       }
     },
     "member_actions": {
-      "show": {
+      "get": {
         "method": "GET",
         "expects": null,
         "response": "http://pm.mpx.dev/v20140601/context/product",
@@ -47,6 +47,24 @@ defineFixture('pm.context.product', {
             "variable": "product_id",
             "source": "id",
             "required": true
+          }
+        ]
+      },
+      "foo": {
+        "method": "PUT",
+        "expects": null,
+        "response": "http://pm.mpx.dev/v20140601/context/product",
+        "resource": "http://pm.mpx.dev/v20140601/context/product",
+        "template": "http://pm.mpx.dev/v20140601/product/{product_id}{?name}",
+        "mappings": [
+          {
+            "variable": "product_id",
+            "source": "id",
+            "required": true
+          },
+          {
+            "variable": "name",
+            "source": "title"
           }
         ]
       }

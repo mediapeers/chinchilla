@@ -21,48 +21,52 @@ describe 'ChActionOp', ->
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
 
-  describe '$ch', ->
-    beforeEach ->
-      inject ($injector) ->
-        $ch = $injector.get('$ch')
-        $httpBackend = $injector.get('$httpBackend')
-        ChActionOp = $injector.get('ChActionOp')
+  beforeEach ->
+    inject ($injector) ->
+      $ch = $injector.get('$ch')
+      $httpBackend = $injector.get('$httpBackend')
+      ChActionOp = $injector.get('ChActionOp')
 
-        entryPointContext = loadFixture('pm.context.entry_point')
-        productContext = loadFixture('pm.context.product')
+      entryPointContext = loadFixture('pm.context.entry_point')
+      productContext = loadFixture('pm.context.product')
+      affiliationContext = loadFixture('pm.context.affiliation')
 
-        $httpBackend.whenGET(EP).respond(entryPointContext)
-        $httpBackend.whenGET(PC).respond(productContext)
-        $httpBackend.whenGET(AC).respond({})
+      $httpBackend.whenGET(EP).respond(entryPointContext)
+      $httpBackend.whenGET(PC).respond(productContext)
+      $httpBackend.whenGET(AC).respond(affiliationContext)
 
-        $pm = $ch('pm')
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/products').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/affiliation').respond({})
 
-    it 'gets an action operation', ->
-      operation = $pm.$('products').$$('query')
+      $pm = $ch('pm')
 
-      $httpBackend.flush()
-      expect(operation).to.be.an.instanceof(ChActionOp)
+  it 'gets an action operation', ->
+    operation = $pm.$('products').$$('query')
 
-    it 'initializes collection action', ->
-      operation = $pm.$('products').$c('query')
+    $httpBackend.flush()
+    expect(operation).to.be.an.instanceof(ChActionOp)
 
-      $httpBackend.flush()
-      expect(operation.$type).to.eq('collection')
+  it 'initializes collection action', ->
+    operation = $pm.$('products').$c('query')
 
-    it 'initializes member action', ->
-      operation = $pm.$('products').$m('get')
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('collection')
 
-      $httpBackend.flush()
-      expect(operation.$type).to.eq('member')
+  it 'initializes member action', ->
+    operation = $pm.$('products').$m('get')
 
-    it 'initializes collection action by default for collection has_many/HABTM association', ->
-      operation = $pm.$('products').$$('query')
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('member')
 
-      $httpBackend.flush()
-      expect(operation.$type).to.eq('collection')
+  it 'initializes collection action by default for collection has_many/HABTM association', ->
+    operation = $pm.$('products').$$('query')
 
-    it 'initializes member action by default for has_one/belongs_to association', ->
-      operation = $pm.$('affiliation').$$('get')
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('collection')
 
-      $httpBackend.flush()
-      expect(operation.$type).to.eq('member')
+  it 'initializes member action by default for has_one/belongs_to association', ->
+    operation = $pm.$('affiliation').$$('get')
+
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('member')

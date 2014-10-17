@@ -9,3 +9,11 @@ angular.module('chinchilla').factory 'ChContext', ->
     association: (name) ->
       assoc = @property(name)
       assoc if _.isPlainObject(assoc)
+
+    member_action: (name) ->
+      context = @data && @data['@context']
+      context && context.member_actions && context.member_actions[name]
+
+    collection_action: (name) ->
+      context = @data && @data['@context']
+      context && context.collection_actions && context.collection_actions[name]
