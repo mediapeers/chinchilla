@@ -94,6 +94,23 @@ describe 'ChRequestBuilder', ->
 
         expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/product/1?name=TheDreamers')
 
+      it 'builds url using @id', ->
+        product =
+          '@id': 'http://pm.mpx.dev/v20140601/product/1'
+          'title': 'TheDreamers'
+
+        builder = ChRequestBuilder.init(context, product, 'member', 'foo')
+        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/product/1?name=TheDreamers')
+
+      it 'builds url using id value', ->
+        product =
+          'id': 1,
+          'title': 'TheDreamers'
+
+        builder = ChRequestBuilder.init(context, product, 'member', 'foo')
+        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/product/1?name=TheDreamers')
+
+
   describe 'ChCollectionRequestBuilder', ->
     context = null
     product1 = null
@@ -123,5 +140,24 @@ describe 'ChRequestBuilder', ->
     describe '#buildUrl', ->
       it 'builds url', ->
         builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
+        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/products?ids=1,3')
 
+      it 'builds url using @id', ->
+        product1 =
+          '@id': 'http://pm.mpx.dev/v20140601/product/1'
+
+        product2 =
+          '@id': 'http://pm.mpx.dev/v20140601/product/3'
+
+        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
+        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/products?ids=1,3')
+
+      it 'builds url using id value', ->
+        product1 =
+          'id': 1
+
+        product2 =
+          'id': 3
+
+        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
         expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/products?ids=1,3')

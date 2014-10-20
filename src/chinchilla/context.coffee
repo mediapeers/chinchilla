@@ -12,8 +12,8 @@ angular.module('chinchilla').factory 'ChContext', ->
 
     member_action: (name) ->
       context = @data && @data['@context']
-      context && context.member_actions && context.member_actions[name]
+      action  = context && context.member_actions && context.member_actions[name]
 
     collection_action: (name) ->
       context = @data && @data['@context']
-      context && context.collection_actions && context.collection_actions[name]
+      action  = context && context.collection_actions && context.collection_actions[name]

@@ -32,8 +32,8 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
     mappings:
       -> throw new Error('ChRequestBuilder#mappings: abstract! should be implemented in concrete class')
 
-    buildUrl:
-      -> throw new Error('ChRequestBuilder#buildUrl: abstract! should be implemented in concrete class')
+    buildUriParams:
+      -> throw new Error('ChRequestBuilder#buildUriParams: abstract! should be implemented in concrete class')
 
     data:
       -> throw new Error('ChRequestBuilder#data: abstract! should be implemented in concrete class')
@@ -51,6 +51,24 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
         data: data
       )
 
+    buildUrl: ->
+      uriTmpl = new UriTemplate(@$contextAction.template)
+      uriTmpl.fillFromObject(@buildUriParams())
+
+    getId: (obj) ->
+      return obj['@id'] if obj && obj['@id']
+
+      get       = @$context.member_action('get')
+      template  = new UriTemplate(get.template)
+      params    = {}
+
+      _.each get.mappings, (mapping) ->
+        value = obj[mapping.source]
+        return unless value
+
+        params[mapping.variable] = value
+
+      template.fillFromObject(params)
 
 angular.module('chinchilla').factory 'ChMemberRequestBuilder', ($q, ChRequestBuilder) ->
   class ChMemberRequestBuilder extends ChRequestBuilder
@@ -64,7 +82,7 @@ angular.module('chinchilla').factory 'ChMemberRequestBuilder', ($q, ChRequestBui
       get       = @$context.member_action('get')
       template  = new UriTemplate(get.template)
       mappings  = get.mappings
-      uriAttrs  = template.fromUri(@$subject['@id'])
+      uriAttrs  = template.fromUri(@getId(@$subject))
 
       # transform using mapping
       result = {}
@@ -76,18 +94,18 @@ angular.module('chinchilla').factory 'ChMemberRequestBuilder', ($q, ChRequestBui
 
       result
 
-    buildUrl: ->
-      uriTmpl = new UriTemplate(@$contextAction.template)
+    # extracts attributes first, then tries to find values from object
+    buildUriParams: ->
+      params = {}
+      attrs  = @extractAttributes()
 
-      # convert attrs using mapping
-      uriAttrs = {}
       _.each @$contextAction.mappings, (mapping) =>
-        value = @$subject && @$subject[mapping.source]
+        value = attrs[mapping.source] || (@$subject && @$subject[mapping.source])
         return unless value
 
-        uriAttrs[mapping.variable] = value
+        params[mapping.variable] = value
 
-      uriTmpl.fillFromObject(uriAttrs)
+      params
 
     data: ->
       @$subject || {}
@@ -100,15 +118,12 @@ angular.module('chinchilla').factory 'ChCollectionRequestBuilder', ($q, ChReques
       @$contextAction = @$context.collection_action(@$action)
 
     extractAttributes: ->
-      unless _.isArray(@$subject)
-        throw new Error("ChCollectionRequestBuilder#extractAttributes: 'subject' must be an array")
-
       return {} if _.isEmpty(@$subject)
 
       get       = @$context.member_action('get')
       template  = new UriTemplate(get.template)
       mappings  = get.mappings
-      uriAttrs  = _.map @$subject, (obj) -> template.fromUri(obj['@id'])
+      uriAttrs  = _.map @$subject, (obj) => template.fromUri(@getId(obj))
 
       # transform using mapping
       result = {}
@@ -125,23 +140,25 @@ angular.module('chinchilla').factory 'ChCollectionRequestBuilder', ($q, ChReques
 
       result
 
-    buildUrl: ->
-      uriTmpl       = new UriTemplate(@$contextAction.template)
+    buildUriParams: ->
+      params = {}
+      attrs  = @extractAttributes()
 
-      # convert attrs using mapping
-      uriAttrs = {}
       _.each @$contextAction.mappings, (mapping) =>
         return unless @$subject
 
-        uriAttrs[mapping.variable] ||= []
+        if attrs[mapping.source]
+          params[mapping.variable] = attrs[mapping.source]
+        else
+          params[mapping.variable] ||= []
 
-        _.each @$subject, (obj) ->
-          value = obj[mapping.source]
-          return unless value
+          _.each @$subject, (obj) ->
+            value = obj[mapping.source]
+            return unless value
 
-          uriAttrs[mapping.variable].push(value)
+            params[mapping.variable].push(value)
 
-      uriTmpl.fillFromObject(uriAttrs)
+      params
 
     data: ->
       result = {}
