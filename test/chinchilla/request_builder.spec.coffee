@@ -44,14 +44,17 @@ describe 'ChRequestBuilder', ->
   describe 'ChRequestBuilder', ->
     describe '.init', ->
       it 'works', ->
-        ChRequestBuilder.init(new ChContext(), {}, 'member', 'get')
+        context = new ChContext('@context': member_actions: { get: {} })
+        ChRequestBuilder.init(context, {}, 'member', 'get')
 
       it 'returns an instance of ChMemberRequestBuilder', ->
-        builder = ChRequestBuilder.init(new ChContext(), {}, 'member', 'get')
+        context = new ChContext('@context': member_actions: { get: {} })
+        builder = ChRequestBuilder.init(context, {}, 'member', 'get')
         expect(builder).to.be.instanceof($injector.get('ChMemberRequestBuilder'))
 
       it 'returns an instance of ChCollectionRequestBuilder', ->
-        builder = ChRequestBuilder.init(new ChContext(), [], 'collection', 'query')
+        context = new ChContext('@context': collection_actions: { query: {} })
+        builder = ChRequestBuilder.init(context, [], 'collection', 'query')
         expect(builder).to.be.instanceof($injector.get('ChCollectionRequestBuilder'))
 
     describe '#perform', ->
@@ -133,7 +136,7 @@ describe 'ChRequestBuilder', ->
 
     describe '#extractAttributes', ->
       it 'returns id attribues for a collection of objects', ->
-        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'get')
+        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
 
         expect(builder.extractAttributes()).to.be.like(id: ['1', '3'])
 
