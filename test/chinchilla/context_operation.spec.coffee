@@ -7,7 +7,8 @@ describe 'ChContextOp', ->
   ChContextOp = null
   $pm = null
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
-  ProductContextUrl = 'http://pm.mpx.dev/v20140601/context/product'
+  PC = 'http://pm.mpx.dev/v20140601/context/product'
+  AC = 'http://pm.mpx.dev/v20140601/context/affiliation'
 
   beforeEach ->
     angular.mock.module("chinchilla")
@@ -18,7 +19,6 @@ describe 'ChContextOp', ->
       null
 
   afterEach ->
-    $httpBackend.flush()
     $httpBackend.verifyNoOutstandingExpectation()
     $httpBackend.verifyNoOutstandingRequest()
 
@@ -30,13 +30,35 @@ describe 'ChContextOp', ->
       ChContextOp = $injector.get('ChContextOp')
 
       entryPointContext = loadFixture('pm.context.entry_point')
+      productContext = loadFixture('pm.context.product')
+      affiliationContext = loadFixture('pm.context.affiliation')
+      $httpBackend.whenGET(AC).respond(affiliationContext)
       $httpBackend.whenGET(EP).respond(entryPointContext)
+      $httpBackend.whenGET(PC).respond(productContext)
 
       $pm = $ch('pm')
+      $httpBackend.flush()
 
   it 'requests the context for product', ->
-    $httpBackend.expectGET(ProductContextUrl).respond(null)
     operation = $pm.$('products')
+    $httpBackend.flush()
 
   it 'responds to $$', ->
     expect($pm).to.respondTo('$$')
+
+  it 'exposes association data for collection', ->
+    $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ affiliation: { foo: 'bar' }}])
+    products = $pm.$('products').$$('query')
+    affiliationContext = products.$('affiliation')
+    $httpBackend.flush()
+
+    expect(affiliationContext.$associationData.length).to.eq(1)
+    expect(affiliationContext.$associationData[0]).to.be.like(foo: 'bar')
+
+  it 'exposes association data for has one/belongs to association', ->
+    $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(affiliation: { foo: 'bar' })
+    products = $pm.$('products').$$('query')
+    affiliationContext = products.$('affiliation')
+    $httpBackend.flush()
+
+    expect(affiliationContext.$associationData).to.be.like(foo: 'bar')

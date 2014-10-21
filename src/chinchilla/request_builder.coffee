@@ -17,12 +17,12 @@
 
 angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) ->
   class ChRequestBuilder
-    @init = (context, subject, type, action) ->
+    @init = (context, subject, type, action, params) ->
       klass = switch type
         when 'member' then $injector.get('ChMemberRequestBuilder')
         when 'collection' then $injector.get('ChCollectionRequestBuilder')
 
-      new klass(context, subject, type, action)
+      new klass(context, subject, type, action, params)
 
     constructor: (@$context, @$subject, @$type, @$action, @$params) ->
 
@@ -97,13 +97,17 @@ angular.module('chinchilla').factory 'ChMemberRequestBuilder', ($q, ChRequestBui
     # extracts attributes first, then tries to find values from object
     buildUriParams: ->
       params = {}
-      attrs  = @extractAttributes()
+      values = _.merge {}, @extractAttributes(), @$params
 
       _.each @$contextAction.mappings, (mapping) =>
-        value = attrs[mapping.source] || (@$subject && @$subject[mapping.source])
-        return unless value
+        if mapping.source
+          value = values[mapping.source] || (@$subject && @$subject[mapping.source])
+          return unless value
 
-        params[mapping.variable] = value
+          params[mapping.variable] = value
+        else
+          value = values[mapping.source] || (@$subject && @$subject[mapping.source])
+          return unless value
 
       params
 

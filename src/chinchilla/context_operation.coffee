@@ -1,35 +1,31 @@
-angular.module('chinchilla').factory 'ChContextOp', (ChOperation, ChActionOp, ChContextService) ->
+angular.module('chinchilla').factory 'ChContextOp', (ChOperation, ChContextService) ->
   class ChContextOp extends ChOperation
     constructor: (@$parent = null, @$subject) ->
-      super
+      ChOperation.init(@)
 
       # if context called for an association, then park
       # association info here
-      @$association = null
+      @$associationProperty = null
+      @$associationData = null
 
       if @$parent
-        success = => @__run__()
+        success = =>
+          if _.isString(@$subject)
+            # requesting association context..
+            @$associationProperty = @$parent.$context.association(@$subject)
+            @$associationData     = null
+
+            if @$parent.$data && (members = @$parent.$data.members)
+              @$associationData = _.map members, (member) => member[@$subject]
+            else
+              @$associationData = @$parent.$data && @$parent.$data[@$subject]
+
+          @__run__()
         error   = => @$deferred.reject()
 
         @$parent.$promise.then success, error
       else
         @__run__()
-
-    # fetches association
-    $: (subject) ->
-      new ChContextOp(@, subject)
-
-    # executes action
-    $$: (action, params = {}) ->
-      new ChActionOp(@, null, action, params)
-
-    # executes collection action
-    $c: (action, params = {}) ->
-      new ChActionOp(@, 'collection', action, params)
-
-    # executes member action
-    $m: (action, params = {}) ->
-      new ChActionOp(@, 'member', action, params)
 
     __run__: ->
       @__findContextUrl__()
@@ -45,16 +41,13 @@ angular.module('chinchilla').factory 'ChContextOp', (ChOperation, ChActionOp, Ch
       @$contextUrl = null
 
       if _.isString(@$subject)
-        try
-          @$association = @$parent.$context.association(@$subject)
-          @$contextUrl = @$association.type
+        @$contextUrl = @$associationProperty && @$associationProperty.type
 
-        catch
-          console.log @
+        unless @$contextUrl
           throw new Error("ChContextOp#__findContextUrl__: no association '#{@$subject}' found")
 
       else if _.isArray(@$subject)
-        @$contextUrl = @$subject[0] %% @$subject[0]['@context']
+        @$contextUrl = @$subject[0] && @$subject[0]['@context']
 
         if !first || !@$contextUrl
           console.log @
