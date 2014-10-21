@@ -7,12 +7,15 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
       # source is object, association type is member       => use member template
       # source is object, association type is collection   => use collection template
       # source is array, type is collection                => use member template (HABTM)
+      # source is array, type is collection                => use member template (HABTM)
       # source is array, type is member                    => DOES NOT MAKE SENSE
       #
       # source is object     => output e.g. { id: 2, name: 'foo' }
       # source is array      => output e.g. { id: [1, 2], name: ['foo', 'bar']}
-      params = if _.isArray(source) && type == 'collection'
+      params = if _.isArray(source) && type == 'member'
         @_extractMemberArray(source)
+      else if _.isArray(source) && type == 'collection'
+        @_extractCollectionArray(source)
       else
         if type == 'collection'
           @_extractCollection(source)
@@ -68,9 +71,26 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
     _extractMemberArray: (source) ->
       return {} if _.isEmpty(source)
       action    = @$context.member_action('get')
+      @_extractArrayValues(action, source)
+
+    _extractCollectionArray: (source) ->
+      return {} if _.isEmpty(source)
+      action = @$context.collection_action('query')
+      @_extractArrayValues(action, source)
+
+    _extractCollection: (source) ->
+      action = @$context.collection_action('query')
+      @_extractValues(action, source)
+
+    _extractMember: (source) ->
+      action = @$context.member_action('get')
+      @_extractValues(action, source)
+
+    _extractArrayValues: (action, objects) ->
       mappings  = action.mappings
 
-      values = _.map source, (obj) => @_extractValues(action, obj)
+      values = _.map objects, (obj) => @_extractValues(action, obj)
+      values = _.compact(values)
 
       result = {}
       _.each mappings, (mapping) ->
@@ -82,14 +102,6 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
 
       result
 
-    _extractCollection: (source) ->
-      action = @$context.collection_action('query')
-      @_extractValues(action, source)
-
-    _extractMember: (source) ->
-      action = @$context.member_action('get')
-      @_extractValues(action, source)
-
     _extractValues: (action, object) ->
       id = object && object['@id']
       return {} unless id
@@ -97,6 +109,8 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
       result    = {}
       template  = new UriTemplate(action.template)
       values    = template.fromUri(id)
+      return {} if _.isEmpty(values)
+
       mappings  = action.mappings
 
       _.each mappings, (mapping) ->

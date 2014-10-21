@@ -106,7 +106,7 @@ describe 'ChRequestBuilder', ->
 
         builder = new ChRequestBuilder(context, 'role', 'collection', 'query')
 
-        expect(builder.extractFrom(obj, 'collection')).to.be.like(id: ['1', '2'])
+        expect(builder.extractFrom(obj, 'member')).to.be.like(id: ['1', '2'])
 
   describe '#performRequest', ->
     it 'sends request', ->
