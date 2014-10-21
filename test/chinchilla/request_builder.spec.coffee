@@ -138,7 +138,7 @@ describe 'ChRequestBuilder', ->
 
       builder = new ChRequestBuilder(context, 'role', 'collection', 'query')
       builder.extractFrom(obj, 'member')
-      builder.mergeParams(foo: 'foo')
+      builder.mergeParams(foo: 'foo', bar: 'bar')
 
       $httpBackend.expectGET('http://um.mpx.com/roles/15?foo=foo').respond(null)
 
