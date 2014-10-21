@@ -41,126 +41,106 @@ describe 'ChRequestBuilder', ->
       $pm = $ch('pm')
       $httpBackend.flush()
 
-  describe 'ChRequestBuilder', ->
-    describe '.init', ->
-      it 'works', ->
-        context = new ChContext('@context': member_actions: { get: {} })
-        ChRequestBuilder.init(context, {}, 'member', 'get')
+  describe '#extractFrom', ->
+    context 'extract from @id of ONE association (or single object)', ->
+      it 'extracts values', ->
+        obj =
+          '@id': 'http://um.mpx.com/role/15',
 
-      it 'returns an instance of ChMemberRequestBuilder', ->
-        context = new ChContext('@context': member_actions: { get: {} })
-        builder = ChRequestBuilder.init(context, {}, 'member', 'get')
-        expect(builder).to.be.instanceof($injector.get('ChMemberRequestBuilder'))
+        context = new ChContext(
+          '@context':
+            member_actions:
+              get:
+                template: 'http://um.mpx.com/role/{role_id}'
+                mappings: [
+                    variable: 'role_id'
+                    source: 'id'
+                    required: true
+                ]
+        )
 
-      it 'returns an instance of ChCollectionRequestBuilder', ->
-        context = new ChContext('@context': collection_actions: { query: {} })
-        builder = ChRequestBuilder.init(context, [], 'collection', 'query')
-        expect(builder).to.be.instanceof($injector.get('ChCollectionRequestBuilder'))
+        builder = new ChRequestBuilder(context, 'role', 'member', 'get')
 
-    describe '#perform', ->
-      it 'hits backend with expected url', ->
-        $httpBackend.expectGET('http://pm.mpx.dev/v20140601/product/1').respond(null)
+        expect(builder.extractFrom(obj, 'member')).to.be.like(id: '15')
 
-        context = new ChContext(loadFixture('pm.context.product'))
-        product =
-          '@id': 'http://pm.mpx.dev/v20140601/product/1'
-          '@context': 'http://pm.mpx.dev/v20140601/context/product'
-          'id': 1
-          'title': 'TheDreamers'
+    context 'extract from @id of MANY association', ->
+      it 'extracts values', ->
+        obj =
+          '@id': 'http://um.mpx.com/roles/1,4,5',
 
-        builder = ChRequestBuilder.init(context, product, 'member', 'get')
-        builder.performRequest()
-        $httpBackend.flush()
+        context = new ChContext(
+          '@context':
+            collection_actions:
+              query:
+                template: 'http://um.mpx.com/roles/{ids}'
+                mappings: [
+                    variable: 'ids'
+                    source: 'id'
+                    required: true
+                ]
+        )
 
-  describe 'ChMemberRequestBuilder', ->
-    context = null
-    product = null
+        builder = new ChRequestBuilder(context, 'role', 'collection', 'query')
 
-    beforeEach ->
-      product =
-        '@id': 'http://pm.mpx.dev/v20140601/product/1'
-        '@context': 'http://pm.mpx.dev/v20140601/context/product'
-        'id': 1
-        'title': 'TheDreamers'
+        expect(builder.extractFrom(obj, 'collection')).to.be.like(id: ['1', '4', '5'])
 
-      context = new ChContext(loadFixture('pm.context.product'))
+    context 'extract from @id from HABTM association (or multiple objects)', ->
+      it 'extracts values', ->
+        obj =[
+            '@id': 'http://um.mpx.com/role/1',
+          ,
+            '@id': 'http://um.mpx.com/role/2',
+        ]
 
-    describe '#extractAttributes', ->
-      it 'returns id attribues for single object', ->
-        builder = ChRequestBuilder.init(context, product, 'member', 'get')
+        context = new ChContext(
+          '@context':
+            member_actions:
+              get:
+                template: 'http://um.mpx.com/role/{role_id}'
+                mappings: [
+                    variable: 'role_id'
+                    source: 'id'
+                    required: true
+                ]
+        )
 
-        expect(builder.extractAttributes()).to.be.like(id: '1')
+        builder = new ChRequestBuilder(context, 'role', 'collection', 'query')
 
-    describe '#buildUrl', ->
-      it 'builds url', ->
-        builder = ChRequestBuilder.init(context, product, 'member', 'foo')
+        expect(builder.extractFrom(obj, 'collection')).to.be.like(id: ['1', '2'])
 
-        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/product/1?name=TheDreamers')
+  describe '#performRequest', ->
+    it 'sends request', ->
+      obj =
+        '@id': 'http://um.mpx.com/role/15',
 
-      it 'builds url using @id', ->
-        product =
-          '@id': 'http://pm.mpx.dev/v20140601/product/1'
-          'title': 'TheDreamers'
+      context = new ChContext(
+        '@context':
+          member_actions:
+            get:
+              template: 'http://um.mpx.com/role/{role_id}'
+              mappings: [
+                  variable: 'role_id'
+                  source: 'id'
+                  required: true
+              ]
+          collection_actions:
+            query:
+              method: 'GET'
+              template: 'http://um.mpx.com/roles/{ids}{?foo}'
+              mappings: [
+                  variable: 'ids'
+                  source: 'id'
+                  required: true
+                ,
+                  variable: 'foo'
+              ]
+      )
 
-        builder = ChRequestBuilder.init(context, product, 'member', 'foo')
-        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/product/1?name=TheDreamers')
+      builder = new ChRequestBuilder(context, 'role', 'collection', 'query')
+      builder.extractFrom(obj, 'member')
+      builder.mergeParams(foo: 'foo')
 
-      it 'builds url using id value', ->
-        product =
-          'id': 1,
-          'title': 'TheDreamers'
+      $httpBackend.expectGET('http://um.mpx.com/roles/15?foo=foo').respond(null)
 
-        builder = ChRequestBuilder.init(context, product, 'member', 'foo')
-        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/product/1?name=TheDreamers')
-
-
-  describe 'ChCollectionRequestBuilder', ->
-    context = null
-    product1 = null
-    product2 = null
-
-    beforeEach ->
-      product1 =
-        '@id': 'http://pm.mpx.dev/v20140601/product/1'
-        '@context': 'http://pm.mpx.dev/v20140601/context/product'
-        'id': 1
-        'title': 'TheDreamers'
-
-      product2 =
-        '@id': 'http://pm.mpx.dev/v20140601/product/3'
-        '@context': 'http://pm.mpx.dev/v20140601/context/product'
-        'id': 3
-        'title': 'NightOnEarth'
-
-      context = new ChContext(loadFixture('pm.context.product'))
-
-    describe '#extractAttributes', ->
-      it 'returns id attribues for a collection of objects', ->
-        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
-
-        expect(builder.extractAttributes()).to.be.like(id: ['1', '3'])
-
-    describe '#buildUrl', ->
-      it 'builds url', ->
-        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
-        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/products?ids=1,3')
-
-      it 'builds url using @id', ->
-        product1 =
-          '@id': 'http://pm.mpx.dev/v20140601/product/1'
-
-        product2 =
-          '@id': 'http://pm.mpx.dev/v20140601/product/3'
-
-        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
-        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/products?ids=1,3')
-
-      it 'builds url using id value', ->
-        product1 =
-          'id': 1
-
-        product2 =
-          'id': 3
-
-        builder = ChRequestBuilder.init(context, [product1, product2], 'collection', 'query')
-        expect(builder.buildUrl()).to.eq('http://pm.mpx.dev/v20140601/products?ids=1,3')
+      builder.performRequest()
+      $httpBackend.flush()

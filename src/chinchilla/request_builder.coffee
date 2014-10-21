@@ -1,172 +1,108 @@
-# collection
-# 1. dissasemble attributes from get template for each object
-# 2. assemble new url params by merging
-# 2. assemble new collection url
-# 3. apply params (if passed)
-# 4. attach data for POST and PUT for each object, key is id always
-#
-# member
-# 1. dissasemble attributes from get template for object
-# 2. assemble new member url
-# 3. apply params (if passed)
-# 4. attach data for POST and PUT
-#
-# explicit
-# 1. assemble new url with passed params
-
-
 angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) ->
   class ChRequestBuilder
-    @init = (context, subject, type, action, params) ->
-      klass = switch type
-        when 'member' then $injector.get('ChMemberRequestBuilder')
-        when 'collection' then $injector.get('ChCollectionRequestBuilder')
+    constructor: (@$context, @$subject, @$type, @$action) ->
+      @$mergedParams = {}
 
-      new klass(context, subject, type, action, params)
+    extractFrom: (source, type) ->
+      # source is object, association type is member       => use member template
+      # source is object, association type is collection   => use collection template
+      # source is array, type is collection                => use member template (HABTM)
+      # source is array, type is member                    => DOES NOT MAKE SENSE
+      #
+      # source is object     => output e.g. { id: 2, name: 'foo' }
+      # source is array      => output e.g. { id: [1, 2], name: ['foo', 'bar']}
+      params = if _.isArray(source) && type == 'collection'
+        @_extractMemberArray(source)
+      else
+        if type == 'collection'
+          @_extractCollection(source)
+        else
+          @_extractMember(source)
 
-    constructor: (@$context, @$subject, @$type, @$action, @$params) ->
+      @mergeParams(params)
+      params
 
-    extractAttributes:
-      -> throw new Error('ChRequestBuilder#extractAttributes: abstract! should be implemented in concrete class')
-
-    mappings:
-      -> throw new Error('ChRequestBuilder#mappings: abstract! should be implemented in concrete class')
-
-    buildUriParams:
-      -> throw new Error('ChRequestBuilder#buildUriParams: abstract! should be implemented in concrete class')
-
-    data:
-      -> throw new Error('ChRequestBuilder#data: abstract! should be implemented in concrete class')
+    mergeParams: (params) ->
+      _.merge @$mergedParams, params || {}
 
     performRequest: ->
-      data = if _.include(['POST', 'PUT', 'PATCH'], @$contextAction.method)
+      action = if @$type == 'collection'
+        @$context.collection_action(@$action)
+      else
+        @$context.member_action(@$action)
+
+      data = if _.include(['POST', 'PUT', 'PATCH'], action.method)
         @data()
       else
         null
 
       $http(
-        method: @$contextAction.method
-        url: @buildUrl()
-        params: @$params
+        method: action.method
+        url: @buildUrl(action)
         data: data
       )
 
-    buildUrl: ->
-      uriTmpl = new UriTemplate(@$contextAction.template)
-      uriTmpl.fillFromObject(@buildUriParams())
+    buildUrl: (action) ->
+      uriTmpl = new UriTemplate(action.template)
+      uriTmpl.fillFromObject(@_buildParams(action))
 
-    getId: (obj) ->
-      return obj['@id'] if obj && obj['@id']
+    data: ->
+      if @$type == 'collection'
+        result = {}
+        _.each @$subject, (obj) -> result[obj.id] = obj
+        result
+      else
+        @$subject
 
-      get       = @$context.member_action('get')
-      template  = new UriTemplate(get.template)
-      params    = {}
+    _buildParams: (action) ->
+      mappings  = action.mappings
+      result    = {}
 
-      _.each get.mappings, (mapping) ->
-        value = obj[mapping.source]
+      _.each mappings, (mapping) =>
+        value = @$mergedParams[mapping.source] || @$mergedParams[mapping.variable]
         return unless value
+        result[mapping.variable] = value
 
-        params[mapping.variable] = value
+      result
 
-      template.fillFromObject(params)
+    _extractMemberArray: (source) ->
+      return {} if _.isEmpty(source)
+      action    = @$context.member_action('get')
+      mappings  = action.mappings
 
-angular.module('chinchilla').factory 'ChMemberRequestBuilder', ($q, ChRequestBuilder) ->
-  class ChMemberRequestBuilder extends ChRequestBuilder
-    constructor: ->
-      super
-      @$contextAction = @$context.member_action(@$action)
+      values = _.map source, (obj) => @_extractValues(action, obj)
 
-    extractAttributes: ->
-      return {} unless @$subject
-
-      get       = @$context.member_action('get')
-      template  = new UriTemplate(get.template)
-      mappings  = get.mappings
-      uriAttrs  = template.fromUri(@getId(@$subject))
-
-      # transform using mapping
       result = {}
       _.each mappings, (mapping) ->
-        value = uriAttrs[mapping.variable]
+        result[mapping.source] = []
+
+        _.each values, (attrs) ->
+          return unless attrs[mapping.source]
+          result[mapping.source].push attrs[mapping.source]
+
+      result
+
+    _extractCollection: (source) ->
+      action = @$context.collection_action('query')
+      @_extractValues(action, source)
+
+    _extractMember: (source) ->
+      action = @$context.member_action('get')
+      @_extractValues(action, source)
+
+    _extractValues: (action, object) ->
+      id = object && object['@id']
+      return {} unless id
+
+      result    = {}
+      template  = new UriTemplate(action.template)
+      values    = template.fromUri(id)
+      mappings  = action.mappings
+
+      _.each mappings, (mapping) ->
+        value = values[mapping.variable]
         return unless value
 
         result[mapping.source] = value
-
-      result
-
-    # extracts attributes first, then tries to find values from object
-    buildUriParams: ->
-      params = {}
-      values = _.merge {}, @extractAttributes(), @$params
-
-      _.each @$contextAction.mappings, (mapping) =>
-        if mapping.source
-          value = values[mapping.source] || (@$subject && @$subject[mapping.source])
-          return unless value
-
-          params[mapping.variable] = value
-        else
-          value = values[mapping.source] || (@$subject && @$subject[mapping.source])
-          return unless value
-
-      params
-
-    data: ->
-      @$subject || {}
-
-
-angular.module('chinchilla').factory 'ChCollectionRequestBuilder', ($q, ChRequestBuilder) ->
-  class ChCollectionRequestBuilder extends ChRequestBuilder
-    constructor: ->
-      super
-      @$contextAction = @$context.collection_action(@$action)
-
-    extractAttributes: ->
-      return {} if _.isEmpty(@$subject)
-
-      get       = @$context.member_action('get')
-      template  = new UriTemplate(get.template)
-      mappings  = get.mappings
-      uriAttrs  = _.map @$subject, (obj) => template.fromUri(@getId(obj))
-
-      # transform using mapping
-      result = {}
-      _.each mappings, (mapping) ->
-        result[mapping.source] ||= []
-
-        _.each uriAttrs, (attrs) ->
-          value = attrs[mapping.variable]
-          return unless value
-
-          result[mapping.source].push(value)
-
-        result[mapping.source] = result[mapping.source]
-
-      result
-
-    buildUriParams: ->
-      params = {}
-      attrs  = @extractAttributes()
-
-      _.each @$contextAction.mappings, (mapping) =>
-        return unless @$subject
-
-        if attrs[mapping.source]
-          params[mapping.variable] = attrs[mapping.source]
-        else
-          params[mapping.variable] ||= []
-
-          _.each @$subject, (obj) ->
-            value = obj[mapping.source]
-            return unless value
-
-            params[mapping.variable].push(value)
-
-      params
-
-    data: ->
-      result = {}
-      _.each @$subject, (obj) ->
-        result[obj.id] = obj
 
       result
