@@ -17,9 +17,14 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
         @$associationProperty = @$parent.$associationProperty
         @$associationType = if @$associationProperty && @$associationProperty.collection then 'collection' else 'member'
 
-        if _.isNull(@$type) && @$associationType
-          # if type is not specified, try to guess from association info (one vs many)
-          @$type = @$associationType
+        if _.isNull(@$type)
+          # if type is not specified, try to guess from association
+          @$type = if _.isArray(@$associationData)
+            'collection'
+          else if _.isPlainObject(@$associationType)
+            'member'
+          else
+            @$associationType
 
         @__run__()
 
