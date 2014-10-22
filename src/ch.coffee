@@ -1,21 +1,18 @@
 module = angular.module('chinchilla', [])
 
 module.provider '$ch', () ->
-  provider = @
+  # holds the urls to different application entry point contexts
+  entryPoints = {}
 
-  @.defaults = {}
-  @.endpoints = {}
+  @setEntryPoint = (systemId, url) ->
+    entryPoints[systemId] = url
 
-  @.setEndpoint = (moduleName, url) ->
-    console.log('Setting endpoint')
+  @.$get = ['ChContextOp', (ChContextOp) ->
+    (systemId) ->
+      contextUrl = entryPoints[systemId]
+      throw new Error("no entry point url defined for #{systemId}") unless contextUrl
 
-    provider.endpoints[moduleName] = url
-
-  @.$get = ['ch_Chinchilla', (ch_Chinchilla, ch_EntryPointRegistry, ch_ContextRegistry) ->
-    provider.contextEntryPointRegistry = new ch_EntryPointRegistry(provider.endpoints)
-    provider.contextRegistry = new ch_ContextRegistry()
-
-    (definition) -> new ch_Chinchilla(definition, provider)
+      new ChContextOp(null, { '@context': contextUrl })
   ]
 
-  return provider
+  @
