@@ -32,11 +32,11 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
       builder = new ChRequestBuilder(@$context, @$subject, @$type, @$action)
 
       # if collection association and data array of arrays => HABTM!
-      if @$type == 'collection' && _.isArray(@$associationData) && _.isArray(_.first(@$associationData))
+      if @$associationProperty && @$associationProperty.collection && _.isArray(@$associationData) && _.isArray(_.first(@$associationData))
         _.each @$associationData, (data) -> builder.extractFrom(data, 'member')
 
       # if member association and data array => HABTM!
-      else if @$type == 'member' && _.isArray(@$associationData)
+      else if _.isArray(@$associationData)
         builder.extractFrom(@$associationData, 'member')
 
       else
