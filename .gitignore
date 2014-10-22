@@ -4,6 +4,7 @@ node_modules
 lib/fixtures.js
 lib/bower.js
 lib/chinchilla.spec.js
+lib/chinchilla.js
 
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]
@@ -57,7 +58,3 @@ Temporary Items
 *.tmproj
 *.tmproject
 tmtags
-
-
-
-chinchilla.js
