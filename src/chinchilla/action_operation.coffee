@@ -56,9 +56,9 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
         @$data = response.data
 
         if response.data.members
-          @$arr = response.data.members
+          _.each response.data.members, (member) => @$arr.push(member)
         else
-          @$obj = response.data
+          _.merge @$obj, response.data
 
         @$deferred.resolve(@)
       error = =>
