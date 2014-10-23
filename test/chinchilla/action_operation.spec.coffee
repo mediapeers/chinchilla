@@ -1,9 +1,9 @@
 'use strict'
 
-describe 'ChActionOp', ->
+describe 'ChActionOperation', ->
   $ch = null
   $httpBackend = null
-  ChActionOp = null
+  ChActionOperation = null
   $pm = null
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
   PC = 'http://pm.mpx.dev/v20140601/context/product'
@@ -25,7 +25,7 @@ describe 'ChActionOp', ->
     inject ($injector) ->
       $ch = $injector.get('$ch')
       $httpBackend = $injector.get('$httpBackend')
-      ChActionOp = $injector.get('ChActionOp')
+      ChActionOperation = $injector.get('ChActionOperation')
 
       entryPointContext = loadFixture('pm.context.entry_point')
       productContext = loadFixture('pm.context.product')
@@ -45,7 +45,7 @@ describe 'ChActionOp', ->
     operation = $pm.$('products').$$('query')
 
     $httpBackend.flush()
-    expect(operation).to.be.an.instanceof(ChActionOp)
+    expect(operation).to.be.an.instanceof(ChActionOperation)
 
   it 'initializes collection action', ->
     operation = $pm.$('products').$c('query')

@@ -1,17 +1,26 @@
 angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) ->
+  # class to build and run requests. uses template to extract needed params from existing
+  # objects and to build request url.
   class ChRequestBuilder
+    # @param [ChContext] $context
+    # @param [Object|Array<Object>] subject concrete objects to run request for
+    # @param [String] type 'member' or 'collection'
+    # @param [String] action e.g. 'query'
     constructor: (@$context, @$subject, @$type, @$action) ->
       @$mergedParams = {}
 
+    # extracts params from object(s).
+    # source is association reference, association type is member       => use member template
+    # source is association reference, association type is collection   => use collection template
+    # source is array, type is collection                               => use member template (HABTM)
+    # source is array, type is collection                               => use member template (HABTM)
+    # source is array, type is member                                   => DOES NOT MAKE SENSE
+    # source is object, type is member                                  => use member template
+    # source is object, type is collection                              => use collection template
+    #
+    # source is object     => output e.g. { id: 2, name: 'foo' }
+    # source is array      => output e.g. { id: [1, 2], name: ['foo', 'bar']}
     extractFrom: (source, type) ->
-      # source is object, association type is member       => use member template
-      # source is object, association type is collection   => use collection template
-      # source is array, type is collection                => use member template (HABTM)
-      # source is array, type is collection                => use member template (HABTM)
-      # source is array, type is member                    => DOES NOT MAKE SENSE
-      #
-      # source is object     => output e.g. { id: 2, name: 'foo' }
-      # source is array      => output e.g. { id: [1, 2], name: ['foo', 'bar']}
       params = if _.isArray(source) && type == 'member'
         @_extractMemberArray(source)
       else if _.isArray(source) && type == 'collection'
@@ -25,9 +34,13 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
       @mergeParams(params)
       params
 
+    # adds more params
+    #
+    # @param [Object]
     mergeParams: (params) ->
       _.merge @$mergedParams, params || {}
 
+    # finally runs the request
     performRequest: ->
       action = if @$type == 'collection'
         @$context.collection_action(@$action)
@@ -45,10 +58,15 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
         data: data
       )
 
+    # builds the url with all previously collected params.
+    #
+    # @param [Object] action action from context
     buildUrl: (action) ->
       uriTmpl = new UriTemplate(action.template)
       uriTmpl.fillFromObject(@_buildParams(action))
 
+    # builds body data. if $subject is an array of objects a nested data object is created
+    # containing each object's data, referenced by object id
     data: ->
       if @$type == 'collection'
         result = {}
@@ -57,6 +75,9 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
       else
         @$subject
 
+    # builds params using action template from context
+    #
+    # @param [Object] action action from context
     _buildParams: (action) ->
       mappings  = action.mappings
       result    = {}

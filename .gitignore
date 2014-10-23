@@ -58,3 +58,4 @@ Temporary Items
 *.tmproj
 *.tmproject
 tmtags
+doc/*

@@ -1,65 +1,22 @@
-angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
-
-  # specs:
-  # - need to fetch data
-  # - need to assign association objects to objects
-  #   - cache association objects per object
-  #   - resolve matching association objects using
-  #     - collection template (isCollection = true)
-  #     - member template (isCollection = false)
-  class ChLazyAssociation
-    constructor: (@$operation, @$objects, @$name) ->
-      # holds association data per object once retrieved
-      @cache = {}
-      @isCollection = @$operation.$context.association(@$name).collection
-
-      @_initCache()
-
-    # makes sure data is fetched only once
-    # returns the action operation
-    load: ->
-      @context ||= @$operation.$(@$name)
-      @action ||= @context.$$('get').$promise.then @_assign.bind(@)
-
-    # returns pointer to object
-    retrieve: (object) ->
-      @load()
-      @cache[object['@id']]
-
-    # inits the cache for all objects
-    # creates objects/arrays depending on the association type
-    # one can bind to
-    _initCache: ->
-      _.each @objects, (object) =>
-        @cache[object['@id']] = if @isCollection
-          []
-        else
-          {}
-
-    _assign: (actionOp) ->
-      results = if _.isArray(actionOp.$rawData) then actionOp.$rawData else [actionOp.$rawData]
-
-      sortedResults = {}
-      _.each results, (object) -> sortedResults[object['id'].toString()] = object
-
-      if @isCollection
-        # each object may get assigned multiple association result objects
-        action = actionOp.$context.collection_action('get')
-
-        _.each @$objects, (object) ->
-          console.log object.$associations[@$name]
-      else
-        @context.member_template('get')
-
-
 angular.module('chinchilla').factory 'ChLazyLoader', (ChLazyAssociation) ->
+  # changes objects by putting association references aside and replacing them
+  # with getters that allow access to association data that is lazy loaded
+  # (using the references) via multi get for all objects it was initialized for.
+  # caches one ChLazyAssociation instance per association.
+  #
+  # @example
+  #   $ch('um').$('users').$$('query').then (operation) ->
+  #     new ChLazyLoader(operation, operation.$arr)
   class ChLazyLoader
+    # @param [ChActionOperation]
+    # @param [Array<Object>] objects array of objects you want to lazy load associations for
     constructor: (@$operation, @$objects = []) ->
       # holds one instance of ChLazyAssociation per association
       @$cache   = {}
 
       @_turnLazy()
 
+    # modifies objects and init getters
     _turnLazy: ->
       self = @
 
@@ -78,5 +35,8 @@ angular.module('chinchilla').factory 'ChLazyLoader', (ChLazyAssociation) ->
 
           Object.defineProperty object, key, get: -> self._association(key).retrieve(object)
 
+    # init ChLazyAssociation instance
+    #
+    # @param [String] name association name
     _association: (name) ->
       @$cache[name] ||= new ChLazyAssociation(@$operation, @$objects, name)

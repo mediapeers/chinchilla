@@ -1,10 +1,10 @@
 'use strict'
 
-describe 'ChContextOp', ->
+describe 'ChContextOperation', ->
   $ch = null
   $httpBackend = null
   ChContext = null
-  ChContextOp = null
+  ChContextOperation = null
   $pm = null
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
   PC = 'http://pm.mpx.dev/v20140601/context/product'
@@ -27,7 +27,7 @@ describe 'ChContextOp', ->
       $ch = $injector.get('$ch')
       $httpBackend = $injector.get('$httpBackend')
       ChContext = $injector.get('ChContext')
-      ChContextOp = $injector.get('ChContextOp')
+      ChContextOperation = $injector.get('ChContextOperation')
 
       entryPointContext = loadFixture('pm.context.entry_point')
       productContext = loadFixture('pm.context.product')
