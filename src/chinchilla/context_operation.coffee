@@ -15,19 +15,19 @@ angular.module('chinchilla').factory 'ChContextOp', (ChOperation, ChContextServi
             @$associationProperty = @$parent.$context.association(@$subject)
             @$associationData     = null
 
-            assocData = (object) =>
-              associations = object && object.$associations
-              associations && associations[@$subject] && associations[@$subject].reference
+            assocData = (object) => object && object[@$subject]
 
-            if _.isArray(@$parent.$data)
-              @$associationData = _.map @$parent.$data, (member) -> assocData(member)
+            data = @$parent.$rawData
+            if _.isArray(data)
+              @$associationData = _.map data, (member) -> assocData(member)
             else
-              @$associationData = assocData(@$parent.$data)
+              @$associationData = assocData(data)
 
           @__run__()
-        error   = => @$deferred.reject()
 
+        error = => @$deferred.reject()
         @$parent.$promise.then success, error
+
       else
         @__run__()
 

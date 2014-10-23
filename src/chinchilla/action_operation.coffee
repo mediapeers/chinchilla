@@ -4,7 +4,6 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
       ChOperation.init(@)
 
       @$subject = null
-      @$data = null
       @$arr = []
       @$obj = {}
 
@@ -53,13 +52,15 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
       builder.mergeParams(@$params)
 
       success = (response) =>
-        @$data = (response.data && response.data.members) || response.data
-        new ChLazyLoader(@)
+        @$rawData = (response.data && response.data.members) || response.data
+        data = _.cloneDeep(@$rawData)
 
-        if _.isArray(@$data)
-          _.each @$data, (member) => @$arr.push(member)
+        if _.isArray(data)
+          _.each data, (member) => @$arr.push(member)
+          new ChLazyLoader(@, @$arr)
         else
-          _.merge @$obj, @$data
+          _.merge @$obj, data
+          new ChLazyLoader(@, [@$obj])
 
         @$deferred.resolve(@)
       error = =>

@@ -57,8 +57,8 @@ describe 'ChContextOp', ->
       expect(affiliationContext.$associationData[0]).to.be.like('@id': 'foo')
 
     it 'exposes association data for has one/belongs to association', ->
-      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(affiliation: { '@id': 'foo' })
-      products = $pm.$('products').$$('query')
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/product/1').respond(affiliation: { '@id': 'foo' })
+      products = $pm.$('products').$m('get', id: 1)
       affiliationContext = products.$('affiliation')
       $httpBackend.flush()
 
