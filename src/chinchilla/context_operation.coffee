@@ -15,10 +15,14 @@ angular.module('chinchilla').factory 'ChContextOp', (ChOperation, ChContextServi
             @$associationProperty = @$parent.$context.association(@$subject)
             @$associationData     = null
 
-            if @$parent.$data && (members = @$parent.$data.members)
-              @$associationData = _.map members, (member) => member[@$subject]
+            assocData = (object) =>
+              associations = object && object.$associations
+              associations && associations[@$subject] && associations[@$subject].reference
+
+            if _.isArray(@$parent.$data)
+              @$associationData = _.map @$parent.$data, (member) -> assocData(member)
             else
-              @$associationData = @$parent.$data && @$parent.$data[@$subject]
+              @$associationData = assocData(@$parent.$data)
 
           @__run__()
         error   = => @$deferred.reject()
@@ -33,6 +37,7 @@ angular.module('chinchilla').factory 'ChContextOp', (ChOperation, ChContextServi
       success = (context) =>
         @$context = context
         @$deferred.resolve(@)
+
       error   = => @$deferred.reject()
 
       ChContextService.get(@$contextUrl).then(success, error)

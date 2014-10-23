@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilder) ->
+angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilder, ChLazyLoader) ->
   class ChActionOp extends ChOperation
     constructor: (@$parent, @$type, @$action, @$params = {}) ->
       ChOperation.init(@)
@@ -53,12 +53,13 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
       builder.mergeParams(@$params)
 
       success = (response) =>
-        @$data = response.data
+        @$data = (response.data && response.data.members) || response.data
+        new ChLazyLoader(@)
 
-        if response.data.members
-          _.each response.data.members, (member) => @$arr.push(member)
+        if _.isArray(@$data)
+          _.each @$data, (member) => @$arr.push(member)
         else
-          _.merge @$obj, response.data
+          _.merge @$obj, @$data
 
         @$deferred.resolve(@)
       error = =>
