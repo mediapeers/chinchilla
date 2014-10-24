@@ -26,7 +26,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     # @return [promise] promise of association action operation
     load: ->
       @contextOperation ||= @$operation.$(@$name)
-      @actionOperation  ||= @contextOperation.$$('get', per: 100).$promise.then @_assign.bind(@)
+      @actionOperation  ||= @contextOperation.$$('get').$promise.then @_assign.bind(@)
 
     # fetch association for specific object.
     # triggers load if necessary.
@@ -92,6 +92,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
 
             @cache[backReference].push(result)
       else
+        # HAS ONE / BELONGS TO
         sortedResults = {}
         _.each results, (result) -> sortedResults[result['@id']] = result
         _.each @$objects, (object) =>
