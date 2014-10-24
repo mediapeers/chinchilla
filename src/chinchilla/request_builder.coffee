@@ -10,13 +10,6 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
       @$mergedParams = {}
 
     # extracts params from object(s).
-    # source is association reference, association type is member       => use member template
-    # source is association reference, association type is collection   => use collection template
-    # source is array, type is collection                               => use member template (HABTM)
-    # source is array, type is collection                               => use member template (HABTM)
-    # source is array, type is member                                   => DOES NOT MAKE SENSE
-    # source is object, type is member                                  => use member template
-    # source is object, type is collection                              => use collection template
     #
     # source is object     => output e.g. { id: 2, name: 'foo' }
     # source is array      => output e.g. { id: [1, 2], name: ['foo', 'bar']}

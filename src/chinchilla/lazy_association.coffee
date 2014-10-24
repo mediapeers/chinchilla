@@ -53,23 +53,44 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     _assign: (actionOp) ->
       results = if _.isArray(actionOp.$rawData) then actionOp.$rawData else [actionOp.$rawData]
 
-      # TODO does not work with HABTM
       if @isCollection
-        # HAS MANY
-        # find back reference association, -> association that points to same context the parent context does
-        # say you want to load user phones..
-        # - @$operation is a user action operation, which $context is the user context
-        # - @contextOperation.$context is the phone context
-        # - -> find the association inside of phone context which points to @id of user context
-        parentContextId = @$operation.$context.data['@context']['@id']
-        associationName = _.findKey @contextOperation.$context.data['@context']['properties'], (value, key) ->
-          value && value.type && value.type == parentContextId
+        # check if HABTM
+        habtm = _.any @$objects, (object) =>
+          reference = object.$associations && object.$associations[@$name]
+          return unless reference
 
-        _.each results, (result) =>
-          backReference = result && result[associationName] && result[associationName]['@id']
-          return unless backReference
+          _.isArray(reference)
 
-          @cache[backReference].push(result)
+        if habtm
+          # HAS AND BELONGS TO MANY
+          sortedResults = {}
+          _.each results, (result) -> sortedResults[result['@id']] = result
+
+          _.each @$objects, (object) =>
+            references = object.$associations && object.$associations[@$name]
+            return unless _.isArray(references)
+
+            _.each references, (reference) =>
+              result = sortedResults[reference['@id']]
+              return unless result
+
+              @cache[object['@id']].push(result)
+        else
+          # HAS MANY
+          # find back reference association, -> association that points to same context the parent context does
+          # say you want to load user phones..
+          # - @$operation is a user action operation, which $context is the user context
+          # - @contextOperation.$context is the phone context
+          # - -> find the association inside of phone context which points to @id of user context
+          parentContextId = @$operation.$context.data['@context']['@id']
+          associationName = _.findKey @contextOperation.$context.data['@context']['properties'], (value, key) ->
+            value && value.type && value.type == parentContextId
+
+          _.each results, (result) =>
+            backReference = result && result[associationName] && result[associationName]['@id']
+            return unless backReference
+
+            @cache[backReference].push(result)
       else
         sortedResults = {}
         _.each results, (result) -> sortedResults[result['@id']] = result

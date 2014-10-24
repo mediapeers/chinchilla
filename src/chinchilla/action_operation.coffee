@@ -39,14 +39,14 @@ angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChReques
 
       @$parent.$promise.then success, error
 
-    # build params and runs the request once parent operation has been resolved.
     _run: ->
       builder = new ChRequestBuilder(@$context, @$subject, @$type, @$action)
 
       # DISASSEMBLE params from association references if available..
       # if collection association and data array of arrays => HABTM!
       if @$type == 'collection' && _.isArray(@$associationData) && _.isArray(_.first(@$associationData))
-        _.each @$associationData, (data) -> builder.extractFrom(data, 'member')
+        flattenedAssociationData = _.flatten @$associationData
+        builder.extractFrom(flattenedAssociationData, 'member')
 
       # if member association and data array => HABTM!
       else if @$type == 'member' && _.isArray(@$associationData)
