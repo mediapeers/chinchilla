@@ -25,8 +25,8 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     #
     # @return [promise] promise of association action operation
     load: ->
-      @context ||= @$operation.$(@$name)
-      @action ||= @context.$$('get').$promise.then @_assign.bind(@)
+      @contextOperation ||= @$operation.$(@$name)
+      @actionOperation  ||= @contextOperation.$$('get', per: 100).$promise.then @_assign.bind(@)
 
     # fetch association for specific object.
     # triggers load if necessary.
@@ -40,7 +40,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     # creates objects/arrays depending on the association type
     # one can bind to
     _initCache: ->
-      _.each @objects, (object) =>
+      _.each @$objects, (object) =>
         @cache[object['@id']] = if @isCollection
           []
         else
@@ -53,14 +53,32 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     _assign: (actionOp) ->
       results = if _.isArray(actionOp.$rawData) then actionOp.$rawData else [actionOp.$rawData]
 
-      sortedResults = {}
-      _.each results, (object) -> sortedResults[object['id'].toString()] = object
-
+      # TODO does not work with HABTM
       if @isCollection
-        # each object may get assigned multiple association result objects
-        action = actionOp.$context.collection_action('get')
+        # HAS MANY
+        # find back reference association, -> association that points to same context the parent context does
+        # say you want to load user phones..
+        # - @$operation is a user action operation, which $context is the user context
+        # - @contextOperation.$context is the phone context
+        # - -> find the association inside of phone context which points to @id of user context
+        parentContextId = @$operation.$context.data['@context']['@id']
+        associationName = _.findKey @contextOperation.$context.data['@context']['properties'], (value, key) ->
+          value && value.type && value.type == parentContextId
 
-        _.each @$objects, (object) ->
-          console.log object.$associations[@$name]
+        _.each results, (result) =>
+          backReference = result && result[associationName] && result[associationName]['@id']
+          return unless backReference
+
+          @cache[backReference].push(result)
       else
-        @context.member_template('get')
+        sortedResults = {}
+        _.each results, (result) -> sortedResults[result['@id']] = result
+        _.each @$objects, (object) =>
+          requestedId = object.$associations && object.$associations[@$name] && object.$associations[@$name]['@id']
+          return unless requestedId
+
+          result = sortedResults[requestedId]
+          return unless result
+
+          _.merge @cache[object['@id']], result
+

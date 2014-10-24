@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) ->
+angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, ChUtils) ->
   # class to build and run requests. uses template to extract needed params from existing
   # objects and to build request url.
   class ChRequestBuilder
@@ -92,52 +92,17 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http) 
     _extractMemberArray: (source) ->
       return {} if _.isEmpty(source)
       action    = @$context.member_action('get')
-      @_extractArrayValues(action, source)
+      ChUtils.extractArrayValues(action, source)
 
     _extractCollectionArray: (source) ->
       return {} if _.isEmpty(source)
       action = @$context.collection_action('query')
-      @_extractArrayValues(action, source)
+      ChUtils.extractArrayValues(action, source)
 
     _extractCollection: (source) ->
       action = @$context.collection_action('query')
-      @_extractValues(action, source)
+      ChUtils.extractValues(action, source)
 
     _extractMember: (source) ->
       action = @$context.member_action('get')
-      @_extractValues(action, source)
-
-    _extractArrayValues: (action, objects) ->
-      mappings  = action.mappings
-
-      values = _.map objects, (obj) => @_extractValues(action, obj)
-      values = _.compact(values)
-
-      result = {}
-      _.each mappings, (mapping) ->
-        result[mapping.source] = []
-
-        _.each values, (attrs) ->
-          return unless attrs[mapping.source]
-          result[mapping.source].push attrs[mapping.source]
-
-      result
-
-    _extractValues: (action, object) ->
-      id = object && object['@id']
-      return {} unless id
-
-      result    = {}
-      template  = new UriTemplate(action.template)
-      values    = template.fromUri(id)
-      return {} if _.isEmpty(values)
-
-      mappings  = action.mappings
-
-      _.each mappings, (mapping) ->
-        value = values[mapping.variable]
-        return unless value
-
-        result[mapping.source] = value
-
-      result
+      ChUtils.extractValues(action, source)
