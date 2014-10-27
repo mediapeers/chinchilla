@@ -11,6 +11,7 @@ gulp     = require('gulp')
 $        = require("gulp-load-plugins")(lazy: false)
 $run     = require('run-sequence')
 $logger  = $.util.log
+$exec    = require('child_process').exec
 
 
 gulp.task 'compile::sources', ->
@@ -47,10 +48,19 @@ gulp.task "watch::watch", ->
   gulp.watch './test/**/*.coffee', ['compile::tests']
   return
 
+gulp.task "watch::doc", ->
+  gulp.watch './src/**/*.coffee', ['documentation::generate']
+  return
+
+gulp.task 'documentation::generate', ->
+  $exec('codo src')
+
 gulp.task "compile", (cb) ->
   $run(["compile::bower", "compile::fixtures", "compile::sources", "compile::tests"], cb)
 
 gulp.task "watch", (cb) ->
   $run('compile', 'watch::watch', cb)
 
+gulp.task "doc", (cb) ->
+  $run('documentation::generate', 'watch::doc', cb)
 

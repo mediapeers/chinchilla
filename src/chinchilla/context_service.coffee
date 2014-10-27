@@ -1,22 +1,28 @@
 angular.module('chinchilla').factory 'ChContextService', ($q, $http, ChContext) ->
-  # this is the cache
-  contexts = {}
+  # class that fetches contexts from backend and caches them.
+  # singleton.
+  class ChContextService
+    constructor: ->
+      @contexts = {}
 
-  # TODO there is no multi get for contexts currently
-  get: (url) ->
-    deferred = $q.defer()
+    # @param [String] url of context to be fetched
+    # @return [ChContext] context instance
+    get: (url) ->
+      deferred = $q.defer()
 
-    if context = contexts[url]
-      deferred.resolve(context)
-    else
-      success = (response) ->
-        context = new ChContext(response.data)
-        contexts[url] = context
+      if context = @contexts[url]
         deferred.resolve(context)
+      else
+        success = (response) =>
+          context = new ChContext(response.data)
+          @contexts[url] = context
+          deferred.resolve(context)
 
-      error = ->
-        deferred.reject()
+        error = ->
+          deferred.reject()
 
-      $http.get(url).then success, error
+        $http.get(url).then success, error
 
-    deferred.promise
+      deferred.promise
+
+  new ChContextService()

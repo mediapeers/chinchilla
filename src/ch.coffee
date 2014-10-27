@@ -7,12 +7,12 @@ module.provider '$ch', () ->
   @setEntryPoint = (systemId, url) ->
     entryPoints[systemId] = url
 
-  @.$get = ['ChContextOp', (ChContextOp) ->
+  @.$get = ['ChContextOperation', (ChContextOperation) ->
     (systemId) ->
       contextUrl = entryPoints[systemId]
       throw new Error("no entry point url defined for #{systemId}") unless contextUrl
 
-      new ChContextOp(null, { '@context': contextUrl })
+      new ChContextOperation(null, { '@context': contextUrl })
   ]
 
   @

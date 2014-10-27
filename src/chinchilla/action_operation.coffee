@@ -1,14 +1,20 @@
-angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilder) ->
-  class ChActionOp extends ChOperation
+angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChRequestBuilder, ChLazyLoader) ->
+  # chainable operation class to run queries.
+  class ChActionOperation extends ChOperation
+    # @param [ChContextOperation] parent
+    # @param [String] action 'member', 'collection' or null.
+    #   if null, type will be determined based on association type, if any
+    # @param [String] action action name, e.g. 'query'
+    # @param [Object] params
     constructor: (@$parent, @$type, @$action, @$params = {}) ->
       ChOperation.init(@)
 
       @$subject = null
-      @$data = null
       @$arr = []
       @$obj = {}
 
       success = =>
+        # action operation used the parent's context
         @$context = @$parent.$context
 
         # use subject from parent only if object or array (no string!)
@@ -17,23 +23,30 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
         @$associationProperty = @$parent.$associationProperty
         @$associationType = if @$associationProperty && @$associationProperty.collection then 'collection' else 'member'
 
-        if _.isNull(@$type) && @$associationType
-          # if type is not specified, try to guess from association info (one vs many)
-          @$type = @$associationType
+        if _.isNull(@$type)
+          # if type is not specified, try to guess from association
+          @$type = if _.isArray(@$associationData)
+            'collection'
+          else if _.isPlainObject(@$associationType)
+            'member'
+          else
+            @$associationType
 
-        @__run__()
+        @_run()
 
       error = =>
         @$deferred.reject()
 
       @$parent.$promise.then success, error
 
-    __run__: ->
+    _run: ->
       builder = new ChRequestBuilder(@$context, @$subject, @$type, @$action)
 
+      # DISASSEMBLE params from association references if available..
       # if collection association and data array of arrays => HABTM!
       if @$type == 'collection' && _.isArray(@$associationData) && _.isArray(_.first(@$associationData))
-        _.each @$associationData, (data) -> builder.extractFrom(data, 'member')
+        flattenedAssociationData = _.flatten @$associationData
+        builder.extractFrom(flattenedAssociationData, 'member')
 
       # if member association and data array => HABTM!
       else if @$type == 'member' && _.isArray(@$associationData)
@@ -44,16 +57,21 @@ angular.module('chinchilla').factory 'ChActionOp', (ChOperation, ChRequestBuilde
       else
         builder.extractFrom(@$associationData, @$associationType)
 
+      # DISASSEMBLE params from passed objects
       builder.extractFrom(@$subject, @$type)
+      # add passed params
       builder.mergeParams(@$params)
 
       success = (response) =>
-        @$data = response.data
+        @$rawData = (response.data && response.data.members) || response.data
+        data = _.cloneDeep(@$rawData)
 
-        if response.data.members
-          @$arr = response.data.members
+        if _.isArray(data)
+          _.each data, (member) => @$arr.push(member)
+          new ChLazyLoader(@, @$arr)
         else
-          @$obj = response.data
+          _.merge @$obj, data
+          new ChLazyLoader(@, [@$obj])
 
         @$deferred.resolve(@)
       error = =>

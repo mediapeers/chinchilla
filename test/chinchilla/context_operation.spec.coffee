@@ -1,10 +1,10 @@
 'use strict'
 
-describe 'ChContextOp', ->
+describe 'ChContextOperation', ->
   $ch = null
   $httpBackend = null
   ChContext = null
-  ChContextOp = null
+  ChContextOperation = null
   $pm = null
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
   PC = 'http://pm.mpx.dev/v20140601/context/product'
@@ -27,7 +27,7 @@ describe 'ChContextOp', ->
       $ch = $injector.get('$ch')
       $httpBackend = $injector.get('$httpBackend')
       ChContext = $injector.get('ChContext')
-      ChContextOp = $injector.get('ChContextOp')
+      ChContextOperation = $injector.get('ChContextOperation')
 
       entryPointContext = loadFixture('pm.context.entry_point')
       productContext = loadFixture('pm.context.product')
@@ -46,19 +46,20 @@ describe 'ChContextOp', ->
   it 'responds to $$', ->
     expect($pm).to.respondTo('$$')
 
-  it 'exposes association data for collection', ->
-    $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ affiliation: { foo: 'bar' }}])
-    products = $pm.$('products').$$('query')
-    affiliationContext = products.$('affiliation')
-    $httpBackend.flush()
+  context 'association data', ->
+    it 'exposes association data for collection', ->
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ affiliation: { '@id': 'foo' }}])
+      products = $pm.$('products').$$('query')
+      affiliationContext = products.$('affiliation')
+      $httpBackend.flush()
 
-    expect(affiliationContext.$associationData.length).to.eq(1)
-    expect(affiliationContext.$associationData[0]).to.be.like(foo: 'bar')
+      expect(affiliationContext.$associationData.length).to.eq(1)
+      expect(affiliationContext.$associationData[0]).to.be.like('@id': 'foo')
 
-  it 'exposes association data for has one/belongs to association', ->
-    $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(affiliation: { foo: 'bar' })
-    products = $pm.$('products').$$('query')
-    affiliationContext = products.$('affiliation')
-    $httpBackend.flush()
+    it 'exposes association data for has one/belongs to association', ->
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/product/1').respond(affiliation: { '@id': 'foo' })
+      products = $pm.$('products').$m('get', id: 1)
+      affiliationContext = products.$('affiliation')
+      $httpBackend.flush()
 
-    expect(affiliationContext.$associationData).to.be.like(foo: 'bar')
+      expect(affiliationContext.$associationData).to.be.like('@id': 'foo')

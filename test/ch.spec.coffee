@@ -4,7 +4,7 @@ describe '$chProvider', ->
   $ch = null
   $httpBackend = null
   ChContext = null
-  ChContextOp = null
+  ChContextOperation = null
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
 
   beforeEach ->
@@ -21,13 +21,13 @@ describe '$chProvider', ->
         $ch = $injector.get('$ch')
         $httpBackend = $injector.get('$httpBackend')
         ChContext = $injector.get('ChContext')
-        ChContextOp = $injector.get('ChContextOp')
+        ChContextOperation = $injector.get('ChContextOperation')
 
         entryPointContext = loadFixture('pm.context.entry_point')
         $httpBackend.whenGET(EP).respond(entryPointContext)
 
     it 'returns context operation', ->
-      expect($ch('pm')).to.be.an.instanceof(ChContextOp)
+      expect($ch('pm')).to.be.an.instanceof(ChContextOperation)
 
     it 'fetches context for pm entry point', ->
       operation = $ch('pm')
