@@ -12,6 +12,7 @@ angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChReques
       @$subject = null
       @$arr = []
       @$obj = {}
+      @$headers = {}
 
       success = =>
         # action operation used the parent's context
@@ -72,6 +73,8 @@ angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChReques
         else
           _.merge @$obj, data
           new ChLazyLoader(@, [@$obj])
+
+        _.merge @$headers, response.headers()
 
         @$deferred.resolve(@)
       error = =>
