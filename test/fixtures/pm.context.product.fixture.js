@@ -90,6 +90,19 @@ defineFixture('pm.context.product', {
             "source": "id"
           }
         ]
+      },
+      "get": {
+        "method": "GET",
+        "expects": null,
+        "response": "http://pm.mpx.dev/v20140601/context/collection",
+        "resource": "http://pm.mpx.dev/v20140601/context/product",
+        "template": "http://pm.mpx.dev/v20140601/product/{ids}",
+        "mappings": [
+          {
+            "variable": "ids",
+            "source": "id"
+          }
+        ]
       }
     }
   }
