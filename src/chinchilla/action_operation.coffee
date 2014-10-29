@@ -26,7 +26,7 @@ angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChReques
 
         if _.isNull(@$type)
           # if type is not specified, try to guess from association
-          @$type = if _.isArray(@$associationData)
+          @$type = if _.isArray(@$associationData) || _.isArray(@$parent.$subject)
             'collection'
           else if _.isPlainObject(@$associationType)
             'member'
@@ -42,7 +42,6 @@ angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChReques
 
     _run: ->
       builder = new ChRequestBuilder(@$context, @$subject, @$type, @$action)
-
       # DISASSEMBLE params from association references if available..
       # if collection association and data array of arrays => HABTM!
       if @$type == 'collection' && _.isArray(@$associationData) && _.isArray(_.first(@$associationData))

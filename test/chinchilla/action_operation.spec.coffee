@@ -37,6 +37,8 @@ describe 'ChActionOperation', ->
 
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/products').respond({})
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1,2').respond({})
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/affiliation').respond({})
 
       $pm = $ch('pm')
@@ -53,8 +55,56 @@ describe 'ChActionOperation', ->
     $httpBackend.flush()
     expect(operation.$type).to.eq('collection')
 
+  it 'initializes collection action for array of objects', ->
+    objects = [
+        '@context': 'http://pm.mpx.dev/v20140601/context/product'
+        '@id': 'http://pm.mpx.dev/v20140601/product/1'
+      ,
+        '@context': 'http://pm.mpx.dev/v20140601/context/product'
+        '@id': 'http://pm.mpx.dev/v20140601/product/2'
+    ]
+
+    operation = $pm.$(objects).$c('get')
+
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('collection')
+
+  it 'initializes magick collection action for array of objects', ->
+    objects = [
+        '@context': 'http://pm.mpx.dev/v20140601/context/product'
+        '@id': 'http://pm.mpx.dev/v20140601/product/1'
+      ,
+        '@context': 'http://pm.mpx.dev/v20140601/context/product'
+        '@id': 'http://pm.mpx.dev/v20140601/product/2'
+    ]
+
+    operation = $pm.$(objects).$$('get')
+
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('collection')
+
   it 'initializes member action', ->
     operation = $pm.$('products').$m('get')
+
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('member')
+
+  it 'initializes member action for object', ->
+    obj =
+      '@context': 'http://pm.mpx.dev/v20140601/context/product'
+      '@id': 'http://pm.mpx.dev/v20140601/product/1'
+
+    operation = $pm.$(obj).$m('get')
+
+    $httpBackend.flush()
+    expect(operation.$type).to.eq('member')
+
+  it 'initializes magick member action for object', ->
+    obj =
+      '@context': 'http://pm.mpx.dev/v20140601/context/product'
+      '@id': 'http://pm.mpx.dev/v20140601/product/1'
+
+    operation = $pm.$(obj).$$('get')
 
     $httpBackend.flush()
     expect(operation.$type).to.eq('member')

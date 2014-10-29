@@ -75,13 +75,14 @@ angular.module('chinchilla').factory 'ChContextOperation', (ChOperation, ChConte
           throw new Error("ChContextOperation#_findContextUrl: no association '#{@$subject}' found")
 
       else if _.isArray(@$subject)
+        first = @$subject[0]
         @$contextUrl = @$subject[0] && @$subject[0]['@context']
 
         if !first || !@$contextUrl
           console.log @
           throw new Error('ChContextOperation#_findContextUrl: empty array of objects given or missing context')
 
-        if _.any(@$subject, (current) -> current['@context'] != @$contextUrl)
+        if _.any(@$subject, (current) => current['@context'] != @$contextUrl)
           console.log @
           throw new Error('ChContextOperation#_findContextUrl: objects with different contexts given, aborting')
 
