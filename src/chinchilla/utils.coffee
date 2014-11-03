@@ -31,6 +31,7 @@ angular.module('chinchilla').factory 'ChUtils', ->
 
         _.each values, (attrs) ->
           return unless attrs[mapping.source]
+          return if _.include result[mapping.source], attrs[mapping.source]
           result[mapping.source].push attrs[mapping.source]
 
       result
