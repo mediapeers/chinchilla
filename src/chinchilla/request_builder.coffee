@@ -16,8 +16,14 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     extractFrom: (source, type) ->
       params = if _.isArray(source) && type == 'member'
         @_extractMemberArray(source)
+
       else if _.isArray(source) && type == 'collection'
-        @_extractCollectionArray(source)
+        first = _.first(source)
+        if _.has(first, '@context')
+          @_extractMemberArray(source)
+        else
+          @_extractCollectionArray(source)
+
       else
         if type == 'collection'
           @_extractCollection(source)
