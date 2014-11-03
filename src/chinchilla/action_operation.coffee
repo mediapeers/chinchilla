@@ -76,7 +76,9 @@ angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChReques
         _.merge @$headers, response.headers()
 
         @$deferred.resolve(@)
-      error = =>
+      error = (response) =>
+        @$error = _.cloneDeep(response.data)
+        _.merge @$headers, response.headers()
         @$deferred.reject()
 
       builder.performRequest().then success, error

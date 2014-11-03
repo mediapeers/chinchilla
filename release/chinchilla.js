@@ -110,7 +110,9 @@
             };
           }(this);
           error = function (_this) {
-            return function () {
+            return function (response) {
+              _this.$error = _.cloneDeep(response.data);
+              _.merge(_this.$headers, response.headers());
               return _this.$deferred.reject();
             };
           }(this);
