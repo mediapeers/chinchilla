@@ -43,6 +43,16 @@ describe 'ChContextOperation', ->
     operation = $pm.$('products')
     $httpBackend.flush()
 
+  describe '#$new', ->
+    it 'creates new empty object', ->
+      operation = $pm.$('products')
+      $httpBackend.flush()
+
+      operation.$new(foo: 'bar').$promise.then (result) ->
+        expect(result.$obj).to.be.like('@context': PC, foo: 'bar')
+
+      true
+
   it 'responds to $$', ->
     expect($pm).to.respondTo('$$')
 

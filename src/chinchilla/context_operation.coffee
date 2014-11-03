@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChContextOperation', (ChOperation, ChContextService) ->
+angular.module('chinchilla').factory 'ChContextOperation', ($q, ChOperation, ChContextService) ->
   # chainable operation class to fetch contexts.
   class ChContextOperation extends ChOperation
     # @param [ChOperation] parent might be ChActionOperation or ChContextOperation
@@ -47,6 +47,23 @@ angular.module('chinchilla').factory 'ChContextOperation', (ChOperation, ChConte
 
       else
         @_run()
+
+    # creates a new object pointing to the current context
+    #
+    # @param [Object] attrs attributes to be merged into the new object
+    # @return [Object]
+    $new: (attrs = {}) ->
+      deferred = $q.defer()
+      result =
+        $obj: _.extend({}, attrs)
+        $deferred: deferred
+        $promise: deferred.promise
+
+      @$promise.then =>
+        result.$obj['@context'] = @$context.data['@context']['@type']
+        deferred.resolve(result)
+
+      result
 
     # finds context url first, then fetches the context.
     _run: ->
