@@ -120,3 +120,35 @@ describe 'ChActionOperation', ->
 
     $httpBackend.flush()
     expect(operation.$type).to.eq('member')
+
+  context 'lazy loading', ->
+    class ObjectsOperationDummy
+      @calls = []
+      constructor: ->
+        ObjectsOperationDummy.calls.push(arguments)
+        @$promise = then: angular.noop
+
+    beforeEach ->
+      ObjectsOperationDummy.calls = []
+
+    it 'initializes lazy loader', ->
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': PC }])
+      products = $pm.$('products').$$('query')
+
+      objectsOperationStub = sinon.stub(products, 'ChObjectsOperation', ObjectsOperationDummy)
+
+      $httpBackend.flush()
+
+      # once: new ChContextOperation
+      expect(ObjectsOperationDummy.calls.length).to.eq(1)
+
+    it 'initializes lazy loader multiple times for different contexts', ->
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': 'foo' }, { '@context': 'bar' }])
+      products = $pm.$('products').$$('query')
+
+      objectsOperationStub = sinon.stub(products, 'ChObjectsOperation', ObjectsOperationDummy)
+
+      $httpBackend.flush()
+
+      # twice: context 'foo' and context 'bar'..
+      expect(ObjectsOperationDummy.calls.length).to.eq(2)

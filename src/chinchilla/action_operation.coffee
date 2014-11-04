@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChObjectsOperation, ChRequestBuilder, ChLazyLoader) ->
+angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRequestBuilder, ChLazyLoader) ->
   # chainable operation class to run queries.
   class ChActionOperation extends ChOperation
     # @param [ChContextOperation] parent
@@ -103,7 +103,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChOb
       promises    = []
 
       _.each groups, (records, contextUrl) ->
-        operation = new ChObjectsOperation(records)
+        operation = new self.ChObjectsOperation(records)
         operation.$promise.then -> new ChLazyLoader(operation, records)
         promises.push operation.$promise
 

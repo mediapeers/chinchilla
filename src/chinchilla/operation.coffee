@@ -11,6 +11,7 @@ angular.module('chinchilla').factory 'ChOperation', ($q, $injector) ->
       instance.$promise = instance.$deferred.promise
       instance.ChContextOperation = $injector.get('ChContextOperation')
       instance.ChActionOperation  = $injector.get('ChActionOperation')
+      instance.ChObjectsOperation = $injector.get('ChObjectsOperation')
 
     # returns new chained context operation
     #
