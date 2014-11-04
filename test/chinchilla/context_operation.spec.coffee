@@ -58,7 +58,7 @@ describe 'ChContextOperation', ->
 
   context 'association data', ->
     it 'exposes association data for collection', ->
-      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ affiliation: { '@id': 'foo' }}])
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': AC, affiliation: { '@id': 'foo' }}])
       products = $pm.$('products').$$('query')
       affiliationContext = products.$('affiliation')
       $httpBackend.flush()
@@ -67,7 +67,7 @@ describe 'ChContextOperation', ->
       expect(affiliationContext.$associationData[0]).to.be.like('@id': 'foo')
 
     it 'exposes association data for has one/belongs to association', ->
-      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/product/1').respond(affiliation: { '@id': 'foo' })
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/product/1').respond('@context': AC, affiliation: { '@id': 'foo' })
       products = $pm.$('products').$m('get', id: 1)
       affiliationContext = products.$('affiliation')
       $httpBackend.flush()
