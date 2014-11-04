@@ -63,8 +63,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
       builder.mergeParams(@$params)
 
       success = (response) =>
-        @$rawData = (response.data && response.data.members) || response.data
-        data = _.cloneDeep(@$rawData)
+        data = (response.data && response.data.members) || response.data
 
         if _.isArray(data)
           _.each data, (member) => @$arr.push(member)
@@ -73,27 +72,39 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
 
         _.merge @$headers, response.headers()
 
+        @_moveAssociations()
         @_initLazyLoading()
 
       error = (response) =>
-        @$error = _.cloneDeep(response.data)
+        @$error = response.data
         _.merge @$headers, response.headers()
+
         @$deferred.reject()
 
       builder.performRequest().then success, error
 
-    # group objects by @context
-    # for each group create a lazy loader instance
-    # once all lazy loaders have done their initialization job, we're done
+    _objects: ->
+      if _.isEmpty(@$obj) then @$arr else [@$obj]
+
+    _moveAssociations: ->
+      _.each @_objects(), (object) ->
+        object.$associations ||= {}
+
+        _.each object, (value, key) ->
+          return if key == '$associations'
+
+          if _.isArray(value) || (_.isPlainObject(value) && value['@id'])
+            object.$associations[key] = _.clone(value)
+            delete object[key]
+
     _initLazyLoading: ->
-      self      = @
-      objects   = if _.isEmpty(@$obj) then @$arr else [@$obj]
-      groups    = _.groupBy objects, '@context'
-      promises  = []
+      self        = @
+      groups      = _.groupBy @_objects(), '@context'
+      promises    = []
 
       _.each groups, (records, contextUrl) ->
-        op = new self.ChContextOperation(null, '@context': contextUrl)
-        promises.push(new ChLazyLoader(op, records).$promise)
+        operation = new self.ChObjectsOperation(records)
+        operation.$promise.then -> new ChLazyLoader(operation, records)
+        promises.push operation.$promise
 
-      $q.all(promises).then ->
-        self.$deferred.resolve(self)
+      $q.all(promises).then -> self.$deferred.resolve(self)

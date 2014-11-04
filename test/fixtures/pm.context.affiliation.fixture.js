@@ -1,6 +1,6 @@
 defineFixture('pm.context.affiliation', {
   "@context": {
-    "@type": "http://pm.mpx.dev/v20140601/context/affiliation",
+    "@type": "context",
     "properties": {
       "id": {
         "type": "string"
