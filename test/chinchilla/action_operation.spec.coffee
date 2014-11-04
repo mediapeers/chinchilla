@@ -5,6 +5,8 @@ describe 'ChActionOperation', ->
   $httpBackend = null
   ChActionOperation = null
   $pm = null
+  $injector = null
+  $q = null
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
   PC = 'http://pm.mpx.dev/v20140601/context/product'
   AC = 'http://pm.mpx.dev/v20140601/context/affiliation'
@@ -22,8 +24,10 @@ describe 'ChActionOperation', ->
     $httpBackend.verifyNoOutstandingRequest()
 
   beforeEach ->
-    inject ($injector) ->
+    inject (_$injector_) ->
+      $injector = _$injector_
       $ch = $injector.get('$ch')
+      $q = $injector.get('$q')
       $httpBackend = $injector.get('$httpBackend')
       ChActionOperation = $injector.get('ChActionOperation')
 
@@ -120,3 +124,35 @@ describe 'ChActionOperation', ->
 
     $httpBackend.flush()
     expect(operation.$type).to.eq('member')
+
+  context 'lazy loading', ->
+    class ContextOperationDummy
+      @calls = []
+      constructor: ->
+        ContextOperationDummy.calls.push(arguments)
+        @$promise = then: angular.noop
+
+    beforeEach ->
+      ContextOperationDummy.calls = []
+
+    it 'initializes lazy loader', ->
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': PC }])
+      products = $pm.$('products').$$('query')
+
+      contextOperationStub = sinon.stub(products, 'ChContextOperation', ContextOperationDummy)
+
+      $httpBackend.flush()
+
+      # once: new ChContextOperation
+      expect(ContextOperationDummy.calls.length).to.eq(1)
+
+    it 'initializes lazy loader multiple times for different contexts', ->
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': 'foo' }, { '@context': 'bar' }])
+      products = $pm.$('products').$$('query')
+
+      contextOperationStub = sinon.stub(products, 'ChContextOperation', ContextOperationDummy)
+
+      $httpBackend.flush()
+
+      # twice: context 'foo' and context 'bar'..
+      expect(ContextOperationDummy.calls.length).to.eq(2)

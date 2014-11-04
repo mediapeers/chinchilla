@@ -6,6 +6,7 @@ describe '$chProvider', ->
   ChContext = null
   ChContextOperation = null
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
+  PC = 'http://pm.mpx.dev/v20140601/context/product'
 
   beforeEach ->
     angular.mock.module("chinchilla")
@@ -23,19 +24,22 @@ describe '$chProvider', ->
         ChContext = $injector.get('ChContext')
         ChContextOperation = $injector.get('ChContextOperation')
 
-        entryPointContext = loadFixture('pm.context.entry_point')
-        $httpBackend.whenGET(EP).respond(entryPointContext)
+        $httpBackend.whenGET(EP).respond({})
 
-    it 'returns context operation', ->
+    it 'returns context operation for system id', ->
       expect($ch('pm')).to.be.an.instanceof(ChContextOperation)
+
+    it 'returns context operation for object', ->
+      obj = '@context': 'http://pm.mpx.dev/v20140601/context/affiliation'
+      expect($ch(obj)).to.be.an.instanceof(ChContextOperation)
 
     it 'fetches context for pm entry point', ->
       operation = $ch('pm')
-
-      expect(operation.$context).to.be.null
-
       $httpBackend.flush()
 
-      expect(operation.$context).not.to.be.null
-      expect(operation.$context).to.be.an.instanceof(ChContext)
+    it 'fetches context for product', ->
+      $httpBackend.expectGET(PC).respond({})
+      obj = '@context': 'http://pm.mpx.dev/v20140601/context/product'
 
+      operation = $ch(obj)
+      $httpBackend.flush()
