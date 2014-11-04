@@ -51,7 +51,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     #
     # @param [ChActionOperation] actionOp
     _assign: (actionOp) ->
-      results = if _.isArray(actionOp.$rawData) then actionOp.$rawData else [actionOp.$rawData]
+      results = if _.isEmpty(actionOp.$obj) then actionOp.$arr else [actionOp.$obj]
 
       if @isCollection
         # check if HABTM
@@ -87,7 +87,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
             value && value.type && value.type == parentContextId
 
           _.each results, (result) =>
-            backReference = result && result[associationName] && result[associationName]['@id']
+            backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id']
             return unless backReference
 
             @cache[backReference].push(result)

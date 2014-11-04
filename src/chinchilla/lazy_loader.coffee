@@ -21,18 +21,9 @@ angular.module('chinchilla').factory 'ChLazyLoader', (ChLazyAssociation) ->
       self = @
 
       _.each @$objects, (object) ->
-        object.$associations ||= {}
+        return unless object.$associations
 
-        associations = {}
-        _.each object, (value, key) ->
-          return if key == '$associations'
-
-          if _.isArray(value) || (_.isPlainObject(value) && value['@id'])
-            associations[key] = _.clone(value)
-
-        _.each associations, (value, key) ->
-          object.$associations[key] = value
-
+        _.each object.$associations, (value, key) ->
           Object.defineProperty object, key, get: -> self._association(key).retrieve(object)
 
     # init ChLazyAssociation instance

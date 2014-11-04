@@ -41,3 +41,40 @@ angular.module('chinchilla').factory 'ChOperation', ($q, $injector) ->
     # @return [ChActionOperation]
     $m: (action, params = {}) ->
       new @ChActionOperation(@, 'member', action, params)
+
+    # finds context url
+    # if $subject is string, then it assumes this is the name of an association
+    # (will fail if no parent context operation available).
+    # if $subject is an object, object has to provide @context url.
+    # if $subject is an array of objects, all objects have to provide the same @context url
+    _findContextUrl: (subject) ->
+      @$contextUrl = null
+
+      if _.isString(subject)
+        @$contextUrl = @$associationProperty && @$associationProperty.type
+
+        unless @$contextUrl
+          throw new Error("ChContextOperation#_findContextUrl: no association '#{subject}' found")
+
+      else if _.isArray(subject)
+        first = subject[0]
+        @$contextUrl = subject[0] && subject[0]['@context']
+
+        if !first || !@$contextUrl
+          console.log @
+          throw new Error('ChContextOperation#_findContextUrl: empty array of objects given or missing context')
+
+        if _.any(subject, (current) => current['@context'] != @$contextUrl)
+          console.log @
+          throw new Error('ChContextOperation#_findContextUrl: objects with different contexts given, aborting')
+
+      else if _.isPlainObject(subject)
+        @$contextUrl = subject['@context']
+
+        if !@$contextUrl
+          console.log @
+          throw new Error('ChContextOperation#_findContextUrl: missing context')
+
+      else
+        console.log @
+        throw new Error('ChContextOperation#_findContextUrl: unsupported subject')

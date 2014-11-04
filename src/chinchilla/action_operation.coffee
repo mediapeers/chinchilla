@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChRequestBuilder, ChLazyLoader) ->
+angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChObjectsOperation, ChRequestBuilder, ChLazyLoader) ->
   # chainable operation class to run queries.
   class ChActionOperation extends ChOperation
     # @param [ChContextOperation] parent
@@ -63,22 +63,50 @@ angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChReques
       builder.mergeParams(@$params)
 
       success = (response) =>
-        @$rawData = (response.data && response.data.members) || response.data
-        data = _.cloneDeep(@$rawData)
+        data = (response.data && response.data.members) || response.data
 
         if _.isArray(data)
           _.each data, (member) => @$arr.push(member)
-          new ChLazyLoader(@, @$arr)
         else
           _.merge @$obj, data
-          new ChLazyLoader(@, [@$obj])
 
         _.merge @$headers, response.headers()
 
-        @$deferred.resolve(@)
+        @_moveAssociations()
+        @_initLazyLoading()
+        #new ChLazyLoader(@, @_objects())
+        #@$deferred.resolve(@)
+
       error = (response) =>
-        @$error = _.cloneDeep(response.data)
+        @$error = response.data
         _.merge @$headers, response.headers()
+
         @$deferred.reject()
 
       builder.performRequest().then success, error
+
+    _objects: ->
+      if _.isEmpty(@$obj) then @$arr else [@$obj]
+
+    _moveAssociations: ->
+      _.each @_objects(), (object) ->
+        object.$associations ||= {}
+
+        _.each object, (value, key) ->
+          return if key == '$associations'
+
+          if _.isArray(value) || (_.isPlainObject(value) && value['@id'])
+            object.$associations[key] = _.clone(value)
+            delete object[key]
+
+    _initLazyLoading: ->
+      self        = @
+      groups      = _.groupBy @_objects(), '@context'
+      promises    = []
+
+      _.each groups, (records, contextUrl) ->
+        operation = new ChObjectsOperation(records)
+        operation.$promise.then -> new ChLazyLoader(operation, records)
+        promises.push operation.$promise
+
+      $q.all(promises).then -> self.$deferred.resolve(self)
