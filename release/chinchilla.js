@@ -10,13 +10,17 @@
     this.$get = [
       'ChContextOperation',
       function (ChContextOperation) {
-        return function (systemId) {
+        return function (subject) {
           var contextUrl;
-          contextUrl = entryPoints[systemId];
-          if (!contextUrl) {
-            throw new Error('no entry point url defined for ' + systemId);
+          if (_.isString(subject)) {
+            contextUrl = entryPoints[subject];
+            if (!contextUrl) {
+              throw new Error('no entry point url defined for ' + subject);
+            }
+            return new ChContextOperation(null, { '@context': contextUrl });
+          } else {
+            return new ChContextOperation(null, subject);
           }
-          return new ChContextOperation(null, { '@context': contextUrl });
         };
       }
     ];
@@ -38,10 +42,11 @@
       return child;
     };
   angular.module('chinchilla').factory('ChActionOperation', [
+    '$q',
     'ChOperation',
     'ChRequestBuilder',
     'ChLazyLoader',
-    function (ChOperation, ChRequestBuilder, ChLazyLoader) {
+    function ($q, ChOperation, ChRequestBuilder, ChLazyLoader) {
       var ChActionOperation;
       return ChActionOperation = function (_super) {
         __extends(ChActionOperation, _super);
@@ -100,13 +105,11 @@
                 _.each(data, function (member) {
                   return _this.$arr.push(member);
                 });
-                new ChLazyLoader(_this, _this.$arr);
               } else {
                 _.merge(_this.$obj, data);
-                new ChLazyLoader(_this, [_this.$obj]);
               }
               _.merge(_this.$headers, response.headers());
-              return _this.$deferred.resolve(_this);
+              return _this._initLazyLoading();
             };
           }(this);
           error = function (_this) {
@@ -117,6 +120,21 @@
             };
           }(this);
           return builder.performRequest().then(success, error);
+        };
+        ChActionOperation.prototype._initLazyLoading = function () {
+          var groups, objects, promises, self;
+          self = this;
+          objects = _.isEmpty(this.$obj) ? this.$arr : [this.$obj];
+          groups = _.groupBy(objects, '@context');
+          promises = [];
+          _.each(groups, function (records, contextUrl) {
+            var op;
+            op = new self.ChContextOperation(null, { '@context': contextUrl });
+            return promises.push(new ChLazyLoader(op, records).$promise);
+          });
+          return $q.all(promises).then(function () {
+            return self.$deferred.resolve(self);
+          });
         };
         return ChActionOperation;
       }(ChOperation);
@@ -179,9 +197,10 @@
       return child;
     };
   angular.module('chinchilla').factory('ChContextOperation', [
+    '$q',
     'ChOperation',
     'ChContextService',
-    function (ChOperation, ChContextService) {
+    function ($q, ChOperation, ChContextService) {
       var ChContextOperation;
       return ChContextOperation = function (_super) {
         __extends(ChContextOperation, _super);
@@ -224,6 +243,25 @@
             this._run();
           }
         }
+        ChContextOperation.prototype.$new = function (attrs) {
+          var deferred, result;
+          if (attrs == null) {
+            attrs = {};
+          }
+          deferred = $q.defer();
+          result = {
+            $obj: _.extend({}, attrs),
+            $deferred: deferred,
+            $promise: deferred.promise
+          };
+          this.$promise.then(function (_this) {
+            return function () {
+              result.$obj['@context'] = _this.$context.data['@context']['@type'];
+              return deferred.resolve(result);
+            };
+          }(this));
+          return result;
+        };
         ChContextOperation.prototype._run = function () {
           var error, success;
           this._findContextUrl();
@@ -425,15 +463,23 @@
 }.call(this));
 (function () {
   angular.module('chinchilla').factory('ChLazyLoader', [
+    '$q',
     'ChLazyAssociation',
-    function (ChLazyAssociation) {
+    function ($q, ChLazyAssociation) {
       var ChLazyLoader;
       return ChLazyLoader = function () {
         function ChLazyLoader($operation, $objects) {
           this.$operation = $operation;
           this.$objects = $objects != null ? $objects : [];
           this.$cache = {};
-          this._turnLazy();
+          this.$deferred = $q.defer();
+          this.$promise = this.$deferred.promise;
+          this.$operation.$promise.then(function (_this) {
+            return function () {
+              _this._turnLazy();
+              return _this.$deferred.resolve();
+            };
+          }(this));
         }
         ChLazyLoader.prototype._turnLazy = function () {
           var self;
@@ -657,6 +703,9 @@
           result[mapping.source] = [];
           return _.each(values, function (attrs) {
             if (!attrs[mapping.source]) {
+              return;
+            }
+            if (_.include(result[mapping.source], attrs[mapping.source])) {
               return;
             }
             return result[mapping.source].push(attrs[mapping.source]);
