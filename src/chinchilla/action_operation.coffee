@@ -74,8 +74,6 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChOb
 
         @_moveAssociations()
         @_initLazyLoading()
-        #new ChLazyLoader(@, @_objects())
-        #@$deferred.resolve(@)
 
       error = (response) =>
         @$error = response.data

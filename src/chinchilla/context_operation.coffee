@@ -34,7 +34,7 @@ angular.module('chinchilla').factory 'ChContextOperation', ($q, ChOperation, ChC
 
             assocData = (object) => object && object.$associations && object.$associations[@$subject]
 
-            if _.isEmpty(@$parent.$obj)
+            if !_.isEmpty(@$parent.$arr)
               @$associationData = _.map @$parent.$arr, (member) -> assocData(member)
             else
               @$associationData = assocData(@$parent.$obj)

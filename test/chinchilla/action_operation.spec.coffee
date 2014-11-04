@@ -99,7 +99,7 @@ describe 'ChActionOperation', ->
     $httpBackend.flush()
     expect(operation.$type).to.eq('member')
 
-  it 'initializes magick member action for object', ->
+  it 'initializes magic member action for object', ->
     obj =
       '@context': 'http://pm.mpx.dev/v20140601/context/product'
       '@id': 'http://pm.mpx.dev/v20140601/product/1'
