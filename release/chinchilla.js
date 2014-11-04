@@ -99,8 +99,7 @@
           success = function (_this) {
             return function (response) {
               var data;
-              _this.$rawData = response.data && response.data.members || response.data;
-              data = _.cloneDeep(_this.$rawData);
+              data = response.data && response.data.members || response.data;
               if (_.isArray(data)) {
                 _.each(data, function (member) {
                   return _this.$arr.push(member);
@@ -109,28 +108,52 @@
                 _.merge(_this.$obj, data);
               }
               _.merge(_this.$headers, response.headers());
+              _this._moveAssociations();
               return _this._initLazyLoading();
             };
           }(this);
           error = function (_this) {
             return function (response) {
-              _this.$error = _.cloneDeep(response.data);
+              _this.$error = response.data;
               _.merge(_this.$headers, response.headers());
               return _this.$deferred.reject();
             };
           }(this);
           return builder.performRequest().then(success, error);
         };
+        ChActionOperation.prototype._objects = function () {
+          if (_.isEmpty(this.$obj)) {
+            return this.$arr;
+          } else {
+            return [this.$obj];
+          }
+        };
+        ChActionOperation.prototype._moveAssociations = function () {
+          return _.each(this._objects(), function (object) {
+            object.$associations || (object.$associations = {});
+            return _.each(object, function (value, key) {
+              if (key === '$associations') {
+                return;
+              }
+              if (_.isArray(value) || _.isPlainObject(value) && value['@id']) {
+                object.$associations[key] = _.clone(value);
+                return delete object[key];
+              }
+            });
+          });
+        };
         ChActionOperation.prototype._initLazyLoading = function () {
-          var groups, objects, promises, self;
+          var groups, promises, self;
           self = this;
-          objects = _.isEmpty(this.$obj) ? this.$arr : [this.$obj];
-          groups = _.groupBy(objects, '@context');
+          groups = _.groupBy(this._objects(), '@context');
           promises = [];
           _.each(groups, function (records, contextUrl) {
-            var op;
-            op = new self.ChContextOperation(null, { '@context': contextUrl });
-            return promises.push(new ChLazyLoader(op, records).$promise);
+            var operation;
+            operation = new self.ChObjectsOperation(records);
+            operation.$promise.then(function () {
+              return new ChLazyLoader(operation, records);
+            });
+            return promises.push(operation.$promise);
           });
           return $q.all(promises).then(function () {
             return self.$deferred.resolve(self);
@@ -214,20 +237,19 @@
           if (this.$parent) {
             success = function (_this) {
               return function () {
-                var assocData, data;
+                var assocData;
                 if (_.isString(_this.$subject)) {
                   _this.$associationProperty = _this.$parent.$context.association(_this.$subject);
                   _this.$associationData = null;
                   assocData = function (object) {
-                    return object && object[_this.$subject];
+                    return object && object.$associations && object.$associations[_this.$subject];
                   };
-                  data = _this.$parent.$rawData;
-                  if (_.isArray(data)) {
-                    _this.$associationData = _.map(data, function (member) {
+                  if (!_.isEmpty(_this.$parent.$arr)) {
+                    _this.$associationData = _.map(_this.$parent.$arr, function (member) {
                       return assocData(member);
                     });
                   } else {
-                    _this.$associationData = assocData(data);
+                    _this.$associationData = assocData(_this.$parent.$obj);
                   }
                 }
                 return _this._run();
@@ -256,7 +278,7 @@
           };
           this.$promise.then(function (_this) {
             return function () {
-              result.$obj['@context'] = _this.$context.data['@context']['@type'];
+              result.$obj['@context'] = _this.$contextUrl;
               return deferred.resolve(result);
             };
           }(this));
@@ -264,7 +286,7 @@
         };
         ChContextOperation.prototype._run = function () {
           var error, success;
-          this._findContextUrl();
+          this._findContextUrl(this.$subject);
           success = function (_this) {
             return function (context) {
               _this.$context = context;
@@ -277,40 +299,6 @@
             };
           }(this);
           return ChContextService.get(this.$contextUrl).then(success, error);
-        };
-        ChContextOperation.prototype._findContextUrl = function () {
-          var first;
-          this.$contextUrl = null;
-          if (_.isString(this.$subject)) {
-            this.$contextUrl = this.$associationProperty && this.$associationProperty.type;
-            if (!this.$contextUrl) {
-              throw new Error('ChContextOperation#_findContextUrl: no association \'' + this.$subject + '\' found');
-            }
-          } else if (_.isArray(this.$subject)) {
-            first = this.$subject[0];
-            this.$contextUrl = this.$subject[0] && this.$subject[0]['@context'];
-            if (!first || !this.$contextUrl) {
-              console.log(this);
-              throw new Error('ChContextOperation#_findContextUrl: empty array of objects given or missing context');
-            }
-            if (_.any(this.$subject, function (_this) {
-                return function (current) {
-                  return current['@context'] !== _this.$contextUrl;
-                };
-              }(this))) {
-              console.log(this);
-              throw new Error('ChContextOperation#_findContextUrl: objects with different contexts given, aborting');
-            }
-          } else if (_.isPlainObject(this.$subject)) {
-            this.$contextUrl = this.$subject['@context'];
-            if (!this.$contextUrl) {
-              console.log(this);
-              throw new Error('ChContextOperation#_findContextUrl: missing context');
-            }
-          } else {
-            console.log(this);
-            throw new Error('ChContextOperation#_findContextUrl: unsupported subject');
-          }
         };
         return ChContextOperation;
       }(ChOperation);
@@ -385,7 +373,7 @@
         };
         ChLazyAssociation.prototype._assign = function (actionOp) {
           var associationName, habtm, parentContextId, results, sortedResults;
-          results = _.isArray(actionOp.$rawData) ? actionOp.$rawData : [actionOp.$rawData];
+          results = _.isEmpty(actionOp.$obj) ? actionOp.$arr : [actionOp.$obj];
           if (this.isCollection) {
             habtm = _.any(this.$objects, function (_this) {
               return function (object) {
@@ -427,7 +415,7 @@
               return _.each(results, function (_this) {
                 return function (result) {
                   var backReference;
-                  backReference = result && result[associationName] && result[associationName]['@id'];
+                  backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id'];
                   if (!backReference) {
                     return;
                   }
@@ -463,41 +451,24 @@
 }.call(this));
 (function () {
   angular.module('chinchilla').factory('ChLazyLoader', [
-    '$q',
     'ChLazyAssociation',
-    function ($q, ChLazyAssociation) {
+    function (ChLazyAssociation) {
       var ChLazyLoader;
       return ChLazyLoader = function () {
         function ChLazyLoader($operation, $objects) {
           this.$operation = $operation;
           this.$objects = $objects != null ? $objects : [];
           this.$cache = {};
-          this.$deferred = $q.defer();
-          this.$promise = this.$deferred.promise;
-          this.$operation.$promise.then(function (_this) {
-            return function () {
-              _this._turnLazy();
-              return _this.$deferred.resolve();
-            };
-          }(this));
+          this._turnLazy();
         }
         ChLazyLoader.prototype._turnLazy = function () {
           var self;
           self = this;
           return _.each(this.$objects, function (object) {
-            var associations;
-            object.$associations || (object.$associations = {});
-            associations = {};
-            _.each(object, function (value, key) {
-              if (key === '$associations') {
-                return;
-              }
-              if (_.isArray(value) || _.isPlainObject(value) && value['@id']) {
-                return associations[key] = _.clone(value);
-              }
-            });
-            return _.each(associations, function (value, key) {
-              object.$associations[key] = value;
+            if (!object.$associations) {
+              return;
+            }
+            return _.each(object.$associations, function (value, key) {
               return Object.defineProperty(object, key, {
                 get: function () {
                   return self._association(key).retrieve(object);
@@ -516,6 +487,62 @@
   ]);
 }.call(this));
 (function () {
+  var __hasProp = {}.hasOwnProperty, __extends = function (child, parent) {
+      for (var key in parent) {
+        if (__hasProp.call(parent, key))
+          child[key] = parent[key];
+      }
+      function ctor() {
+        this.constructor = child;
+      }
+      ctor.prototype = parent.prototype;
+      child.prototype = new ctor();
+      child.__super__ = parent.prototype;
+      return child;
+    };
+  angular.module('chinchilla').factory('ChObjectsOperation', [
+    'ChOperation',
+    'ChContextService',
+    function (ChOperation, ChContextService) {
+      var ChObjectsOperation;
+      return ChObjectsOperation = function (_super) {
+        __extends(ChObjectsOperation, _super);
+        function ChObjectsOperation($objects) {
+          this.$objects = $objects;
+          ChOperation.init(this);
+          this.$arr = [];
+          this.$obj = {};
+          this.$headers = {};
+          this.$contextUrl = null;
+          if (_.isArray(this.$objects)) {
+            this.$arr = this.$objects;
+          } else {
+            this.$obj = this.$objects;
+          }
+          this._run();
+        }
+        ChObjectsOperation.prototype._run = function () {
+          var error, success;
+          this._findContextUrl(this.$objects);
+          success = function (_this) {
+            return function (context) {
+              _this.$context = context;
+              return _this.$deferred.resolve(_this);
+            };
+          }(this);
+          error = function (_this) {
+            return function () {
+              return _this.$deferred.reject();
+            };
+          }(this);
+          return ChContextService.get(this.$contextUrl).then(success, error);
+        };
+        return ChObjectsOperation;
+      }(ChOperation);
+    }
+  ]);
+}.call(this));
+(function () {
   angular.module('chinchilla').factory('ChOperation', [
     '$q',
     '$injector',
@@ -530,7 +557,8 @@
           instance.$deferred = $q.defer();
           instance.$promise = instance.$deferred.promise;
           instance.ChContextOperation = $injector.get('ChContextOperation');
-          return instance.ChActionOperation = $injector.get('ChActionOperation');
+          instance.ChActionOperation = $injector.get('ChActionOperation');
+          return instance.ChObjectsOperation = $injector.get('ChObjectsOperation');
         };
         ChOperation.prototype.$ = function (subject) {
           var contextOp;
@@ -553,6 +581,40 @@
             params = {};
           }
           return new this.ChActionOperation(this, 'member', action, params);
+        };
+        ChOperation.prototype._findContextUrl = function (subject) {
+          var first;
+          this.$contextUrl = null;
+          if (_.isString(subject)) {
+            this.$contextUrl = this.$associationProperty && this.$associationProperty.type;
+            if (!this.$contextUrl) {
+              throw new Error('ChContextOperation#_findContextUrl: no association \'' + subject + '\' found');
+            }
+          } else if (_.isArray(subject)) {
+            first = subject[0];
+            this.$contextUrl = subject[0] && subject[0]['@context'];
+            if (!first || !this.$contextUrl) {
+              console.log(this);
+              throw new Error('ChContextOperation#_findContextUrl: empty array of objects given or missing context');
+            }
+            if (_.any(subject, function (_this) {
+                return function (current) {
+                  return current['@context'] !== _this.$contextUrl;
+                };
+              }(this))) {
+              console.log(this);
+              throw new Error('ChContextOperation#_findContextUrl: objects with different contexts given, aborting');
+            }
+          } else if (_.isPlainObject(subject)) {
+            this.$contextUrl = subject['@context'];
+            if (!this.$contextUrl) {
+              console.log(this);
+              throw new Error('ChContextOperation#_findContextUrl: missing context');
+            }
+          } else {
+            console.log(this);
+            throw new Error('ChContextOperation#_findContextUrl: unsupported subject');
+          }
         };
         return ChOperation;
       }();
