@@ -49,7 +49,7 @@ describe 'ChContextOperation', ->
       $httpBackend.flush()
 
       operation.$new(foo: 'bar').$promise.then (result) ->
-        expect(result.$obj).to.be.like('@context': PC, foo: 'bar')
+        expect(result.$obj).to.be.like('@context': 'http://pm.mpx.dev/v20140601/context/product', foo: 'bar')
 
       true
 

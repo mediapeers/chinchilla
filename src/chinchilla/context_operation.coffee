@@ -60,7 +60,7 @@ angular.module('chinchilla').factory 'ChContextOperation', ($q, ChOperation, ChC
         $promise: deferred.promise
 
       @$promise.then =>
-        result.$obj['@context'] = @$context.data['@context']['@type']
+        result.$obj['@context'] = @$contextUrl
         deferred.resolve(result)
 
       result

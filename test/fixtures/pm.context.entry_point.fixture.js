@@ -1,7 +1,7 @@
 defineFixture('pm.context.entry_point', {
   "@context" : {
     "constants" : {  },
-    "@type" : "http://pm.mpx.dev/v20140601/context/context",
+    "@type" : "context",
     "properties": {
       "affiliation" : {
         "type" : "http://pm.mpx.dev/v20140601/context/affiliation",

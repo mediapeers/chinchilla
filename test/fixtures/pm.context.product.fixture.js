@@ -1,6 +1,6 @@
 defineFixture('pm.context.product', {
   "@context": {
-    "@type": "http://pm.mpx.dev/v20140601/context/product",
+    "@type": "context",
     "constants": {
       "access_levels": [
           "private",
