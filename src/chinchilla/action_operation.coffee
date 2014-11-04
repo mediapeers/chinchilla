@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRequestBuilder, ChLazyLoader) ->
+angular.module('chinchilla').factory 'ChActionOperation', (ChOperation, ChRequestBuilder, ChLazyLoader) ->
   # chainable operation class to run queries.
   class ChActionOperation extends ChOperation
     # @param [ChContextOperation] parent
@@ -68,32 +68,17 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
 
         if _.isArray(data)
           _.each data, (member) => @$arr.push(member)
+          new ChLazyLoader(@, @$arr)
         else
           _.merge @$obj, data
+          new ChLazyLoader(@, [@$obj])
 
         _.merge @$headers, response.headers()
 
-        @_initLazyLoading()
-
+        @$deferred.resolve(@)
       error = (response) =>
         @$error = _.cloneDeep(response.data)
         _.merge @$headers, response.headers()
         @$deferred.reject()
 
       builder.performRequest().then success, error
-
-    # group objects by @context
-    # for each group create a lazy loader instance
-    # once all lazy loaders have done their initialization job, we're done
-    _initLazyLoading: ->
-      self      = @
-      objects   = if _.isEmpty(@$obj) then @$arr else [@$obj]
-      groups    = _.groupBy objects, '@context'
-      promises  = []
-
-      _.each groups, (records, contextUrl) ->
-        op = new self.ChContextOperation(null, '@context': contextUrl)
-        promises.push(new ChLazyLoader(op, records).$promise)
-
-      $q.all(promises).then ->
-        self.$deferred.resolve(self)
