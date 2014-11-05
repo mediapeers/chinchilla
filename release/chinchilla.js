@@ -78,7 +78,7 @@
           }(this);
           error = function (_this) {
             return function () {
-              return _this.$deferred.reject();
+              return _this.$deferred.reject(_this);
             };
           }(this);
           this.$parent.$promise.then(success, error);
@@ -116,7 +116,7 @@
             return function (response) {
               _this.$error = response.data;
               _.merge(_this.$headers, response.headers());
-              return _this.$deferred.reject();
+              return _this.$deferred.reject(_this);
             };
           }(this);
           return builder.performRequest().then(success, error);
@@ -667,7 +667,7 @@
         };
         ChRequestBuilder.prototype.data = function () {
           var result;
-          if (this.$type === 'collection') {
+          if (_.isArray(this.$subject)) {
             result = {};
             _.each(this.$subject, function (obj) {
               return result[obj.id] = obj;
