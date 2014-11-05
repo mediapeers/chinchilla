@@ -36,7 +36,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
         @_run()
 
       error = =>
-        @$deferred.reject()
+        @$deferred.reject(@)
 
       @$parent.$promise.then success, error
 
@@ -79,7 +79,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
         @$error = response.data
         _.merge @$headers, response.headers()
 
-        @$deferred.reject()
+        @$deferred.reject(@)
 
       builder.performRequest().then success, error
 
