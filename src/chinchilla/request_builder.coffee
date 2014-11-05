@@ -67,7 +67,7 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # builds body data. if $subject is an array of objects a nested data object is created
     # containing each object's data, referenced by object id
     data: ->
-      if @$type == 'collection'
+      if _.isArray(@$subject)
         result = {}
         _.each @$subject, (obj) -> result[obj.id] = obj
         result
