@@ -135,7 +135,7 @@
               if (key === '$associations') {
                 return;
               }
-              if (_.isArray(value) || _.isPlainObject(value) && value['@id']) {
+              if (_.isArray(value) && _.isPlainObject(_.first(value)) || _.isPlainObject(value) && value['@id']) {
                 object.$associations[key] = _.clone(value);
                 return delete object[key];
               }
@@ -179,7 +179,7 @@
       ChContext.prototype.association = function (name) {
         var assoc;
         assoc = this.property(name);
-        if (_.isPlainObject(assoc)) {
+        if (_.isPlainObject(assoc) && assoc.type && assoc.type.match(/^(http|https)\:/)) {
           return assoc;
         }
       };
