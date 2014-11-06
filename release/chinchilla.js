@@ -591,19 +591,11 @@
               throw new Error('ChContextOperation#_findContextUrl: no association \'' + subject + '\' found');
             }
           } else if (_.isArray(subject)) {
-            first = subject[0];
-            this.$contextUrl = subject[0] && subject[0]['@context'];
+            first = _.first(subject);
+            this.$contextUrl = first && first['@context'];
             if (!first || !this.$contextUrl) {
               console.log(this);
               throw new Error('ChContextOperation#_findContextUrl: empty array of objects given or missing context');
-            }
-            if (_.any(subject, function (_this) {
-                return function (current) {
-                  return current['@context'] !== _this.$contextUrl;
-                };
-              }(this))) {
-              console.log(this);
-              throw new Error('ChContextOperation#_findContextUrl: objects with different contexts given, aborting');
             }
           } else if (_.isPlainObject(subject)) {
             this.$contextUrl = subject['@context'];
