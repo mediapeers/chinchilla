@@ -93,7 +93,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
         _.each object, (value, key) ->
           return if key == '$associations'
 
-          if _.isArray(value) || (_.isPlainObject(value) && value['@id'])
+          if (_.isArray(value) && _.isPlainObject(_.first(value))) || (_.isPlainObject(value) && value['@id'])
             object.$associations[key] = _.clone(value)
             delete object[key]
 
