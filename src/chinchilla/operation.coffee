@@ -58,6 +58,9 @@ angular.module('chinchilla').factory 'ChOperation', ($q, $injector) ->
           throw new Error("ChContextOperation#_findContextUrl: no association '#{subject}' found")
 
       else if _.isArray(subject)
+        # NOTE:
+        # constraint that verifies all objects have to have the same @context has been removed.
+        # it's your responsibility to initialize operations for a set of objects that are compatible to each other.
         first = _.first(subject)
         @$contextUrl = first && first['@context']
 
