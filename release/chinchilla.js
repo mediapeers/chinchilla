@@ -666,16 +666,33 @@
           return uriTmpl.fillFromObject(this._buildParams(action));
         };
         ChRequestBuilder.prototype.data = function () {
-          var result;
-          if (_.isArray(this.$subject)) {
+          var result, subject;
+          subject = _.cloneDeep(this.$subject);
+          if (_.isArray(subject)) {
             result = {};
-            _.each(this.$subject, function (obj) {
-              return result[obj.id] = obj;
-            });
+            _.each(subject, function (_this) {
+              return function (obj) {
+                return result[obj.id] = _this._remapAttributes(obj);
+              };
+            }(this));
             return result;
           } else {
-            return this.$subject;
+            return this._remapAttributes(subject);
           }
+        };
+        ChRequestBuilder.prototype._remapAttributes = function (object) {
+          return _.each(object, function (value, key) {
+            var values;
+            if (_.isString(value) && /(^tags|_ids$)/.test(key)) {
+              values = _.select(value.split(','), function (item) {
+                return !_.isEmpty(item);
+              });
+              return object[key] = values;
+            } else if (_.isObject(value) && !value.keepAsIs) {
+              object['' + key + '_attributes'] = value;
+              return delete object[key];
+            }
+          });
         };
         ChRequestBuilder.prototype._buildParams = function (action) {
           var mappings, result;
