@@ -13,7 +13,7 @@ angular.module('chinchilla').factory 'ChContext', ->
     # @param [String] name name of association
     association: (name) ->
       assoc = @property(name)
-      assoc if _.isPlainObject(assoc)
+      assoc if _.isPlainObject(assoc) && assoc.type && assoc.type.match(/^(http|https)\:/)
 
     # @param [String] name name of member action
     member_action: (name) ->
