@@ -223,7 +223,8 @@
     '$q',
     'ChOperation',
     'ChContextService',
-    function ($q, ChOperation, ChContextService) {
+    'ChUtils',
+    function ($q, ChOperation, ChContextService, ChUtils) {
       var ChContextOperation;
       return ChContextOperation = function (_super) {
         __extends(ChContextOperation, _super);
@@ -278,6 +279,11 @@
           };
           this.$promise.then(function (_this) {
             return function () {
+              var action;
+              if (_this.$associationData && _this.$associationProperty) {
+                action = _this.$associationProperty.collection ? _this.$context.collection_action('query') : _this.$context.member_action('get');
+                result.$obj.$params = ChUtils.extractValues(action, _this.$associationData);
+              }
               result.$obj['@context'] = _this.$contextUrl;
               return deferred.resolve(result);
             };
