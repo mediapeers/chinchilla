@@ -445,7 +445,7 @@
                 if (!result) {
                   return;
                 }
-                return _.merge(_this.cache[object['@id']], result);
+                return _this.cache[object['@id']] = result;
               };
             }(this));
           }

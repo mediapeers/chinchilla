@@ -102,5 +102,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
           result = sortedResults[requestedId]
           return unless result
 
-          _.merge @cache[object['@id']], result
+          # does not work, loses property getters:
+          #_.merge @cache[object['@id']], result
+          @cache[object['@id']] = result
 
