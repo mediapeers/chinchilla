@@ -351,7 +351,8 @@
 (function () {
   angular.module('chinchilla').factory('ChLazyAssociation', [
     '$injector',
-    function ($injector) {
+    '$q',
+    function ($injector, $q) {
       var ChLazyAssociation;
       return ChLazyAssociation = function () {
         function ChLazyAssociation($operation, $objects, $name) {
@@ -359,6 +360,7 @@
           this.$objects = $objects;
           this.$name = $name;
           this.cache = {};
+          this.deferredCache = {};
           this.isCollection = this.$operation.$context.association(this.$name).collection;
           this._initCache();
         }
@@ -370,6 +372,13 @@
           this.load();
           return this.cache[object['@id']];
         };
+        ChLazyAssociation.prototype.retrievePromise = function (object) {
+          return this.retrieveDeferred(object).promise;
+        };
+        ChLazyAssociation.prototype.retrieveDeferred = function (object) {
+          var _base, _name;
+          return (_base = this.deferredCache)[_name = object['@id']] || (_base[_name] = $q.defer());
+        };
         ChLazyAssociation.prototype._initCache = function () {
           return _.each(this.$objects, function (_this) {
             return function (object) {
@@ -378,7 +387,7 @@
           }(this));
         };
         ChLazyAssociation.prototype._assign = function (actionOp) {
-          var associationName, habtm, parentContextId, results, sortedResults;
+          var associationName, backReferences, habtm, parentContextId, results, sortedResults;
           results = _.isEmpty(actionOp.$obj) ? actionOp.$arr : [actionOp.$obj];
           if (this.isCollection) {
             habtm = _.any(this.$objects, function (_this) {
@@ -403,7 +412,7 @@
                   if (!_.isArray(references)) {
                     return;
                   }
-                  return _.each(references, function (reference) {
+                  _.each(references, function (reference) {
                     var result;
                     result = sortedResults[reference['@id']];
                     if (!result) {
@@ -411,6 +420,7 @@
                     }
                     return _this.cache[object['@id']].push(result);
                   });
+                  return _this.retrieveDeferred(object).resolve();
                 };
               }(this));
             } else {
@@ -418,14 +428,21 @@
               associationName = _.findKey(this.contextOperation.$context.data['@context']['properties'], function (value, key) {
                 return value && value.type && value.type === parentContextId;
               });
-              return _.each(results, function (_this) {
+              backReferences = [];
+              _.each(results, function (_this) {
                 return function (result) {
                   var backReference;
                   backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id'];
                   if (!backReference) {
                     return;
                   }
+                  backReferences.push(backReference);
                   return _this.cache[backReference].push(result);
+                };
+              }(this));
+              return _.each(backReferences, function (_this) {
+                return function (backReference) {
+                  return _this.retrieveDeferred({ '@id': backReference }).resolve();
                 };
               }(this));
             }
@@ -445,7 +462,8 @@
                 if (!result) {
                   return;
                 }
-                return _this.cache[object['@id']] = result;
+                _this.cache[object['@id']] = result;
+                return _this.retrieveDeferred(object).resolve();
               };
             }(this));
           }
@@ -475,9 +493,14 @@
               return;
             }
             return _.each(object.$associations, function (value, key) {
-              return Object.defineProperty(object, key, {
+              Object.defineProperty(object, key, {
                 get: function () {
                   return self._association(key).retrieve(object);
+                }
+              });
+              return Object.defineProperty(object, '' + key + 'Promise', {
+                get: function () {
+                  return self._association(key).retrievePromise(object);
                 }
               });
             });

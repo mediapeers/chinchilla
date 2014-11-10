@@ -25,6 +25,7 @@ angular.module('chinchilla').factory 'ChLazyLoader', (ChLazyAssociation) ->
 
         _.each object.$associations, (value, key) ->
           Object.defineProperty object, key, get: -> self._association(key).retrieve(object)
+          Object.defineProperty object, "#{key}Promise", get: -> self._association(key).retrievePromise(object)
 
     # init ChLazyAssociation instance
     #

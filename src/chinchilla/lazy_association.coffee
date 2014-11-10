@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
+angular.module('chinchilla').factory 'ChLazyAssociation', ($injector, $q) ->
   # lazy loading for associations. loads association data (via multi get) if multiple
   # objects passed. accessing the association for one objects loads them all in one
   # request.
@@ -17,6 +17,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     constructor: (@$operation, @$objects, @$name) ->
       # holds association data per object once retrieved
       @cache = {}
+      @deferredCache = {}
       @isCollection = @$operation.$context.association(@$name).collection
 
       @_initCache()
@@ -35,6 +36,20 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
     retrieve: (object) ->
       @load()
       @cache[object['@id']]
+
+    # fetch association promise for specific object.
+    # triggers load if necessary.
+    #
+    # @return [Object] association object
+    retrievePromise: (object) ->
+      @retrieveDeferred(object).promise
+
+    # fetch deferred association for specific object.
+    # triggers load if necessary.
+    #
+    # @return [Object] association object
+    retrieveDeferred: (object) ->
+      @deferredCache[object['@id']] ||= $q.defer()
 
     # inits the cache for all objects
     # creates objects/arrays depending on the association type
@@ -75,6 +90,8 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
               return unless result
 
               @cache[object['@id']].push(result)
+
+            @retrieveDeferred(object).resolve()
         else
           # HAS MANY
           # find back reference association, -> association that points to same context the parent context does
@@ -86,11 +103,18 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
           associationName = _.findKey @contextOperation.$context.data['@context']['properties'], (value, key) ->
             value && value.type && value.type == parentContextId
 
+          backReferences = []
+
           _.each results, (result) =>
             backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id']
             return unless backReference
+            backReferences.push(backReference)
 
             @cache[backReference].push(result)
+
+          _.each backReferences, (backReference) =>
+            @retrieveDeferred('@id': backReference).resolve()
+
       else
         # HAS ONE / BELONGS TO
         sortedResults = {}
@@ -105,4 +129,5 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector) ->
           # does not work, loses property getters:
           #_.merge @cache[object['@id']], result
           @cache[object['@id']] = result
+          @retrieveDeferred(object).resolve()
 
