@@ -12,6 +12,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
       @$subject = null
       @$arr = []
       @$obj = {}
+      @$graph = []
       @$headers = {}
 
       success = =>
@@ -63,17 +64,22 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
       builder.mergeParams(@$params)
 
       success = (response) =>
-        data = (response.data && response.data.members) || response.data
-
-        if _.isArray(data)
-          _.each data, (member) => @$arr.push(member)
-        else
-          _.merge @$obj, data
-
         _.merge @$headers, response.headers()
 
-        @_moveAssociations()
-        @_initLazyLoading()
+        if response.data['@type'] == 'graph'
+          _.each response.data['@graph'], (member) => @$arr.push(member)
+          @_buildGraph()
+
+        else
+          data = (response.data && response.data.members) || response.data
+
+          if _.isArray(data)
+            _.each data, (member) => @$arr.push(member)
+          else
+            _.merge @$obj, data
+
+          @_moveAssociations()
+          @_initLazyLoading()
 
       error = (response) =>
         @$error = response.data
@@ -108,3 +114,17 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
         promises.push operation.$promise
 
       $q.all(promises).then -> self.$deferred.resolve(self)
+
+    _buildGraph: ->
+      return if _.isEmpty(@$arr)
+      @$graph = []
+      # id, parent_id tree builder
+      _.each @$arr, (node) =>
+        if node.parent_id # child
+          if parent = (_.find @$arr, (x) -> x.id == node.parent_id)
+            node.parent = parent
+            parent.children ?= []
+            parent.children.push(node)
+        else # root
+          @$graph.push(node)
+
