@@ -69,6 +69,7 @@
           this.$subject = null;
           this.$arr = [];
           this.$obj = {};
+          this.$graph = [];
           this.$headers = {};
           success = function (_this) {
             return function () {
@@ -108,17 +109,24 @@
           success = function (_this) {
             return function (response) {
               var data;
-              data = response.data && response.data.members || response.data;
-              if (_.isArray(data)) {
-                _.each(data, function (member) {
+              _.merge(_this.$headers, response.headers());
+              if (response.data['@type'] === 'graph') {
+                _.each(response.data['@graph'], function (member) {
                   return _this.$arr.push(member);
                 });
+                return _this._buildGraph();
               } else {
-                _.merge(_this.$obj, data);
+                data = response.data && response.data.members || response.data;
+                if (_.isArray(data)) {
+                  _.each(data, function (member) {
+                    return _this.$arr.push(member);
+                  });
+                } else {
+                  _.merge(_this.$obj, data);
+                }
+                _this._moveAssociations();
+                return _this._initLazyLoading();
               }
-              _.merge(_this.$headers, response.headers());
-              _this._moveAssociations();
-              return _this._initLazyLoading();
             };
           }(this);
           error = function (_this) {
@@ -167,6 +175,30 @@
           return $q.all(promises).then(function () {
             return self.$deferred.resolve(self);
           });
+        };
+        ChActionOperation.prototype._buildGraph = function () {
+          if (_.isEmpty(this.$arr)) {
+            return;
+          }
+          this.$graph = [];
+          return _.each(this.$arr, function (_this) {
+            return function (node) {
+              var parent;
+              if (node.parent_id) {
+                if (parent = _.find(_this.$arr, function (x) {
+                    return x.id === node.parent_id;
+                  })) {
+                  node.parent = parent;
+                  if (parent.children == null) {
+                    parent.children = [];
+                  }
+                  return parent.children.push(node);
+                }
+              } else {
+                return _this.$graph.push(node);
+              }
+            };
+          }(this));
         };
         return ChActionOperation;
       }(ChOperation);
