@@ -128,3 +128,5 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
         else # root
           @$graph.push(node)
 
+      @$deferred.resolve(@)
+

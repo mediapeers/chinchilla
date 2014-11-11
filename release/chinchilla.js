@@ -181,7 +181,7 @@
             return;
           }
           this.$graph = [];
-          return _.each(this.$arr, function (_this) {
+          _.each(this.$arr, function (_this) {
             return function (node) {
               var parent;
               if (node.parent_id) {
@@ -199,6 +199,7 @@
               }
             };
           }(this));
+          return this.$deferred.resolve(this);
         };
         return ChActionOperation;
       }(ChOperation);
