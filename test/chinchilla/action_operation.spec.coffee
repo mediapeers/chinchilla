@@ -8,6 +8,7 @@ describe 'ChActionOperation', ->
   EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
   PC = 'http://pm.mpx.dev/v20140601/context/product'
   AC = 'http://pm.mpx.dev/v20140601/context/affiliation'
+  GC = 'http://pm.mpx.dev/v20140601/context/geo_scope'
 
   beforeEach ->
     angular.mock.module("chinchilla")
@@ -30,16 +31,20 @@ describe 'ChActionOperation', ->
       entryPointContext = loadFixture('pm.context.entry_point')
       productContext = loadFixture('pm.context.product')
       affiliationContext = loadFixture('pm.context.affiliation')
+      geoScopeContext = loadFixture('pm.context.geo_scope')
+      geoScopeData = loadFixture('pm.graph.geo_scope')
 
       $httpBackend.whenGET(EP).respond(entryPointContext)
       $httpBackend.whenGET(PC).respond(productContext)
       $httpBackend.whenGET(AC).respond(affiliationContext)
+      $httpBackend.whenGET(GC).respond(geoScopeContext)
 
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/products').respond({})
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/').respond({})
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1').respond({})
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1,2').respond({})
       $httpBackend.whenGET('http://pm.mpx.dev/v20140601/affiliation').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/geo_scopes/graph').respond(geoScopeData)
 
       $pm = $ch('pm')
 
@@ -120,6 +125,20 @@ describe 'ChActionOperation', ->
 
     $httpBackend.flush()
     expect(operation.$type).to.eq('member')
+
+   it 'peforms graph action', ->
+    operation = $pm.$('geo_scopes').$c('graph')
+
+    $httpBackend.flush()
+
+    graph = operation.$graph
+    expect(graph[0]['id']).to.eq('TRR')
+    expect(graph[0]['children'][0]['id']).to.eq('EUR')
+    expect(graph[0]['children'][0]['children'][0]['id']).to.eq('GER')
+
+    expect(graph[1]['id']).to.eq('MARS')
+    expect(graph[1]['children'][0]['id']).to.eq('MDLR')
+    expect(graph[1]['children'][0]['children'][0]['id']).to.eq('CASS')
 
   context 'lazy loading', ->
     class ObjectsOperationDummy
