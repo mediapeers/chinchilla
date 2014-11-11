@@ -7,8 +7,8 @@ module.provider '$ch', () ->
   @setEntryPoint = (systemId, url) ->
     entryPoints[systemId] = url
 
-  @.$get = ['ChContextOperation', (ChContextOperation) ->
-    (subject) ->
+  @.$get = ['ChContextOperation', 'ChObjectsOperation', (ChContextOperation, ChObjectsOperation) ->
+    fn = (subject) ->
       if _.isString(subject)
         contextUrl = entryPoints[subject]
         throw new Error("no entry point url defined for #{subject}") unless contextUrl
@@ -16,6 +16,10 @@ module.provider '$ch', () ->
         new ChContextOperation(null, { '@context': contextUrl })
       else
         new ChContextOperation(null, subject)
+
+    fn.o = (objects) -> new ChObjectsOperation(objects)
+    fn.c = (objects) -> new ChContextOperation(objects)
+    fn
   ]
 
   @

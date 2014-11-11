@@ -9,8 +9,10 @@
     };
     this.$get = [
       'ChContextOperation',
-      function (ChContextOperation) {
-        return function (subject) {
+      'ChObjectsOperation',
+      function (ChContextOperation, ChObjectsOperation) {
+        var fn;
+        fn = function (subject) {
           var contextUrl;
           if (_.isString(subject)) {
             contextUrl = entryPoints[subject];
@@ -22,6 +24,13 @@
             return new ChContextOperation(null, subject);
           }
         };
+        fn.o = function (objects) {
+          return new ChObjectsOperation(objects);
+        };
+        fn.c = function (objects) {
+          return new ChContextOperation(objects);
+        };
+        return fn;
       }
     ];
     return this;
