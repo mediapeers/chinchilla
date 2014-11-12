@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChContextOperation', ($q, ChOperation, ChContextService, ChUtils) ->
+angular.module('chinchilla').factory 'ChContextOperation', ($q, ChOperation, ChContextService, ChRequestBuilder, ChUtils) ->
   # chainable operation class to fetch contexts.
   class ChContextOperation extends ChOperation
     # @param [ChOperation] parent might be ChActionOperation or ChContextOperation
@@ -68,6 +68,22 @@ angular.module('chinchilla').factory 'ChContextOperation', ($q, ChOperation, ChC
           result.$obj.$params = ChUtils.extractValues(action, @$associationData)
 
         result.$obj['@context'] = @$contextUrl
+        deferred.resolve(result)
+
+      result
+
+    # initializes a new request builder for given action
+    #
+    # @param [String] type either 'collection' or 'member'
+    # @param [String] action the action
+    $r: (type, action) ->
+      deferred = $q.defer()
+      result =
+        $deferred: deferred
+        $promise: deferred.promise
+
+      @$promise.then =>
+        result.$request = new ChRequestBuilder(@$context, {}, type, action)
         deferred.resolve(result)
 
       result

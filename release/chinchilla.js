@@ -270,8 +270,9 @@
     '$q',
     'ChOperation',
     'ChContextService',
+    'ChRequestBuilder',
     'ChUtils',
-    function ($q, ChOperation, ChContextService, ChUtils) {
+    function ($q, ChOperation, ChContextService, ChRequestBuilder, ChUtils) {
       var ChContextOperation;
       return ChContextOperation = function (_super) {
         __extends(ChContextOperation, _super);
@@ -332,6 +333,21 @@
                 result.$obj.$params = ChUtils.extractValues(action, _this.$associationData);
               }
               result.$obj['@context'] = _this.$contextUrl;
+              return deferred.resolve(result);
+            };
+          }(this));
+          return result;
+        };
+        ChContextOperation.prototype.$r = function (type, action) {
+          var deferred, result;
+          deferred = $q.defer();
+          result = {
+            $deferred: deferred,
+            $promise: deferred.promise
+          };
+          this.$promise.then(function (_this) {
+            return function () {
+              result.$request = new ChRequestBuilder(_this.$context, {}, type, action);
               return deferred.resolve(result);
             };
           }(this));
@@ -698,12 +714,13 @@
     function ($q, $injector, $http, ChUtils) {
       var ChRequestBuilder;
       return ChRequestBuilder = function () {
-        function ChRequestBuilder($context, $subject, $type, $action) {
+        function ChRequestBuilder($context, $subject, $type, $actionName) {
           this.$context = $context;
           this.$subject = $subject;
           this.$type = $type;
-          this.$action = $action;
+          this.$actionName = $actionName;
           this.$mergedParams = {};
+          this.$action = this.$type === 'collection' ? this.$context.collection_action(this.$actionName) : this.$context.member_action(this.$actionName);
         }
         ChRequestBuilder.prototype.extractFrom = function (source, type) {
           var first, params;
@@ -715,23 +732,22 @@
           return _.merge(this.$mergedParams, params || {});
         };
         ChRequestBuilder.prototype.performRequest = function () {
-          var action, data;
-          action = this.$type === 'collection' ? this.$context.collection_action(this.$action) : this.$context.member_action(this.$action);
+          var data;
           data = _.include([
             'POST',
             'PUT',
             'PATCH'
-          ], action.method) ? this.data() : null;
+          ], this.$action.method) ? this.data() : null;
           return $http({
-            method: action.method,
-            url: this.buildUrl(action),
+            method: this.$action.method,
+            url: this.buildUrl(),
             data: data
           });
         };
-        ChRequestBuilder.prototype.buildUrl = function (action) {
+        ChRequestBuilder.prototype.buildUrl = function () {
           var uriTmpl;
-          uriTmpl = new UriTemplate(action.template);
-          return uriTmpl.fillFromObject(this._buildParams(action));
+          uriTmpl = new UriTemplate(this.$action.template);
+          return uriTmpl.fillFromObject(this._buildParams());
         };
         ChRequestBuilder.prototype.data = function () {
           var result, subject;
@@ -762,9 +778,9 @@
             }
           });
         };
-        ChRequestBuilder.prototype._buildParams = function (action) {
+        ChRequestBuilder.prototype._buildParams = function () {
           var mappings, result;
-          mappings = action.mappings;
+          mappings = this.$action.mappings;
           result = {};
           _.each(mappings, function (_this) {
             return function (mapping) {
