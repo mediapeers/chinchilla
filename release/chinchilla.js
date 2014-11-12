@@ -207,45 +207,50 @@
   ]);
 }.call(this));
 (function () {
-  angular.module('chinchilla').factory('ChContext', function () {
-    var ChContext;
-    return ChContext = function () {
-      function ChContext(data) {
-        this.data = data != null ? data : {};
-      }
-      ChContext.prototype.property = function (name) {
-        var context;
-        context = this.data && this.data['@context'];
-        return context && context.properties && context.properties[name];
-      };
-      ChContext.prototype.association = function (name) {
-        var assoc;
-        assoc = this.property(name);
-        if (_.isPlainObject(assoc) && assoc.type && assoc.type.match(/^(http|https)\:/)) {
-          return assoc;
+  angular.module('chinchilla').factory('ChContext', [
+    '$log',
+    function ($log) {
+      var ChContext;
+      return ChContext = function () {
+        function ChContext(data) {
+          this.data = data != null ? data : {};
         }
-      };
-      ChContext.prototype.member_action = function (name) {
-        var action, context;
-        context = this.data && this.data['@context'];
-        action = context && context.member_actions && context.member_actions[name];
-        if (!action) {
-          throw new Error('requested non-existing member action \'' + name + '\'');
-        }
-        return action;
-      };
-      ChContext.prototype.collection_action = function (name) {
-        var action, context;
-        context = this.data && this.data['@context'];
-        action = context && context.collection_actions && context.collection_actions[name];
-        if (!action) {
-          throw new Error('requested non-existing collection action \'' + name + '\'');
-        }
-        return action;
-      };
-      return ChContext;
-    }();
-  });
+        ChContext.prototype.property = function (name) {
+          var context;
+          context = this.data && this.data['@context'];
+          return context && context.properties && context.properties[name];
+        };
+        ChContext.prototype.association = function (name) {
+          var assoc;
+          assoc = this.property(name);
+          if (_.isPlainObject(assoc) && assoc.type && assoc.type.match(/^(http|https)\:/)) {
+            return assoc;
+          }
+        };
+        ChContext.prototype.member_action = function (name) {
+          var action, context;
+          context = this.data && this.data['@context'];
+          action = context && context.member_actions && context.member_actions[name];
+          if (!action) {
+            $log.warn('requested non-existing member action \'' + name + '\' in following context:');
+            $log.warn(this.data);
+          }
+          return action;
+        };
+        ChContext.prototype.collection_action = function (name) {
+          var action, context;
+          context = this.data && this.data['@context'];
+          action = context && context.collection_actions && context.collection_actions[name];
+          if (!action) {
+            $log.warn('requested non-existing collection action \'' + name + '\' in following context:');
+            $log.warn(this.data);
+          }
+          return action;
+        };
+        return ChContext;
+      }();
+    }
+  ]);
 }.call(this));
 (function () {
   var __hasProp = {}.hasOwnProperty, __extends = function (child, parent) {
@@ -775,28 +780,34 @@
         };
         ChRequestBuilder.prototype._extractMemberArray = function (source) {
           var action;
-          if (_.isEmpty(source)) {
+          action = this.$context.member_action('get');
+          if (_.isEmpty(source) || _.isEmpty(action)) {
             return {};
           }
-          action = this.$context.member_action('get');
           return ChUtils.extractArrayValues(action, source);
         };
         ChRequestBuilder.prototype._extractCollectionArray = function (source) {
           var action;
-          if (_.isEmpty(source)) {
+          action = this.$context.collection_action('query');
+          if (_.isEmpty(source) || _.isEmpty(action)) {
             return {};
           }
-          action = this.$context.collection_action('query');
           return ChUtils.extractArrayValues(action, source);
         };
         ChRequestBuilder.prototype._extractCollection = function (source) {
           var action;
           action = this.$context.collection_action('query');
+          if (_.isEmpty(source) || _.isEmpty(action)) {
+            return {};
+          }
           return ChUtils.extractValues(action, source);
         };
         ChRequestBuilder.prototype._extractMember = function (source) {
           var action;
           action = this.$context.member_action('get');
+          if (_.isEmpty(source) || _.isEmpty(action)) {
+            return {};
+          }
           return ChUtils.extractValues(action, source);
         };
         return ChRequestBuilder;

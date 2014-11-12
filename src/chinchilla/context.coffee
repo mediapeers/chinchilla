@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChContext', ->
+angular.module('chinchilla').factory 'ChContext', ($log) ->
   # context wrapper with some helper functions to fetch actions and association
   # context information.
   class ChContext
@@ -19,7 +19,9 @@ angular.module('chinchilla').factory 'ChContext', ->
     member_action: (name) ->
       context = @data && @data['@context']
       action  = context && context.member_actions && context.member_actions[name]
-      throw new Error("requested non-existing member action '#{name}'") unless action
+      unless action
+        $log.warn("requested non-existing member action '#{name}' in following context:")
+        $log.warn(@data)
 
       action
 
@@ -27,6 +29,8 @@ angular.module('chinchilla').factory 'ChContext', ->
     collection_action: (name) ->
       context = @data && @data['@context']
       action  = context && context.collection_actions && context.collection_actions[name]
-      throw new Error("requested non-existing collection action '#{name}'") unless action
+      unless action
+        $log.warn("requested non-existing collection action '#{name}' in following context:")
+        $log.warn(@data)
 
       action

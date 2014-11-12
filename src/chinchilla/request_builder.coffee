@@ -103,19 +103,21 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
       result
 
     _extractMemberArray: (source) ->
-      return {} if _.isEmpty(source)
-      action    = @$context.member_action('get')
+      action = @$context.member_action('get')
+      return {} if _.isEmpty(source) || _.isEmpty(action)
       ChUtils.extractArrayValues(action, source)
 
     _extractCollectionArray: (source) ->
-      return {} if _.isEmpty(source)
       action = @$context.collection_action('query')
+      return {} if _.isEmpty(source) || _.isEmpty(action)
       ChUtils.extractArrayValues(action, source)
 
     _extractCollection: (source) ->
       action = @$context.collection_action('query')
+      return {} if _.isEmpty(source) || _.isEmpty(action)
       ChUtils.extractValues(action, source)
 
     _extractMember: (source) ->
       action = @$context.member_action('get')
+      return {} if _.isEmpty(source) || _.isEmpty(action)
       ChUtils.extractValues(action, source)
