@@ -59,12 +59,13 @@
       var ChActionOperation;
       return ChActionOperation = function (_super) {
         __extends(ChActionOperation, _super);
-        function ChActionOperation($parent, $type, $action, $params) {
+        function ChActionOperation($parent, $type, $action, $params, $options) {
           var error, success;
           this.$parent = $parent;
           this.$type = $type;
           this.$action = $action;
           this.$params = $params != null ? $params : {};
+          this.$options = $options != null ? $options : {};
           ChOperation.init(this);
           this.$subject = null;
           this.$arr = [];
@@ -95,7 +96,7 @@
         }
         ChActionOperation.prototype._run = function () {
           var builder, error, flattenedAssociationData, success;
-          builder = new ChRequestBuilder(this.$context, this.$subject, this.$type, this.$action);
+          builder = new ChRequestBuilder(this.$context, this.$subject, this.$type, this.$action, this.$options);
           if (this.$type === 'collection' && _.isArray(this.$associationData) && _.isArray(_.first(this.$associationData))) {
             flattenedAssociationData = _.flatten(this.$associationData);
             builder.extractFrom(flattenedAssociationData, 'member');
@@ -640,23 +641,32 @@
           var contextOp;
           return contextOp = new this.ChContextOperation(this, subject);
         };
-        ChOperation.prototype.$$ = function (action, params) {
+        ChOperation.prototype.$$ = function (action, params, options) {
           if (params == null) {
             params = {};
           }
-          return new this.ChActionOperation(this, null, action, params);
+          if (options == null) {
+            options = {};
+          }
+          return new this.ChActionOperation(this, null, action, params, options);
         };
-        ChOperation.prototype.$c = function (action, params) {
+        ChOperation.prototype.$c = function (action, params, options) {
           if (params == null) {
             params = {};
           }
-          return new this.ChActionOperation(this, 'collection', action, params);
+          if (options == null) {
+            options = {};
+          }
+          return new this.ChActionOperation(this, 'collection', action, params, options);
         };
-        ChOperation.prototype.$m = function (action, params) {
+        ChOperation.prototype.$m = function (action, params, options) {
           if (params == null) {
             params = {};
           }
-          return new this.ChActionOperation(this, 'member', action, params);
+          if (options == null) {
+            options = {};
+          }
+          return new this.ChActionOperation(this, 'member', action, params, options);
         };
         ChOperation.prototype._findContextUrl = function (subject) {
           var first;
@@ -698,11 +708,12 @@
     function ($q, $injector, $http, ChUtils) {
       var ChRequestBuilder;
       return ChRequestBuilder = function () {
-        function ChRequestBuilder($context, $subject, $type, $action) {
+        function ChRequestBuilder($context, $subject, $type, $action, $options) {
           this.$context = $context;
           this.$subject = $subject;
           this.$type = $type;
           this.$action = $action;
+          this.$options = $options;
           this.$mergedParams = {};
         }
         ChRequestBuilder.prototype.extractFrom = function (source, type) {
@@ -736,6 +747,9 @@
         ChRequestBuilder.prototype.data = function () {
           var result, subject;
           subject = _.cloneDeep(this.$subject);
+          if (this.$options['raw']) {
+            return subject;
+          }
           if (_.isArray(subject)) {
             result = {};
             _.each(subject, function (_this) {
@@ -756,7 +770,7 @@
                 return !_.isEmpty(item);
               });
               return object[key] = values;
-            } else if (_.isObject(value) && !value.keepAsIs) {
+            } else if (_.isObject(value)) {
               object['' + key + '_attributes'] = value;
               return delete object[key];
             }
