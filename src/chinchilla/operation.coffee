@@ -26,22 +26,22 @@ angular.module('chinchilla').factory 'ChOperation', ($q, $injector) ->
     #
     # @param [String] action, e.g. 'get'
     # @return [ChActionOperation]
-    $$: (action, params = {}) ->
-      new @ChActionOperation(@, null, action, params)
+    $$: (action, params = {}, options = {}) ->
+      new @ChActionOperation(@, null, action, params, options)
 
     # returns new chained collection action operation.
     #
     # @param [String] action, e.g. 'get'
     # @return [ChActionOperation]
-    $c: (action, params = {}) ->
-      new @ChActionOperation(@, 'collection', action, params)
+    $c: (action, params = {}, options = {}) ->
+      new @ChActionOperation(@, 'collection', action, params, options)
 
     # returns new chained member action operation.
     #
     # @param [String] action, e.g. 'get'
     # @return [ChActionOperation]
-    $m: (action, params = {}) ->
-      new @ChActionOperation(@, 'member', action, params)
+    $m: (action, params = {}, options = {}) ->
+      new @ChActionOperation(@, 'member', action, params, options)
 
     # finds context url
     # if $subject is string, then it assumes this is the name of an association

@@ -6,7 +6,8 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # @param [Object|Array<Object>] subject concrete objects to run request for
     # @param [String] type 'member' or 'collection'
     # @param [String] action e.g. 'query'
-    constructor: (@$context, @$subject, @$type, @$action) ->
+    # @param [String] options e.g. {raw: true}
+    constructor: (@$context, @$subject, @$type, @$action, @$options) ->
       @$mergedParams = {}
 
     # extracts params from object(s).

@@ -6,7 +6,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
     #   if null, type will be determined based on association type, if any
     # @param [String] action action name, e.g. 'query'
     # @param [Object] params
-    constructor: (@$parent, @$type, @$action, @$params = {}) ->
+    constructor: (@$parent, @$type, @$action, @$params = {}, @$options = {}) ->
       ChOperation.init(@)
 
       @$subject = null
@@ -42,7 +42,7 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
       @$parent.$promise.then success, error
 
     _run: ->
-      builder = new ChRequestBuilder(@$context, @$subject, @$type, @$action)
+      builder = new ChRequestBuilder(@$context, @$subject, @$type, @$action, @$options)
       # DISASSEMBLE params from association references if available..
       # if collection association and data array of arrays => HABTM!
       if @$type == 'collection' && _.isArray(@$associationData) && _.isArray(_.first(@$associationData))
