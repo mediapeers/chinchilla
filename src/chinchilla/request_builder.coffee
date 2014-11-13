@@ -69,6 +69,8 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # containing each object's data, referenced by object id
     data: ->
       subject = _.cloneDeep(@$subject)
+      return subject if @$options['raw'] # do not modify data according to rails conventions
+
       if _.isArray(subject)
         result = {}
         _.each subject, (obj) => result[obj.id] = @_remapAttributes(obj)
@@ -84,7 +86,7 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
           object[key] = values
 
         # remap nested data according to rails conventions
-        else if _.isObject(value) && !value.keepAsIs
+        else if _.isObject(value)
           object["#{key}_attributes"] = value
           delete object[key]
 
