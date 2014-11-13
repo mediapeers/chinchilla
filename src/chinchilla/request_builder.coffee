@@ -7,8 +7,12 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # @param [String] type 'member' or 'collection'
     # @param [String] action e.g. 'query'
     # @param [String] options e.g. {raw: true}
-    constructor: (@$context, @$subject, @$type, @$action, @$options) ->
+    constructor: (@$context, @$subject, @$type, @$actionName, @$options) ->
       @$mergedParams = {}
+      @$action = if @$type == 'collection'
+        @$context.collection_action(@$actionName)
+      else
+        @$context.member_action(@$actionName)
 
     # extracts params from object(s).
     #
@@ -42,28 +46,23 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
 
     # finally runs the request
     performRequest: ->
-      action = if @$type == 'collection'
-        @$context.collection_action(@$action)
-      else
-        @$context.member_action(@$action)
-
-      data = if _.include(['POST', 'PUT', 'PATCH'], action.method)
+      data = if _.include(['POST', 'PUT', 'PATCH'], @$action.method)
         @data()
       else
         null
 
       $http(
-        method: action.method
-        url: @buildUrl(action)
+        method: @$action.method
+        url: @buildUrl()
         data: data
       )
 
     # builds the url with all previously collected params.
     #
     # @param [Object] action action from context
-    buildUrl: (action) ->
-      uriTmpl = new UriTemplate(action.template)
-      uriTmpl.fillFromObject(@_buildParams(action))
+    buildUrl: ->
+      uriTmpl = new UriTemplate(@$action.template)
+      uriTmpl.fillFromObject(@_buildParams())
 
     # builds body data. if $subject is an array of objects a nested data object is created
     # containing each object's data, referenced by object id
@@ -94,8 +93,8 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # builds params using action template from context
     #
     # @param [Object] action action from context
-    _buildParams: (action) ->
-      mappings  = action.mappings
+    _buildParams: ->
+      mappings  = @$action.mappings
       result    = {}
 
       _.each mappings, (mapping) =>
