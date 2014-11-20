@@ -43,3 +43,18 @@ describe '$chProvider', ->
 
       operation = $ch(obj)
       $httpBackend.flush()
+
+  describe '$chTimestampedUrl', ->
+    beforeEach ->
+      inject ($injector) ->
+        $chTimestampedUrl = $injector.get('$chTimestampedUrl')
+
+    it 'adds timestamp to clean url withouth params', ->
+      url = "http://google.com"
+      timestamped = $chTimestampedUrl(url)
+      expect(_.contains(timestamped, "?t=")).to.be.true
+
+    it 'adds timestamp to already parametrized url', ->
+      url = "http://google.com?foo=bar"
+      timestamped = $chTimestampedUrl(url)
+      expect(_.contains(timestamped, "&t=")).to.be.true

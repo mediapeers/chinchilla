@@ -23,3 +23,14 @@ module.provider '$ch', () ->
   ]
 
   @
+
+module.provider '$chTimestampedUrl', () ->
+  @timestamp = new Date().getTime()
+
+  @.$get = =>
+    (url) =>
+      uri = new URI(url)
+      uri.addQuery(t: @timestamp)
+      uri.toString()
+
+  @
