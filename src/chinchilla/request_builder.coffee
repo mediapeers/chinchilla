@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, ChUtils) ->
+angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, $chTimestampedUrl, ChUtils) ->
   # class to build and run requests. uses template to extract needed params from existing
   # objects and to build request url.
   class ChRequestBuilder
@@ -53,7 +53,7 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
 
       $http(
         method: @$action.method
-        url: @buildUrl()
+        url: $chTimestampedUrl(@buildUrl())
         data: data
       )
 

@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChContextService', ($q, $http, ChContext) ->
+angular.module('chinchilla').factory 'ChContextService', ($q, $http, $chTimestampedUrl, ChContext) ->
   # class that fetches contexts from backend and caches them.
   # singleton.
   class ChContextService
@@ -21,7 +21,7 @@ angular.module('chinchilla').factory 'ChContextService', ($q, $http, ChContext) 
         error = ->
           deferred.reject()
 
-        $http.get(url).then success, error
+        $http.get($chTimestampedUrl(url)).then success, error
 
       deferred.promise
 

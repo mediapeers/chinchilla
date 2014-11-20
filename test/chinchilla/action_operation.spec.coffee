@@ -5,13 +5,14 @@ describe 'ChActionOperation', ->
   $httpBackend = null
   ChActionOperation = null
   $pm = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
-  PC = 'http://pm.mpx.dev/v20140601/context/product'
-  AC = 'http://pm.mpx.dev/v20140601/context/affiliation'
-  GC = 'http://pm.mpx.dev/v20140601/context/geo_scope'
+  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+  PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
+  AC = 'http://pm.mpx.dev/v20140601/context/affiliation?t=0'
+  GC = 'http://pm.mpx.dev/v20140601/context/geo_scope?t=0'
 
   beforeEach ->
     angular.mock.module("chinchilla")
+    sinon.useFakeTimers()
 
   beforeEach ->
     angular.mock.module ($chProvider) ->
@@ -39,12 +40,12 @@ describe 'ChActionOperation', ->
       $httpBackend.whenGET(AC).respond(affiliationContext)
       $httpBackend.whenGET(GC).respond(geoScopeContext)
 
-      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/products').respond({})
-      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/').respond({})
-      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1').respond({})
-      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1,2').respond({})
-      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/affiliation').respond({})
-      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/geo_scopes/graph').respond(geoScopeData)
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/products?t=0').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/?t=0').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1?t=0').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/product/1,2?t=0').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/affiliation?t=0').respond({})
+      $httpBackend.whenGET('http://pm.mpx.dev/v20140601/geo_scopes/graph?t=0').respond(geoScopeData)
 
       $pm = $ch('pm')
 
@@ -151,7 +152,7 @@ describe 'ChActionOperation', ->
       ObjectsOperationDummy.calls = []
 
     it 'initializes lazy loader', ->
-      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': PC }])
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products?t=0').respond(members: [{ '@context': PC }])
       products = $pm.$('products').$$('query')
 
       objectsOperationStub = sinon.stub(products, 'ChObjectsOperation', ObjectsOperationDummy)
@@ -162,7 +163,7 @@ describe 'ChActionOperation', ->
       expect(ObjectsOperationDummy.calls.length).to.eq(1)
 
     it 'initializes lazy loader multiple times for different contexts', ->
-      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': 'foo' }, { '@context': 'bar' }])
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products?t=0').respond(members: [{ '@context': 'foo' }, { '@context': 'bar' }])
       products = $pm.$('products').$$('query')
 
       objectsOperationStub = sinon.stub(products, 'ChObjectsOperation', ObjectsOperationDummy)

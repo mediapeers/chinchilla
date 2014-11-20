@@ -7,12 +7,13 @@ describe 'ChRequestBuilder', ->
   $injector = null
   ChRequestBuilder = null
   ChContext = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
-  PC = 'http://pm.mpx.dev/v20140601/context/product'
-  AC = 'http://pm.mpx.dev/v20140601/context/affiliation'
+  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+  PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
+  AC = 'http://pm.mpx.dev/v20140601/context/affiliation?t=0'
 
   beforeEach ->
     angular.mock.module("chinchilla")
+    sinon.useFakeTimers()
 
   beforeEach ->
     angular.mock.module ($chProvider) ->
@@ -140,7 +141,7 @@ describe 'ChRequestBuilder', ->
       builder.extractFrom(obj, 'member')
       builder.mergeParams(foo: 'foo', bar: 'bar')
 
-      $httpBackend.expectGET('http://um.mpx.com/roles/15?foo=foo').respond(null)
+      $httpBackend.expectGET('http://um.mpx.com/roles/15?foo=foo&t=0').respond(null)
 
       builder.performRequest()
       $httpBackend.flush()

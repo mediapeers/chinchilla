@@ -6,12 +6,13 @@ describe 'ChContextOperation', ->
   ChContext = null
   ChContextOperation = null
   $pm = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
-  PC = 'http://pm.mpx.dev/v20140601/context/product'
-  AC = 'http://pm.mpx.dev/v20140601/context/affiliation'
+  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+  PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
+  AC = 'http://pm.mpx.dev/v20140601/context/affiliation?t=0'
 
   beforeEach ->
     angular.mock.module("chinchilla")
+    sinon.useFakeTimers()
 
   beforeEach ->
     angular.mock.module ($chProvider) ->
@@ -58,7 +59,7 @@ describe 'ChContextOperation', ->
 
   context 'association data', ->
     it 'exposes association data for collection', ->
-      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products').respond(members: [{ '@context': PC, affiliation: { '@id': 'foo' }}])
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/products?t=0').respond(members: [{ '@context': PC, affiliation: { '@id': 'foo' }}])
       products = $pm.$('products').$$('query')
       affiliationContext = products.$('affiliation')
       $httpBackend.flush()
@@ -67,7 +68,7 @@ describe 'ChContextOperation', ->
       expect(affiliationContext.$associationData[0]).to.be.like('@id': 'foo')
 
     it 'exposes association data for has one/belongs to association', ->
-      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/product/1').respond('@context': PC, affiliation: { '@id': 'foo' })
+      $httpBackend.expectGET('http://pm.mpx.dev/v20140601/product/1?t=0').respond('@context': PC, affiliation: { '@id': 'foo' })
       products = $pm.$('products').$m('get', id: 1)
       affiliationContext = products.$('affiliation')
       $httpBackend.flush()
