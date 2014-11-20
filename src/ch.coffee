@@ -24,6 +24,7 @@ module.provider '$ch', () ->
 
   @
 
+# helper utility to append a timestamp to a given url
 module.provider '$chTimestampedUrl', () ->
   @timestamp = new Date().getTime()
 
