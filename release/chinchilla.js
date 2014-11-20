@@ -35,6 +35,20 @@
     ];
     return this;
   });
+  module.provider('$chTimestampedUrl', function () {
+    this.timestamp = new Date().getTime();
+    this.$get = function (_this) {
+      return function () {
+        return function (url) {
+          var uri;
+          uri = new URI(url);
+          uri.addQuery({ t: _this.timestamp });
+          return uri.toString();
+        };
+      };
+    }(this);
+    return this;
+  });
 }.call(this));
 (function () {
   var __hasProp = {}.hasOwnProperty, __extends = function (child, parent) {
@@ -379,8 +393,9 @@
   angular.module('chinchilla').factory('ChContextService', [
     '$q',
     '$http',
+    '$chTimestampedUrl',
     'ChContext',
-    function ($q, $http, ChContext) {
+    function ($q, $http, $chTimestampedUrl, ChContext) {
       var ChContextService;
       ChContextService = function () {
         function ChContextService() {
@@ -402,7 +417,7 @@
             error = function () {
               return deferred.reject();
             };
-            $http.get(url).then(success, error);
+            $http.get($chTimestampedUrl(url)).then(success, error);
           }
           return deferred.promise;
         };
@@ -720,8 +735,9 @@
     '$q',
     '$injector',
     '$http',
+    '$chTimestampedUrl',
     'ChUtils',
-    function ($q, $injector, $http, ChUtils) {
+    function ($q, $injector, $http, $chTimestampedUrl, ChUtils) {
       var ChRequestBuilder;
       return ChRequestBuilder = function () {
         function ChRequestBuilder($context, $subject, $type, $actionName, $options) {
@@ -751,7 +767,7 @@
           ], this.$action.method) ? this.data() : null;
           return $http({
             method: this.$action.method,
-            url: this.buildUrl(),
+            url: $chTimestampedUrl(this.buildUrl()),
             data: data
           });
         };
