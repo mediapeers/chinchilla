@@ -5,10 +5,10 @@ describe 'ChActionOperation', ->
   $httpBackend = null
   ChActionOperation = null
   $pm = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
-  PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
-  AC = 'http://pm.mpx.dev/v20140601/context/affiliation?t=0'
-  GC = 'http://pm.mpx.dev/v20140601/context/geo_scope?t=0'
+  EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
+  PC = 'http://pm.mpx.dev/v20140601/context/product'
+  AC = 'http://pm.mpx.dev/v20140601/context/affiliation'
+  GC = 'http://pm.mpx.dev/v20140601/context/geo_scope'
 
   beforeEach ->
     angular.mock.module("chinchilla")
