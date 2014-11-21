@@ -393,9 +393,8 @@
   angular.module('chinchilla').factory('ChContextService', [
     '$q',
     '$http',
-    '$chTimestampedUrl',
     'ChContext',
-    function ($q, $http, $chTimestampedUrl, ChContext) {
+    function ($q, $http, ChContext) {
       var ChContextService;
       ChContextService = function () {
         function ChContextService() {
@@ -417,7 +416,7 @@
             error = function () {
               return deferred.reject();
             };
-            $http.get($chTimestampedUrl(url)).then(success, error);
+            $http.get(url).then(success, error);
           }
           return deferred.promise;
         };
