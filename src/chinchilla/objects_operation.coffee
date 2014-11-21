@@ -1,7 +1,15 @@
 angular.module('chinchilla').factory 'ChObjectsOperation', (ChOperation, ChContextService) ->
-  # chainable operation class to run queries.
-  # fetches context for given set of objects.
+  # chainable operation class to run queries. fetches context for given set of objects.
+  # mainly used for running association queries because it takes parent (given) objects into consideration
+  # when building the query.
+  #
+  # @example
+  #   user = { id: 3, '@context': ... }
+  #   op = new ChObjectsOperation(user)
+  #   op.$('phones').$c('query')
+  #   # -> 'http://backend/users/3/phones'
   class ChObjectsOperation extends ChOperation
+    # @param [Object|Array<Object>] objects
     constructor: (@$objects) ->
       ChOperation.init(@)
 
