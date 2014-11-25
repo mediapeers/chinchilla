@@ -86,6 +86,10 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
 
         # remap nested data according to rails conventions
         else if _.isObject(value)
+          # kick out empty objects inside of array
+          if _.isArray(value)
+            value = _.filter value, (el) -> !_.isEmpty(el)
+
           object["#{key}_attributes"] = value
           delete object[key]
 

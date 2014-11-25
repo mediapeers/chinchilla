@@ -803,6 +803,11 @@
               });
               return object[key] = values;
             } else if (_.isObject(value)) {
+              if (_.isArray(value)) {
+                value = _.filter(value, function (el) {
+                  return !_.isEmpty(el);
+                });
+              }
               object['' + key + '_attributes'] = value;
               return delete object[key];
             }
