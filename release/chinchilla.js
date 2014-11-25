@@ -794,7 +794,38 @@
             return this._remapAttributes(subject);
           }
         };
+        ChRequestBuilder.prototype._collectNonEmptyFields = function (object) {
+          var newObject, self;
+          self = this;
+          newObject = {};
+          _.each(object, function (v, k) {
+            var obj, subset;
+            if (/^\$/.test(k) || k === 'errors' || k === 'isPristine' || _.isFunction(v)) {
+            } else if (_.isArray(v)) {
+              if (_.isPlainObject(v[0])) {
+                subset = _.map(v, function (x) {
+                  return self._collectNonEmptyFields(x);
+                });
+                return newObject[k] = _.reject(subset, function (x) {
+                  return _.isEmpty(x);
+                });
+              } else {
+                return newObject[k] = v;
+              }
+            } else if (_.isPlainObject(v)) {
+              obj = self._collectNonEmptyFields(v);
+              if (!_.isEmpty(obj)) {
+                return newObject[k] = obj;
+              }
+            } else {
+              return newObject[k] = v;
+            }
+          });
+          return newObject;
+        };
         ChRequestBuilder.prototype._remapAttributes = function (object) {
+          var self;
+          self = this;
           return _.each(object, function (value, key) {
             var values;
             if (_.isString(value) && /(^tags|_ids$)/.test(key)) {
@@ -803,11 +834,7 @@
               });
               return object[key] = values;
             } else if (_.isObject(value)) {
-              if (_.isArray(value)) {
-                value = _.filter(value, function (el) {
-                  return !_.isEmpty(el);
-                });
-              }
+              value = self._collectNonEmptyFields(value);
               object['' + key + '_attributes'] = value;
               return delete object[key];
             }
