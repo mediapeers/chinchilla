@@ -6,8 +6,8 @@ describe '$chProvider', ->
   $httpBackend = null
   ChContext = null
   ChContextOperation = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point'
-  PC = 'http://pm.mpx.dev/v20140601/context/product'
+  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+  PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
 
   beforeEach ->
     angular.mock.module("chinchilla")
