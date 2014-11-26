@@ -77,7 +77,32 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
       else
         @_remapAttributes(subject)
 
+    _collectNonEmptyFields: (object) ->
+      self = @
+      newObject = {}
+
+      _.each object, (v,k) ->
+        if /^\$/.test(k) || k == 'errors' || k == 'isPristine' || _.isFunction(v)
+          # skip
+        else if _.isArray(v)
+          if _.isPlainObject(v[0])
+            subset = _.map v, (x) -> self._collectNonEmptyFields(x)
+            newObject[k] = _.reject subset, (x) -> _.isEmpty(x)
+
+          else
+            newObject[k] = v
+
+        else if _.isPlainObject(v)
+          obj = self._collectNonEmptyFields(v)
+          newObject[k] = obj unless _.isEmpty(obj)
+
+        else
+          newObject[k] = v
+
+      newObject
+
     _remapAttributes: (object) ->
+      self = @
       _.each object, (value, key) ->
         # split csv string to array
         if _.isString(value) && /(^tags|_ids$)/.test(key)
@@ -86,9 +111,7 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
 
         # remap nested data according to rails conventions
         else if _.isObject(value)
-          # kick out empty objects inside of array
-          if _.isArray(value)
-            value = _.filter value, (el) -> !_.isEmpty(el)
+          value = self._collectNonEmptyFields(value)
 
           object["#{key}_attributes"] = value
           delete object[key]
