@@ -247,8 +247,8 @@
           context = this.data && this.data['@context'];
           action = context && context.member_actions && context.member_actions[name];
           if (!action) {
-            $log.warn('requested non-existing member action \'' + name + '\' in following context:');
-            $log.warn(this.data);
+            $log.warn('requested non-existing member action \'' + name + '\'');
+            $log.debug(this.data);
           }
           return action;
         };
@@ -257,8 +257,8 @@
           context = this.data && this.data['@context'];
           action = context && context.collection_actions && context.collection_actions[name];
           if (!action) {
-            $log.warn('requested non-existing collection action \'' + name + '\' in following context:');
-            $log.warn(this.data);
+            $log.warn('requested non-existing collection action \'' + name + '\'');
+            $log.debug(this.data);
           }
           return action;
         };
@@ -778,7 +778,7 @@
         };
         ChRequestBuilder.prototype.data = function () {
           var result, subject;
-          subject = _.cloneDeep(this.$subject);
+          subject = this._cleanup(this.$subject);
           if (this.$options['raw']) {
             return subject;
           }
@@ -794,7 +794,7 @@
             return this._remapAttributes(subject);
           }
         };
-        ChRequestBuilder.prototype._collectNonEmptyFields = function (object) {
+        ChRequestBuilder.prototype._cleanup = function (object) {
           var newObject, self;
           self = this;
           newObject = {};
@@ -804,7 +804,7 @@
             } else if (_.isArray(v)) {
               if (_.isPlainObject(v[0])) {
                 subset = _.map(v, function (x) {
-                  return self._collectNonEmptyFields(x);
+                  return self._cleanup(x);
                 });
                 return newObject[k] = _.reject(subset, function (x) {
                   return _.isEmpty(x);
@@ -813,7 +813,7 @@
                 return newObject[k] = v;
               }
             } else if (_.isPlainObject(v)) {
-              obj = self._collectNonEmptyFields(v);
+              obj = self._cleanup(v);
               if (!_.isEmpty(obj)) {
                 return newObject[k] = obj;
               }
@@ -834,7 +834,6 @@
               });
               return object[key] = values;
             } else if (_.isObject(value)) {
-              value = self._collectNonEmptyFields(value);
               object['' + key + '_attributes'] = value;
               return delete object[key];
             }
