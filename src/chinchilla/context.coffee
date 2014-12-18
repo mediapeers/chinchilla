@@ -20,8 +20,8 @@ angular.module('chinchilla').factory 'ChContext', ($log) ->
       context = @data && @data['@context']
       action  = context && context.member_actions && context.member_actions[name]
       unless action
-        $log.warn("requested non-existing member action '#{name}' in following context:")
-        $log.warn(@data)
+        $log.warn("requested non-existing member action '#{name}'")
+        $log.debug(@data)
 
       action
 
@@ -30,7 +30,7 @@ angular.module('chinchilla').factory 'ChContext', ($log) ->
       context = @data && @data['@context']
       action  = context && context.collection_actions && context.collection_actions[name]
       unless action
-        $log.warn("requested non-existing collection action '#{name}' in following context:")
-        $log.warn(@data)
+        $log.warn("requested non-existing collection action '#{name}'")
+        $log.debug(@data)
 
       action

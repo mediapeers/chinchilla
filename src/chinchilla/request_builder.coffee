@@ -67,7 +67,7 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # builds body data. if $subject is an array of objects a nested data object is created
     # containing each object's data, referenced by object id
     data: ->
-      subject = _.cloneDeep(@$subject)
+      subject = @_cleanup(@$subject)
       return subject if @$options['raw'] # do not modify data according to rails conventions
 
       if _.isArray(subject)
@@ -77,7 +77,13 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
       else
         @_remapAttributes(subject)
 
-    _collectNonEmptyFields: (object) ->
+    # cleans the object to be send
+    # * rejects attributes starting with $
+    # * rejects validation errors and isPristine attribute
+    # * rejects js functions
+    # * rejects empty objects {}
+    # * rejects empty objects within array [{}]
+    _cleanup: (object) ->
       self = @
       newObject = {}
 
@@ -86,14 +92,14 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
           # skip
         else if _.isArray(v)
           if _.isPlainObject(v[0])
-            subset = _.map v, (x) -> self._collectNonEmptyFields(x)
+            subset = _.map v, (x) -> self._cleanup(x)
             newObject[k] = _.reject subset, (x) -> _.isEmpty(x)
 
           else
             newObject[k] = v
 
         else if _.isPlainObject(v)
-          obj = self._collectNonEmptyFields(v)
+          obj = self._cleanup(v)
           newObject[k] = obj unless _.isEmpty(obj)
 
         else
@@ -111,8 +117,6 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
 
         # remap nested data according to rails conventions
         else if _.isObject(value)
-          value = self._collectNonEmptyFields(value)
-
           object["#{key}_attributes"] = value
           delete object[key]
 
