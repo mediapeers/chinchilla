@@ -17,7 +17,17 @@ module.provider '$ch', () ->
         new ChContextOperation(null, subject)
 
     fn.o = (objects) -> new ChObjectsOperation(objects)
-    fn.c = (objects) -> new ChContextOperation(objects)
+
+    fn.c = ->
+      if arguments.length == 2
+        [system, model] = arguments
+        endpoint = endpoints[system]
+        throw new Error("no endpoint url defined for #{system}") unless endpoint
+        new ChContextOperation(null, { '@context': "#{endpoint}/context/#{model}" })
+      else
+        contextUrl = arguments[0]
+        new ChContextOperation(null, contextUrl)
+
     fn
   ]
 
