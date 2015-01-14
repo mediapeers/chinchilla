@@ -10,6 +10,11 @@ angular.module('chinchilla').factory 'ChContext', ($log) ->
       context = @data && @data['@context']
       context && context.properties && context.properties[name]
 
+    # @param [String] name name of constant
+    constant: (name) ->
+      context = @data && @data['@context']
+      context && context.constants && context.constants[name]
+
     # @param [String] name name of association
     association: (name) ->
       assoc = @property(name)
