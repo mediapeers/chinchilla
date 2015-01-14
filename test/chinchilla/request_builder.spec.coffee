@@ -17,7 +17,7 @@ describe 'ChRequestBuilder', ->
 
   beforeEach ->
     angular.mock.module ($chProvider) ->
-      $chProvider.setEntryPoint('pm', EP)
+      $chProvider.setEndpoint('pm', EP)
       null
 
   afterEach ->

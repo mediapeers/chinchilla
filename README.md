@@ -13,8 +13,8 @@ I'm not going to explain this.
 ~~~javascript
 angular.module("yourproject").config ($chProvider) ->
   # set chinchilla's entry points
-  $chProvider.setEntryPoint('bestbackend', "http://this.is.the.backend.url")
-  $chProvider.setEntryPoint('bar', "http://bar.backend")
+  $chProvider.setEndpoint('bestbackend', "http://this.is.the.backend.url")
+  $chProvider.setEndpoint('bar', "http://bar.backend")
 ~~~
 
 ## Usage
