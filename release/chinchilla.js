@@ -246,6 +246,11 @@
           context = this.data && this.data['@context'];
           return context && context.properties && context.properties[name];
         };
+        ChContext.prototype.constant = function (name) {
+          var context;
+          context = this.data && this.data['@context'];
+          return context && context.constants && context.constants[name];
+        };
         ChContext.prototype.association = function (name) {
           var assoc;
           assoc = this.property(name);
