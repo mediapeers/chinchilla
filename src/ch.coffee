@@ -2,23 +2,32 @@ module = angular.module('chinchilla', [])
 
 module.provider '$ch', () ->
   # holds the urls to different application entry point contexts
-  entryPoints = {}
+  endpoints = {}
 
-  @setEntryPoint = (systemId, url) ->
-    entryPoints[systemId] = url
+  @setEndpoint = (systemId, url) ->
+    endpoints[systemId] = url
 
   @.$get = ['ChContextOperation', 'ChObjectsOperation', (ChContextOperation, ChObjectsOperation) ->
     fn = (subject) ->
       if _.isString(subject)
-        contextUrl = entryPoints[subject]
-        throw new Error("no entry point url defined for #{subject}") unless contextUrl
-
-        new ChContextOperation(null, { '@context': contextUrl })
+        endpoint = endpoints[subject]
+        throw new Error("no endpoint url defined for #{subject}") unless endpoint
+        new ChContextOperation(null, { '@context': "#{endpoint}/context/entry_point" })
       else
         new ChContextOperation(null, subject)
 
     fn.o = (objects) -> new ChObjectsOperation(objects)
-    fn.c = (objects) -> new ChContextOperation(objects)
+
+    fn.c = ->
+      if arguments.length == 2
+        [system, model] = arguments
+        endpoint = endpoints[system]
+        throw new Error("no endpoint url defined for #{system}") unless endpoint
+        new ChContextOperation(null, { '@context': "#{endpoint}/context/#{model}" })
+      else
+        contextUrl = arguments[0]
+        new ChContextOperation(null, contextUrl)
+
     fn
   ]
 

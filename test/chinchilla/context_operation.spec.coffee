@@ -16,7 +16,7 @@ describe 'ChContextOperation', ->
 
   beforeEach ->
     angular.mock.module ($chProvider) ->
-      $chProvider.setEntryPoint('pm', EP)
+      $chProvider.setEndpoint('pm', EP)
       null
 
   afterEach ->

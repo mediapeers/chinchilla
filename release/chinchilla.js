@@ -2,10 +2,10 @@
   var module;
   module = angular.module('chinchilla', []);
   module.provider('$ch', function () {
-    var entryPoints;
-    entryPoints = {};
-    this.setEntryPoint = function (systemId, url) {
-      return entryPoints[systemId] = url;
+    var endpoints;
+    endpoints = {};
+    this.setEndpoint = function (systemId, url) {
+      return endpoints[systemId] = url;
     };
     this.$get = [
       'ChContextOperation',
@@ -13,13 +13,13 @@
       function (ChContextOperation, ChObjectsOperation) {
         var fn;
         fn = function (subject) {
-          var contextUrl;
+          var endpoint;
           if (_.isString(subject)) {
-            contextUrl = entryPoints[subject];
-            if (!contextUrl) {
-              throw new Error('no entry point url defined for ' + subject);
+            endpoint = endpoints[subject];
+            if (!endpoint) {
+              throw new Error('no endpoint url defined for ' + subject);
             }
-            return new ChContextOperation(null, { '@context': contextUrl });
+            return new ChContextOperation(null, { '@context': '' + endpoint + '/context/entry_point' });
           } else {
             return new ChContextOperation(null, subject);
           }
@@ -27,8 +27,19 @@
         fn.o = function (objects) {
           return new ChObjectsOperation(objects);
         };
-        fn.c = function (objects) {
-          return new ChContextOperation(objects);
+        fn.c = function () {
+          var contextUrl, endpoint, model, system;
+          if (arguments.length === 2) {
+            system = arguments[0], model = arguments[1];
+            endpoint = endpoints[system];
+            if (!endpoint) {
+              throw new Error('no endpoint url defined for ' + system);
+            }
+            return new ChContextOperation(null, { '@context': '' + endpoint + '/context/' + model });
+          } else {
+            contextUrl = arguments[0];
+            return new ChContextOperation(null, contextUrl);
+          }
         };
         return fn;
       }
@@ -234,6 +245,11 @@
           var context;
           context = this.data && this.data['@context'];
           return context && context.properties && context.properties[name];
+        };
+        ChContext.prototype.constant = function (name) {
+          var context;
+          context = this.data && this.data['@context'];
+          return context && context.constants && context.constants[name];
         };
         ChContext.prototype.association = function (name) {
           var assoc;
