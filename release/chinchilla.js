@@ -157,6 +157,7 @@
           }(this);
           error = function (_this) {
             return function (response) {
+              _this.$response = response;
               _this.$error = response.data;
               _.merge(_this.$headers, response.headers());
               return _this.$deferred.reject(_this);
@@ -784,7 +785,8 @@
           return $http({
             method: this.$action.method,
             url: $chTimestampedUrl(this.buildUrl()),
-            data: data
+            data: data,
+            foo: 'bar'
           });
         };
         ChRequestBuilder.prototype.buildUrl = function () {

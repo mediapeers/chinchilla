@@ -82,7 +82,8 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
           @_initLazyLoading()
 
       error = (response) =>
-        @$error = response.data
+        @$response  = response
+        @$error     = response.data
         _.merge @$headers, response.headers()
 
         @$deferred.reject(@)
