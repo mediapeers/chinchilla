@@ -785,8 +785,7 @@
           return $http({
             method: this.$action.method,
             url: $chTimestampedUrl(this.buildUrl()),
-            data: data,
-            foo: 'bar'
+            data: data
           });
         };
         ChRequestBuilder.prototype.buildUrl = function () {
