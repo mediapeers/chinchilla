@@ -7,7 +7,8 @@ describe 'ChRequestBuilder', ->
   $injector = null
   ChRequestBuilder = null
   ChContext = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+  EP = 'http://pm.mpx.dev/v20140601'
+  EPC = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
   PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
   AC = 'http://pm.mpx.dev/v20140601/context/affiliation?t=0'
 
@@ -35,7 +36,7 @@ describe 'ChRequestBuilder', ->
       entryPointContext = loadFixture('pm.context.entry_point')
       productContext = loadFixture('pm.context.product')
 
-      $httpBackend.whenGET(EP).respond(entryPointContext)
+      $httpBackend.whenGET(EPC).respond(entryPointContext)
       $httpBackend.whenGET(PC).respond(productContext)
       $httpBackend.whenGET(AC).respond({})
 

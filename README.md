@@ -26,7 +26,7 @@ Chinchilla automatically (well, it's defined in the contexts) chooses the proper
 ### Example 1: Fetch data
 
 ~~~javascript
-# assuming the 'entry_point' of 'bestbackend' serves you with an interface to 'users', 
+# assuming the 'entry_point' of 'bestbackend' serves you with an interface to 'users',
 # this is a collection action call '$c' and will do a GET request to query users:
 op = $ch('bestbackend').$('users').$c('query')
 # -> GET http://this.is.the.backend.url/users
@@ -69,25 +69,25 @@ $ch('bestbackend').$('organization').$m('delete', id: 1)
 Assuming you have an object or an array of objects, where all of them have a proper '@context' attribute you can use chinchilla simply by passing the objects to $ch
 
 ~~~javascript
-user = { 
+user = {
 	'@context': 'http://this.is.the.backend.url/context/user',
 	'@id': 'http://this.is.the.backend.url/users/1',
-	name: 'john doe' 
+	name: 'john doe'
 }
 
 $ch(user).$m('delete')
 # -> DELETE http://this.is.the.backend.url/users/1
 
 users = [
-	{ 
+	{
 		'@context': 'http://this.is.the.backend.url/context/user',
 		'@id': 'http://this.is.the.backend.url/users/1',
-		name: 'bonny' 
+		name: 'bonny'
 	},
-	{ 
+	{
 		'@context': 'http://this.is.the.backend.url/context/user',
 		'@id': 'http://this.is.the.backend.url/users/2',
-		name: 'clyde' 
+		name: 'clyde'
 	},
 ]
 
@@ -115,7 +115,7 @@ $('bestbackend').$('users').$m('get', id: 2).$promise.then (op) ->
 	# -> GET http://this.is.the.backend.url/organization/1
 	# returns {} empty object first, but the object will be updated with organization data when
 	# the request is done.
-	
+
 # the manual equivalent way to do this would be:
 $('bestbackend').$('users').$m('get', id: 2).$('organization').$m('get')
 ~~~

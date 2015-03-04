@@ -5,7 +5,9 @@ describe 'ChActionOperation', ->
   $httpBackend = null
   ChActionOperation = null
   $pm = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+
+  EP = 'http://pm.mpx.dev/v20140601'
+  EPC = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
   PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
   AC = 'http://pm.mpx.dev/v20140601/context/affiliation?t=0'
   GC = 'http://pm.mpx.dev/v20140601/context/geo_scope?t=0'
@@ -35,7 +37,7 @@ describe 'ChActionOperation', ->
       geoScopeContext = loadFixture('pm.context.geo_scope')
       geoScopeData = loadFixture('pm.graph.geo_scope')
 
-      $httpBackend.whenGET(EP).respond(entryPointContext)
+      $httpBackend.whenGET(EPC).respond(entryPointContext)
       $httpBackend.whenGET(PC).respond(productContext)
       $httpBackend.whenGET(AC).respond(affiliationContext)
       $httpBackend.whenGET(GC).respond(geoScopeContext)
