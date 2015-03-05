@@ -524,23 +524,36 @@
               associationName = _.findKey(this.contextOperation.$context.data['@context']['properties'], function (value, key) {
                 return value && value.type && value.type === parentContextId;
               });
+              associationName || (associationName = _.findKey(this.contextOperation.$context.data['@context']['properties'], function (_this) {
+                return function (value, key) {
+                  return value && value.inverse_of && value.inverse_of === _this.$name;
+                };
+              }(this)));
               backReferences = [];
-              _.each(results, function (_this) {
-                return function (result) {
-                  var backReference;
-                  backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id'];
-                  if (!backReference) {
-                    return;
-                  }
-                  backReferences.push(backReference);
-                  return _this.cache[backReference].push(result);
-                };
-              }(this));
-              return _.each(backReferences, function (_this) {
-                return function (backReference) {
-                  return _this.retrieveDeferred({ '@id': backReference }).resolve();
-                };
-              }(this));
+              try {
+                _.each(results, function (_this) {
+                  return function (result) {
+                    var backReference;
+                    backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id'];
+                    if (!backReference) {
+                      throw new Error();
+                    }
+                    backReferences.push(backReference);
+                    return _this.cache[backReference].push(result);
+                  };
+                }(this));
+                return _.each(backReferences, function (_this) {
+                  return function (backReference) {
+                    return _this.retrieveDeferred({ '@id': backReference }).resolve();
+                  };
+                }(this));
+              } catch (_error) {
+                return _.each(this.$objects, function (_this) {
+                  return function (object) {
+                    return _this.retrieveDeferred(object).reject();
+                  };
+                }(this));
+              }
             }
           } else {
             sortedResults = {};
