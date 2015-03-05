@@ -1,6 +1,6 @@
-defineFixture('pm.context.product', {
+defineFixture('pm.context.product_sub', {
   "@context": {
-    "@id": "http://pm.mpx.dev/v20140601/context/product",
+    "@id": "http://pm.mpx.dev/v20140601/context/product/motion_picture",
     "@type": "context",
     "constants": {
       "access_levels": [

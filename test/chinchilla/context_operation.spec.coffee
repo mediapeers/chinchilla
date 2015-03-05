@@ -6,7 +6,8 @@ describe 'ChContextOperation', ->
   ChContext = null
   ChContextOperation = null
   $pm = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+  EP = 'http://pm.mpx.dev/v20140601'
+  EPC = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
   PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
   AC = 'http://pm.mpx.dev/v20140601/context/affiliation?t=0'
 
@@ -33,8 +34,8 @@ describe 'ChContextOperation', ->
       entryPointContext = loadFixture('pm.context.entry_point')
       productContext = loadFixture('pm.context.product')
       affiliationContext = loadFixture('pm.context.affiliation')
+      $httpBackend.whenGET(EPC).respond(entryPointContext)
       $httpBackend.whenGET(AC).respond(affiliationContext)
-      $httpBackend.whenGET(EP).respond(entryPointContext)
       $httpBackend.whenGET(PC).respond(productContext)
 
       $pm = $ch('pm')

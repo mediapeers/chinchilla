@@ -6,7 +6,8 @@ describe '$chProvider', ->
   $httpBackend = null
   ChContext = null
   ChContextOperation = null
-  EP = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
+  EP = 'http://pm.mpx.dev/v20140601'
+  EPC = 'http://pm.mpx.dev/v20140601/context/entry_point?t=0'
   PC = 'http://pm.mpx.dev/v20140601/context/product?t=0'
 
   beforeEach ->
@@ -26,7 +27,7 @@ describe '$chProvider', ->
         ChContext = $injector.get('ChContext')
         ChContextOperation = $injector.get('ChContextOperation')
 
-        $httpBackend.whenGET(EP).respond({})
+        $httpBackend.whenGET(EPC).respond({})
 
     it 'returns context operation for system id', ->
       expect($ch('pm')).to.be.an.instanceof(ChContextOperation)

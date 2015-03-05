@@ -100,20 +100,31 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector, $q) ->
           # - @contextOperation.$context is the phone context
           # - -> find the association inside of phone context which points to @id of user context
           parentContextId = @$operation.$context.data['@context']['@id']
+
+          # 1. attempt: try to find association name using parent context id in own associations
           associationName = _.findKey @contextOperation.$context.data['@context']['properties'], (value, key) ->
             value && value.type && value.type == parentContextId
 
+          # 2. attempt: try to find association name using inverse_of if given
+          associationName ||= _.findKey @contextOperation.$context.data['@context']['properties'], (value, key) =>
+            value && value.inverse_of && value.inverse_of == @$name
+
           backReferences = []
 
-          _.each results, (result) =>
-            backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id']
-            return unless backReference
-            backReferences.push(backReference)
+          try
+            _.each results, (result) =>
+              backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id']
+              throw new Error unless backReference
 
-            @cache[backReference].push(result)
+              backReferences.push(backReference)
+              @cache[backReference].push(result)
 
-          _.each backReferences, (backReference) =>
-            @retrieveDeferred('@id': backReference).resolve()
+            _.each backReferences, (backReference) =>
+              @retrieveDeferred('@id': backReference).resolve()
+
+          catch
+            _.each @$objects, (object) =>
+              @retrieveDeferred(object).reject()
 
       else
         # HAS ONE / BELONGS TO
