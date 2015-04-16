@@ -239,25 +239,29 @@
     function ($log) {
       var ChContext;
       return ChContext = function () {
+        var isAssociation;
+        isAssociation = function (property) {
+        };
         function ChContext(data) {
           this.data = data != null ? data : {};
+          this.context = this.data && this.data['@context'] || {};
+          this.properties = this.context.properties || {};
+          this.constants = this.context.constants || {};
+          _.each(this.properties, function (property, name) {
+            property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
+            return true;
+          });
         }
         ChContext.prototype.property = function (name) {
-          var context;
-          context = this.data && this.data['@context'];
-          return context && context.properties && context.properties[name];
+          return this.properties[name];
         };
         ChContext.prototype.constant = function (name) {
-          var context;
-          context = this.data && this.data['@context'];
-          return context && context.constants && context.constants[name];
+          return this.constants[name];
         };
         ChContext.prototype.association = function (name) {
-          var assoc;
-          assoc = this.property(name);
-          if (_.isPlainObject(assoc) && assoc.type && assoc.type.match(/^(http|https)\:/)) {
-            return assoc;
-          }
+          var property;
+          property = this.properties[name];
+          return property.isAssociation && property;
         };
         ChContext.prototype.member_action = function (name) {
           var action, context;
