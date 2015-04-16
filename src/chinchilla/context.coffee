@@ -2,23 +2,31 @@ angular.module('chinchilla').factory 'ChContext', ($log) ->
   # context wrapper with some helper functions to fetch actions and association
   # context information.
   class ChContext
+    isAssociation = (property) ->
+
     # @param [Object] data context data
     constructor: (@data = {}) ->
+      @context    = @data && @data['@context'] || {}
+      @properties = @context.properties || {}
+      @constants  = @context.constants || {}
+
+      # mark associations
+      _.each @properties, (property, name) ->
+        property.isAssociation = property.type && /^(http|https)\:/.test(property.type)
+        true # continue loop
 
     # @param [String] name name of property
     property: (name) ->
-      context = @data && @data['@context']
-      context && context.properties && context.properties[name]
+      @properties[name]
 
     # @param [String] name name of constant
     constant: (name) ->
-      context = @data && @data['@context']
-      context && context.constants && context.constants[name]
+      @constants[name]
 
     # @param [String] name name of association
     association: (name) ->
-      assoc = @property(name)
-      assoc if _.isPlainObject(assoc) && assoc.type && assoc.type.match(/^(http|https)\:/)
+      property = @properties[name]
+      property.isAssociation && property
 
     # @param [String] name name of member action
     member_action: (name) ->
