@@ -146,3 +146,63 @@ describe 'ChRequestBuilder', ->
 
       builder.performRequest()
       $httpBackend.flush()
+
+  describe '#data', ->
+    it 'builds data for multi update', ->
+      context = new ChContext(
+        '@context':
+          collection_actions:
+            update:
+              template: 'http://um.mpx.com/roles/{ids}'
+              mappings: [
+                  variable: 'ids'
+                  source: 'id'
+                  required: true
+              ]
+      )
+
+      subject = [
+       { id: 3, foo: 'lorem', '$promise': 'dummy', errors: [] }
+       { id: 6, foo: 'ipsum', '$promise': 'dummy', errors: [] }
+      ]
+
+      builder = new ChRequestBuilder(context, subject, 'collection', 'update', {})
+
+      expected =
+        3: { id: 3, foo: 'lorem' },
+        6: { id: 6, foo: 'ipsum' }
+
+      data = builder.data()
+
+      expect(data).to.be.like(expected)
+
+    it 'builds data for create with nested objects', ->
+      context = new ChContext(
+        '@context':
+          collection_actions:
+            create:
+              template: 'http://um.mpx.com/roles'
+      )
+      subject =
+        name: 'hello'
+        $angular: 'some value'
+        funky: -> 'hey'
+        access_level: 'private'
+        casts: [
+          { foo: 'lorem' }
+          { foo: 'ipsum' }
+        ]
+
+      builder = new ChRequestBuilder(context, subject, 'collection', 'create', {})
+
+      expected =
+        name: 'hello'
+        access_level: 'private'
+        casts_attributes: [
+          { foo: 'lorem' }
+          { foo: 'ipsum' }
+        ]
+
+      data = builder.data()
+
+      expect(data).to.be.like(expected)

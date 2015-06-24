@@ -67,15 +67,17 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # builds body data. if $subject is an array of objects a nested data object is created
     # containing each object's data, referenced by object id
     data: ->
-      subject = @_cleanup(@$subject)
-      return subject if @$options['raw'] # do not modify data according to rails conventions
+      if @$options['raw']
+        @_cleanup(@$subject)
 
-      if _.isArray(subject)
-        result = {}
-        _.each subject, (obj) => result[obj.id] = @_remapAttributes(obj)
-        result
+      else if _.isArray(@$subject)
+        data = {}
+        _.each @$subject, (obj) =>
+          data[obj.id] = @_remapAttributes(@_cleanup(obj))
+        data
+
       else
-        @_remapAttributes(subject)
+        @_cleanup(@_remapAttributes(@$subject))
 
     # cleans the object to be send
     # * rejects attributes starting with $
