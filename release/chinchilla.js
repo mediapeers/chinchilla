@@ -811,21 +811,19 @@
           return uriTmpl.fillFromObject(this._buildParams());
         };
         ChRequestBuilder.prototype.data = function () {
-          var result, subject;
-          subject = this._cleanup(this.$subject);
+          var data;
           if (this.$options['raw']) {
-            return subject;
-          }
-          if (_.isArray(subject)) {
-            result = {};
-            _.each(subject, function (_this) {
+            return this._cleanup(this.$subject);
+          } else if (_.isArray(this.$subject)) {
+            data = {};
+            _.each(this.$subject, function (_this) {
               return function (obj) {
-                return result[obj.id] = _this._remapAttributes(obj);
+                return data[obj.id] = _this._remapAttributes(_this._cleanup(obj));
               };
             }(this));
-            return result;
+            return data;
           } else {
-            return this._remapAttributes(subject);
+            return this._cleanup(this._remapAttributes(this.$subject));
           }
         };
         ChRequestBuilder.prototype._cleanup = function (object) {
