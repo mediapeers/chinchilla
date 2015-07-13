@@ -417,12 +417,10 @@
     '$chTimestampedUrl',
     'ChContext',
     function ($q, $http, $chTimestampedUrl, ChContext) {
-      var ChContextService;
-      ChContextService = function () {
-        function ChContextService() {
-          this.contexts = {};
-        }
-        ChContextService.prototype.get = function (url) {
+      return {
+        contexts: {},
+        pendingRequests: {},
+        get: function (url) {
           var context, deferred, error, success;
           deferred = $q.defer();
           if (context = this.contexts[url]) {
@@ -432,19 +430,37 @@
               return function (response) {
                 context = new ChContext(response.data);
                 _this.contexts[url] = context;
-                return deferred.resolve(context);
+                return _this._resolvePendingRequests(url, context);
               };
             }(this);
             error = function () {
-              return deferred.reject();
+              return this._rejectPendingRequests(url);
             };
-            $http.get($chTimestampedUrl(url)).then(success, error);
+            if (this.pendingRequests[url]) {
+              this._addToPendingRequests(url, deferred);
+            } else {
+              this._addToPendingRequests(url, deferred);
+              $http.get($chTimestampedUrl(url)).then(success, error);
+            }
           }
           return deferred.promise;
-        };
-        return ChContextService;
-      }();
-      return new ChContextService();
+        },
+        _addToPendingRequests: function (url, deferred) {
+          var _base;
+          (_base = this.pendingRequests)[url] || (_base[url] = []);
+          return this.pendingRequests[url].push(deferred);
+        },
+        _resolvePendingRequests: function (url, context) {
+          return _.each(this.pendingRequests[url], function (deferred) {
+            return deferred.resolve(context);
+          });
+        },
+        _rejectPendingRequests: function (url) {
+          return _.each(this.pendingRequests[url], function (deferred) {
+            return deferred.reject();
+          });
+        }
+      };
     }
   ]);
 }.call(this));
