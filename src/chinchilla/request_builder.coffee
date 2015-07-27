@@ -7,7 +7,7 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
     # @param [String] type 'member' or 'collection'
     # @param [String] action e.g. 'query'
     # @param [String] options e.g. {raw: true}
-    constructor: (@$context, @$subject, @$type, @$actionName, @$options) ->
+    constructor: (@$context, @$subject, @$type, @$actionName, @$options = {}) ->
       @$mergedParams = {}
       @$action = if @$type == 'collection'
         @$context.collection_action(@$actionName)
@@ -51,11 +51,14 @@ angular.module('chinchilla').factory 'ChRequestBuilder', ($q, $injector, $http, 
       else
         null
 
-      $http(
+      options = _.merge {},
         method: @$action.method
         url: $chTimestampedUrl(@buildUrl())
         data: data
-      )
+      ,
+        @$options['http']
+
+      $http(options)
 
     # builds the url with all previously collected params.
     #

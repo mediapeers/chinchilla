@@ -3,24 +3,29 @@
   "version": "0.0.1",
   "directory": "bower_components",
   "dependencies": {
-    "angular": "1.3.0-beta.5",
+    "angular": "1.4.0-beta.6",
+    "angular-cookies": "1.4.0-beta.6",
     "lodash": "~2.4.1",
     "uri-templates": "~0.1.5",
-    "uri.js": "~1.14.1"
+    "uri.js": "~1.14.1",
+    "momentjs": "~2.5.1"
   },
   "devDependencies": {
-    "angular-mocks": "1.3.0-beta.3",
+    "angular-mocks": "1.4.0-beta.6",
     "sinonjs": "1.10.2",
     "sinon-chai": "2.5.0",
     "chai-as-promised": "~4.1.1",
     "chai-fuzzy": "git@github.com:elliotf/chai-fuzzy.git#0e66b15013880d493b27ad84c843aa191fc826cc"
   },
   "resolutions": {
-    "angular": "1.3.0-beta.5"
+    "angular": "1.4.0-beta.6"
   },
   "overrides": {
     "angular": {
       "main": "angular.js"
+    },
+    "angular-cookies": {
+      "main": "angular-cookies.js"
     },
     "lodash": {
       "main": "dist/lodash.js"
@@ -42,6 +47,9 @@
     },
     "chai-fuzzy": {
       "main": "index.js"
+    },
+    "momentjs": {
+      "main": "moment.js"
     }
   }
 }

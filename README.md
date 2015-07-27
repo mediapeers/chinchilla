@@ -23,19 +23,40 @@ Chinchilla's interface exposes so called 'operations' you can work with. All ope
 
 Chinchilla automatically (well, it's defined in the contexts) chooses the proper method type when doing requests (GET/POST/PUT/PATCH/DELETE).
 
+### Authentication
+
+Chinchilla by default automatically sends 'Session-Id' in headers for every (action) request to the backends. This is an example of how to implement a login and tell Chinchilla the session id to be used for subsequent requests.
+
+~~~javascript
+angular.module("yourproject").config ($ch, $chSession) ->
+  $ch.c('um', 'session').$new(email: 'foo', password: 'bar').$promise.then (op) ->
+    $ch(op.$obj).$m('create', {}, { withoutSession: true }).$promise.then (op) ->
+      $chSession.setSessionId(op.$obj.id)
+~~~
+
+`withoutSession` tells Chinchilla not to send the session id for this particular request.
+
+This is an example for a logout implementation:
+
+~~~javascript
+angular.module("yourproject").config ($ch, $chSession) ->
+  $ch.c('um', 'session').$m('delete').$promise.then ->
+    $chSession.clearSessionId()
+~~~
+
 ### Example 1: Fetch data
 
 ~~~javascript
-# assuming the 'entry_point' of 'bestbackend' serves you with an interface to 'users',
-# this is a collection action call '$c' and will do a GET request to query users:
-op = $ch('bestbackend').$('users').$c('query')
+# assuming 'bestbackend' serves you with an interface to 'users',
+# this is a collection action call '$c' and will do a GET request to query the user context, then users:
+op = $ch.c('bestbackend', 'user').$c('query')
 # -> GET http://this.is.the.backend.url/users
 
 # once resolved, you can grab the users from (list of users)
 op.$arr
 
 # to fetch a single user, do a member action call instead:
-op = $ch('bestbackend').$('users').$m('get', id: 2)
+op = $ch('bestbackend', 'user').$m('get', id: 2)
 # -> GET http://this.is.the.backend.url/users/2
 
 # once resolved, you can grab the user from..
@@ -44,14 +65,13 @@ op.$obj
 
 The same works to fetch association data. The following call executes 5 sequential requests to your backend, and returns you all users of the organization with id 1.
 
-- Fetches context of 'entry_point'
 - Fetches context of 'organization'
 - Fetches organization with id 1
 - Fetches context of 'user'
 - Fetches list of users
 
 ~~~javascript
-$ch('bestbackend').$('organization').$m('get', id: 1).$('users').$c('query')
+$ch('bestbackend', 'organization').$m('get', id: 1).$('users').$c('query')
 # -> GET http://this.is.the.backend.url/organizations/1/users
 ~~~
 
@@ -60,7 +80,7 @@ $ch('bestbackend').$('organization').$m('get', id: 1).$('users').$c('query')
 like for example deleting an object works the same way:
 
 ~~~javascript
-$ch('bestbackend').$('organization').$m('delete', id: 1)
+$ch('bestbackend', 'organization').$m('delete', id: 1)
 # -> DELETE http://this.is.the.backend.url/organizations/1
 ~~~
 
@@ -100,7 +120,7 @@ $ch(users).$c('delete')
 Each chinchilla operation provides you with a promise.
 
 ~~~javascript
-$('bestbackend').$('users').$m('get', id: 2).$promise.then (op) ->
+$('bestbackend', 'user').$m('get', id: 2).$promise.then (op) ->
 	console.log 'look at our first user:'
 	console.log op.$obj
 ~~~
@@ -117,7 +137,7 @@ $('bestbackend').$('users').$m('get', id: 2).$promise.then (op) ->
 	# the request is done.
 
 # the manual equivalent way to do this would be:
-$('bestbackend').$('users').$m('get', id: 2).$('organization').$m('get')
+$('bestbackend', 'user').$m('get', id: 2).$('organization').$m('get')
 ~~~
 
 Again, as everything is asynchronous, there are promises available you can use to wait for the organization (in this case) to be loaded:

@@ -1,4 +1,4 @@
-module = angular.module('chinchilla', [])
+module = angular.module('chinchilla', ['ngCookies'])
 
 module.provider '$ch', () ->
   # holds the urls to different application entry point contexts
@@ -35,12 +35,42 @@ module.provider '$ch', () ->
 
 # helper utility to append a timestamp to a given url
 module.provider '$chTimestampedUrl', () ->
-  @timestamp = new Date().getTime()
+  timestamp = new Date().getTime()
 
-  @.$get = =>
-    (url) =>
+  @.$get = ->
+    (url) ->
       uri = new URI(url)
-      uri.addQuery(t: @timestamp)
+      uri.addQuery(t: timestamp)
       uri.toString()
+
+  @
+
+# helper utility to manage session
+module.provider '$chSession', () ->
+  domain  = null
+  opts    = null
+
+  @.$get = ['$cookies', '$location', ($cookies, $location) ->
+    cookieKey: 'chSessionId'
+
+    domain: ->
+      domain ||= $location.host().split('.').slice(-2).join('.')
+
+    cookieOpts: ->
+      opts ||=
+        path: '/'
+        domain: @domain()
+        expires: moment().add(1, 'year').toISOString()
+
+    setSessionId: (id) ->
+      $cookies.put(@cookieKey, id, @cookieOpts())
+      id
+
+    getSessionId: ->
+      $cookies.get(@cookieKey)
+
+    clearSessionId: ->
+      $cookies.remove(@cookieKey, domain: @domain())
+  ]
 
   @
