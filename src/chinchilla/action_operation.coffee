@@ -1,4 +1,4 @@
-angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRequestBuilder, ChLazyLoader) ->
+angular.module('chinchilla').factory 'ChActionOperation', ($q, $ch, $chSession, ChOperation, ChRequestBuilder, ChLazyLoader) ->
   # chainable operation class to run queries.
   class ChActionOperation extends ChOperation
     # @param [ChContextOperation] parent
@@ -14,6 +14,11 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, ChOperation, ChRe
       @$obj = {}
       @$graph = []
       @$headers = {}
+
+      unless @$options['withoutSession']
+        @$options['http'] =
+          headers:
+            'Session-Id': $chSession.getSessionId()
 
       success = =>
         # action operation used the parent's context

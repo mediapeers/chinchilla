@@ -1,6 +1,6 @@
 (function () {
   var module;
-  module = angular.module('chinchilla', []);
+  module = angular.module('chinchilla', ['ngCookies']);
   module.provider('$ch', function () {
     var endpoints;
     endpoints = {};
@@ -47,17 +47,51 @@
     return this;
   });
   module.provider('$chTimestampedUrl', function () {
-    this.timestamp = new Date().getTime();
-    this.$get = function (_this) {
-      return function () {
-        return function (url) {
-          var uri;
-          uri = new URI(url);
-          uri.addQuery({ t: _this.timestamp });
-          return uri.toString();
-        };
+    var timestamp;
+    timestamp = new Date().getTime();
+    this.$get = function () {
+      return function (url) {
+        var uri;
+        uri = new URI(url);
+        uri.addQuery({ t: timestamp });
+        return uri.toString();
       };
-    }(this);
+    };
+    return this;
+  });
+  module.provider('$chSession', function () {
+    var domain, opts;
+    domain = null;
+    opts = null;
+    this.$get = [
+      '$cookies',
+      '$location',
+      function ($cookies, $location) {
+        return {
+          cookieKey: 'chSessionId',
+          domain: function () {
+            return domain || (domain = $location.host().split('.').slice(-2).join('.'));
+          },
+          cookieOpts: function () {
+            return opts || (opts = {
+              path: '/',
+              domain: this.domain(),
+              expires: moment().add(1, 'year').toISOString()
+            });
+          },
+          setSessionId: function (id) {
+            $cookies.put(this.cookieKey, id, this.cookieOpts());
+            return id;
+          },
+          getSessionId: function () {
+            return $cookies.get(this.cookieKey);
+          },
+          clearSessionId: function () {
+            return $cookies.remove(this.cookieKey, { domain: this.domain() });
+          }
+        };
+      }
+    ];
     return this;
   });
 }.call(this));
@@ -77,10 +111,12 @@
     };
   angular.module('chinchilla').factory('ChActionOperation', [
     '$q',
+    '$ch',
+    '$chSession',
     'ChOperation',
     'ChRequestBuilder',
     'ChLazyLoader',
-    function ($q, ChOperation, ChRequestBuilder, ChLazyLoader) {
+    function ($q, $ch, $chSession, ChOperation, ChRequestBuilder, ChLazyLoader) {
       var ChActionOperation;
       return ChActionOperation = function (_super) {
         __extends(ChActionOperation, _super);
@@ -97,6 +133,9 @@
           this.$obj = {};
           this.$graph = [];
           this.$headers = {};
+          if (!this.$options['withoutSession']) {
+            this.$options['http'] = { headers: { 'Session-Id': $chSession.getSessionId() } };
+          }
           success = function (_this) {
             return function () {
               _this.$context = _this.$parent.$context;
@@ -809,17 +848,18 @@
           return _.merge(this.$mergedParams, params || {});
         };
         ChRequestBuilder.prototype.performRequest = function () {
-          var data;
+          var data, options;
           data = _.include([
             'POST',
             'PUT',
             'PATCH'
           ], this.$action.method) ? this.data() : null;
-          return $http({
+          options = _.merge({}, {
             method: this.$action.method,
             url: $chTimestampedUrl(this.buildUrl()),
             data: data
-          });
+          }, this.$options['http']);
+          return $http(options);
         };
         ChRequestBuilder.prototype.buildUrl = function () {
           var uriTmpl;
