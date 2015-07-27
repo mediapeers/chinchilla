@@ -834,7 +834,7 @@
           this.$subject = $subject;
           this.$type = $type;
           this.$actionName = $actionName;
-          this.$options = $options;
+          this.$options = $options != null ? $options : {};
           this.$mergedParams = {};
           this.$action = this.$type === 'collection' ? this.$context.collection_action(this.$actionName) : this.$context.member_action(this.$actionName);
         }
