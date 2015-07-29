@@ -472,9 +472,11 @@
                 return _this._resolvePendingRequests(url, context);
               };
             }(this);
-            error = function () {
-              return this._rejectPendingRequests(url);
-            };
+            error = function (_this) {
+              return function () {
+                return _this._rejectPendingRequests(url);
+              };
+            }(this);
             if (this.pendingRequests[url]) {
               this._addToPendingRequests(url, deferred);
             } else {

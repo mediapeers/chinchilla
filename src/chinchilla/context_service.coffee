@@ -15,7 +15,7 @@ angular.module('chinchilla').factory 'ChContextService', ($q, $http, $chTimestam
         @contexts[url] = context
         @_resolvePendingRequests(url, context)
 
-      error = ->
+      error = =>
         @_rejectPendingRequests(url)
 
       if @pendingRequests[url]
