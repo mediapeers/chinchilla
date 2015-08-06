@@ -62,6 +62,9 @@ module.provider '$chSession', () ->
         domain: @domain()
         expires: moment().add(1, 'year').toISOString()
 
+    setSessionDomain: (domainName) ->
+      domain = domainName
+
     setSessionId: (id) ->
       $cookies.put(@cookieKey, id, @cookieOpts())
       id

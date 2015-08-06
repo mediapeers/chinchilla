@@ -79,6 +79,9 @@
               expires: moment().add(1, 'year').toISOString()
             });
           },
+          setSessionDomain: function (domainName) {
+            return domain = domainName;
+          },
           setSessionId: function (id) {
             $cookies.put(this.cookieKey, id, this.cookieOpts());
             return id;
