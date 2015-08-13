@@ -15,7 +15,8 @@ angular.module('chinchilla').factory 'ChActionOperation', ($q, $ch, $chSession, 
       @$graph = []
       @$headers = {}
 
-      unless @$options['withoutSession']
+      sessionId = $chSession.getSessionId()
+      if !_.isEmpty(sessionId) && !@$options['withoutSession']
         @$options['http'] =
           headers:
             'Session-Id': $chSession.getSessionId()
