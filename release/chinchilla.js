@@ -124,7 +124,7 @@
       return ChActionOperation = function (_super) {
         __extends(ChActionOperation, _super);
         function ChActionOperation($parent, $type, $action, $params, $options) {
-          var error, sessionId, success;
+          var error, success;
           this.$parent = $parent;
           this.$type = $type;
           this.$action = $action;
@@ -136,8 +136,7 @@
           this.$obj = {};
           this.$graph = [];
           this.$headers = {};
-          sessionId = $chSession.getSessionId();
-          if (!_.isEmpty(sessionId) && !this.$options['withoutSession']) {
+          if (!this.$options['withoutSession']) {
             this.$options['http'] = { headers: { 'Session-Id': $chSession.getSessionId() } };
           }
           success = function (_this) {
