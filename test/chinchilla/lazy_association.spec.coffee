@@ -113,7 +113,6 @@ describe 'ChLazyAssociation', ->
       product2 = operation.$arr[1]
 
       # trigger layer load
-      product1.layers
       product1.layersPromise
       .finally ->
         expect(product1.layers.length).to.eq(1)
@@ -135,7 +134,6 @@ describe 'ChLazyAssociation', ->
       product2 = operation.$arr[1]
 
       # trigger layer load
-      product1.layers
       product1.layersPromise
       .finally ->
         expect(product1.layers.length).to.be.empty
@@ -154,7 +152,6 @@ describe 'ChLazyAssociation', ->
       product2 = operation.$arr[1]
 
       # trigger layer load
-      product1.layers
       product1.layersPromise
       .finally ->
         expect(product1.layers.length).to.eq(1)

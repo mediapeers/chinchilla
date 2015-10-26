@@ -42,6 +42,7 @@ angular.module('chinchilla').factory 'ChLazyAssociation', ($injector, $q) ->
     #
     # @return [Object] association object
     retrievePromise: (object) ->
+      @load()
       @retrieveDeferred(object).promise
 
     # fetch deferred association for specific object.
