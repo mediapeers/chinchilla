@@ -533,6 +533,7 @@
           return this.cache[object['@id']];
         };
         ChLazyAssociation.prototype.retrievePromise = function (object) {
+          this.load();
           return this.retrieveDeferred(object).promise;
         };
         ChLazyAssociation.prototype.retrieveDeferred = function (object) {
