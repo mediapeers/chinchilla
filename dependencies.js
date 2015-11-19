@@ -1,0 +1,2 @@
+require('bluebird');
+require('superagent');

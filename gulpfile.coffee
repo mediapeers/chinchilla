@@ -7,20 +7,15 @@ args = require('yargs')
   .example('$0 watch', 'Watches and rebuilds')
   .argv
 
-gulp     = require('gulp')
-$        = require("gulp-load-plugins")(lazy: false)
-$run     = require('run-sequence')
-$logger  = $.util.log
-$exec    = require('child_process').exec
-
+gulp        = require('gulp')
+$           = require("gulp-load-plugins")(lazy: false)
+$run        = require('run-sequence')
+$logger     = $.util.log
+$exec       = require('child_process').exec
+$browserify = require('browserify')
 
 gulp.task 'compile::sources', ->
-  gulp.src(['src/ch.coffee', 'src/chinchilla/*.coffee'])
-  .pipe($.plumber(errorHandler: $.notify.onError("Error: <%= error.message %>")))
-  .pipe($.coffee(bare: false, sourceMap: false).on('error', $logger))
-  .pipe($.ngmin({dynamic: false}))
-  .pipe($.concat('chinchilla.js'))
-  .pipe(gulp.dest('./lib'))
+  #$exec('tsc --target ES5 --out lib/chinchilla.js')
 
 gulp.task 'compile::tests', ->
   gulp.src(['test/test_helper.coffee', 'test/**/*.spec.coffee'])
@@ -30,12 +25,12 @@ gulp.task 'compile::tests', ->
   .pipe($.concat('chinchilla.spec.js'))
   .pipe(gulp.dest('./lib'))
 
-gulp.task 'compile::bower', ->
-  $.bowerFiles(includeDev: true)
-  .pipe($.filter(['**/*.js', '!**/*.min.js']))
-  .pipe($.plumber(errorHandler: $.notify.onError("Error: <%= error.message %>")))
-  .pipe($.concat('bower.js'))
-  .pipe(gulp.dest('./lib'))
+#gulp.task 'compile::bower', ->
+  #$.bowerFiles(includeDev: true)
+  #.pipe($.filter(['**/*.js', '!**/*.min.js']))
+  #.pipe($.plumber(errorHandler: $.notify.onError("Error: <%= error.message %>")))
+  #.pipe($.concat('bower.js'))
+  #.pipe(gulp.dest('./lib'))
 
 gulp.task 'compile::fixtures', ->
   gulp.src(['test/fixtures/loader.js', 'test/fixtures/*.fixture.js'])
@@ -56,7 +51,7 @@ gulp.task 'documentation::generate', ->
   $exec('codo src')
 
 gulp.task "compile", (cb) ->
-  $run(["compile::bower", "compile::fixtures", "compile::sources", "compile::tests"], cb)
+  $run(["bundle::dependencies", "compile::fixtures", "compile::sources", "compile::tests"], cb)
 
 gulp.task "watch", (cb) ->
   $run('compile', 'watch::watch', cb)
