@@ -1,8 +1,7 @@
 /// <reference path = "operation.ts" />
 /// <reference path = "session.ts" />
 /// <reference path = "request_builder.ts" />
-declare var _:any;
-declare var Promise:any;
+declare var _;
 
 module Chinchilla {
   export class ActionOperation extends Operation {
@@ -19,7 +18,7 @@ module Chinchilla {
     $headers: any;
     $response: any;
 
-    constructor(parent, type, action:string, params = {}, options = {}) {
+    constructor(parent: Operation, type: string, action:string, params = {}, options = {}) {
       super();
 
       this.$parent = parent;
@@ -63,7 +62,7 @@ module Chinchilla {
         })
     } 
 
-    $objects(): any[] {
+    get $objects(): any[] {
       return _.isEmpty(this.$obj) ? this.$arr : [this.$obj];
     }
 
@@ -126,7 +125,7 @@ module Chinchilla {
     }
 
     private _moveAssociations(): void {
-      _.each(this.$objects(), function(object) {
+      _.each(this.$objects, function(object) {
         object.$associations = object.$associations || {}; 
 
         _.each(object, function(key, value) {
@@ -141,7 +140,7 @@ module Chinchilla {
     }
 
     private _initLazyLoading(): void {
-      var groups = _.groupBy(this.$objects(), '@context');
+      var groups = _.groupBy(this.$objects, '@context');
       var promises = [];
 
       _.each(groups, function(records, contextUrl) {

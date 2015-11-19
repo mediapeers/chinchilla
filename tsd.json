@@ -5,32 +5,5 @@
   "path": "typings",
   "bundle": "typings/tsd.d.ts",
   "installed": {
-    "bluebird/bluebird.d.ts": {
-      "commit": "0a6894d9ecad95abc88b00109f6f81c80b109e81"
-    },
-    "superagent/superagent.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    },
-    "node/node.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    },
-    "moment/moment.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    },
-    "moment/moment-node.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    },
-    "uri-templates/uri-templates.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    },
-    "urijs/URIjs.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    },
-    "jquery/jquery.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    },
-    "lodash/lodash.d.ts": {
-      "commit": "fc341765ebbb04b7109981a25dced01f488f4d94"
-    }
   }
 }

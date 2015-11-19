@@ -65,7 +65,7 @@ declare module Chinchilla {
         $headers: any;
         $response: any;
         constructor(parent: any, type: any, action: string, params?: {}, options?: {});
-        $objects(): any[];
+        $objects: any[];
         private _run();
         private _moveAssociations();
         private _initLazyLoading();
