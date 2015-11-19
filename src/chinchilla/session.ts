@@ -1,5 +1,4 @@
 declare var _:any;
-declare var Promise:any;
 
 module Chinchilla {
   export class Session {

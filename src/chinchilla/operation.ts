@@ -1,8 +1,8 @@
+/// <reference path = "../../typings/promise.d.ts" />
 /// <reference path = "action_operation.ts" />
 /// <reference path = "context_operation.ts" />
 /// <reference path = "context.ts" />
-declare var _:any;
-declare var Promise:any;
+declare var _;
 
 module Chinchilla {
   export class Operation {
@@ -10,15 +10,18 @@ module Chinchilla {
     $contextUrl: string;
     $subject: any;
     $error: any;
-    $deferred: any;
-    $promise: any;
+    $deferred: Deferred<Operation>;
+    $promise: Thenable<Operation>;
     $associationProperty: any;
     $associationData: any;
     $associationType: any;
 
     constructor() {
+      new Promise<Operation>(function(resolve, reject) {
+        resolve('foo'); 
+      });
       this.$error = {};
-      this.$deferred = Promise.pending();
+      this.$deferred = <Deferred<Operation>>Promise.pending();
       this.$promise = this.$deferred.promise;
     }
 
