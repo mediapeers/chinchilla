@@ -5,7 +5,22 @@
     "noImplicitAny": true,
     "outDir": "dist"
   },
+  "filesGlob": [
+    "src/chinchilla/*.ts"
+  ],
   "files": [
-    "src/chinchilla/session.ts"
-  ]
+    "src/chinchilla/action_operation.ts",
+    "src/chinchilla/context_operation.ts",
+    "src/chinchilla/context_service.ts",
+    "src/chinchilla/context.ts",
+    "src/chinchilla/lazy_association.ts",
+    "src/chinchilla/lazy_loader.ts",
+    "src/chinchilla/operation.ts",
+    "src/chinchilla/request_builder.ts",
+    "src/chinchilla/session.ts",
+    "src/chinchilla/utils.ts"
+  ],
+  "atom": {
+    "rewriteTsconfig": true
+  }
 }

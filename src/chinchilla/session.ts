@@ -1,5 +1,6 @@
 declare var _:any;
 declare var Promise:any;
+declare var JSCookieThing:any;
 
 module Chinchilla {
   export class Session {

@@ -14,6 +14,14 @@ module Chinchilla {
       this.$type = type;
       this.$actionName = actionName;
       this.$options = options;
+
+      this.$mergedParams = {}
+
+      if (this.$type === 'collection') {
+        this.$action = this.$context.collection_action(this.$actionName)
+      } else {
+        this.$context.member_action(this.$actionName)
+      }
     }
   }
 }

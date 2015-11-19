@@ -1,9 +1,11 @@
-/// <reference path="../typings/uri-templates.d.ts" />
-/// <reference path="foo.d.ts" />
+declare var _: any;
+declare var Promise: any;
+declare var JSCookieThing: any;
 declare module Chinchilla {
     class Session {
-        domain: string;
-        opts: Object;
-        setSessionDomain(domain: string): void;
+        private static _instance;
+        constructor();
+        static getInstance(): Session;
+        getSessionId(): string;
     }
 }

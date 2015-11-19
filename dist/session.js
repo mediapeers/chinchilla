@@ -1,21 +1,18 @@
-/// <reference path = "../../typings/uri-templates.d.ts" />
-/// <reference path = "foo.ts" />
-//declare var URITemplate:any;
-require("uri-templates");
 var Chinchilla;
 (function (Chinchilla) {
     var Session = (function () {
         function Session() {
+            if (Session._instance)
+                throw new Error('Error: Instantiation failed. Use Session.getInstance() instead');
+            Session._instance = this;
         }
-        Session.prototype.setSessionDomain = function (domain) {
-            jQuery('#foo');
-            new Promise(function (resolve) {
-                resolve('foo');
-            });
-            new URITemplate('//foo');
-            new Chinchilla.Foo();
-            this.domain = domain;
+        Session.getInstance = function () {
+            return Session._instance;
         };
+        Session.prototype.getSessionId = function () {
+            return 'foo';
+        };
+        Session._instance = new Session();
         return Session;
     })();
     Chinchilla.Session = Session;
