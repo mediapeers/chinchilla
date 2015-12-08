@@ -6,6 +6,7 @@ declare var _;
 
 module Chinchilla {
   export class Operation {
+    $parent: Operation;
     $context: Context;
     $contextUrl: string;
     $subject: any;
@@ -17,9 +18,6 @@ module Chinchilla {
     $associationType: any;
 
     constructor() {
-      new Promise<Operation>(function(resolve, reject) {
-        resolve('foo'); 
-      });
       this.$error = {};
       this.$deferred = <Deferred<Operation>>Promise.pending();
       this.$promise = this.$deferred.promise;

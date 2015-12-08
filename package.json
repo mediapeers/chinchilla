@@ -6,8 +6,8 @@
   "homepage": "https://github.com/mediapeers/chinchilla",
   "bugs": "https://github.com/mediapeers/chinchilla/issues",
   "author": {
-    "name": "Arturs Meinarts @ Mediapeers GmbH",
-    "email": "meinarts@mediapeers.com",
+    "name": "Johannes-Kostas Götzinger @ Mediapeers GmbH",
+    "email": "goetzinger@mediapeers.com",
     "url": "https://github.com/mediapeers"
   },
   "main": "./lib/chinchilla.js",
@@ -22,6 +22,7 @@
     "bluebird": "~3.0.5",
     "lodash": "~3.10.1",
     "superagent": "~1.4.0",
+    "js-cookie": "~2.0.4",
     "moment": "~2.10.6",
     "uri-templates": "~0.1.9",
     "urijs": "~1.17.0"

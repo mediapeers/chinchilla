@@ -5,8 +5,6 @@ declare var _;
 
 module Chinchilla {
   export class ActionOperation extends Operation {
-    $parent: Operation;
-
     $type: string;
     $action: string;
     $params: any;
