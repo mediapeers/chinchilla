@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 
-cd release
-python -m SimpleHTTPServer 8000
+cd release && python -m SimpleHTTPServer 8000
