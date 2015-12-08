@@ -4,14 +4,12 @@ declare var _;
 module Chinchilla {
   export class Result {
     headers: any;
-    data: any;
     objects: any[] = [];
 
     success(result): void {
       this.headers  = result.headers;
-      this.data     = (result.body && result.body.members) || result.body;
 
-      switch (result.body['@type']) {
+      switch (result.body && result.body['@type']) {
         case 'graph':
           var members = result.body['@graph'];
           if (!members) return;
@@ -39,6 +37,7 @@ module Chinchilla {
           break;
 
         case 'collection':
+        case 'search_collection':
           _.each(result.body.members, (member) => {
             this.objects.push(member);
           })
@@ -53,6 +52,7 @@ module Chinchilla {
 
         default:
           if (_.isArray(result.body)) throw new Error("Unexpectedly got an array");
+          if (_.isEmpty(result.body)) break;
           this.objects.push(result.body);
           new Subject(this.objects);
           break;

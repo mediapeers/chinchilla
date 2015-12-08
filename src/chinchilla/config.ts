@@ -12,8 +12,8 @@ module Chinchilla {
 
     // timestamp to be appended to every request
     // will be the same for a session lifetime
-
-    static addEndpoint(name: string, url: string): void {
+    
+    static setEndpoint(name: string, url: string): void {
       Config.endpoints[name] = url;
     }
 

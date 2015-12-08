@@ -15,10 +15,20 @@ module Chinchilla {
       return Extractor.extractParams(action, obj);
     }
 
+    // expands given params to include variable mappings in addition
+    // for this input:
+    // { id: 4 }
+    // and this template:
+    // http//server/user/{user_id}
+    // with mapping
+    // { source: id, variable: user_id }
+    //
+    // the returned object would be:
+    // { id: 4, user_id: 4 }
     static uriParams(action: ContextAction, params = {}): Object {
-      var uriParams = {};
+      var uriParams = _.clone(params);
       _.each(action.mappings, (mapping) => {
-        uriParams[mapping.variable] = params[mapping.source];
+        if (!uriParams[mapping.variable]) uriParams[mapping.variable] = params[mapping.source];
       });
 
       return uriParams;
@@ -58,7 +68,7 @@ module Chinchilla {
 
     private static extractArrayValues(contextAction: ContextAction, objects: any): Object {
       var values = _.map(objects, (obj) => {
-        Extractor.extractValues(contextAction, obj);
+        return Extractor.extractValues(contextAction, obj);
       });
 
       values = _.compact(values);

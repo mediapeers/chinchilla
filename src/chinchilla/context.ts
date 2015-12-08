@@ -8,6 +8,7 @@ module Chinchilla {
     public resource: string;
     public response: string;
     public template: string;
+    public method: string;
     public expects: Object;
     public mappings: Object[];
 
@@ -52,7 +53,6 @@ module Chinchilla {
 
         request
           .get(contextUrl)
-          .query({ t: Config.timestamp })
           .end((err, res) => {
             this.data       = res.body;        
             this.context    = res.body && res.body['@context'] || {};

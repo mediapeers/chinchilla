@@ -9,7 +9,7 @@ declare module Chinchilla {
         static domain: string;
         static sessionId: string;
         static sessionKey: string;
-        static addEndpoint(name: string, url: string): void;
+        static setEndpoint(name: string, url: string): void;
         static setCookieDomain(domain: string): void;
         static setSessionId(id: string): void;
         static getSessionId(): string;
@@ -23,6 +23,7 @@ declare module Chinchilla {
         resource: string;
         response: string;
         template: string;
+        method: string;
         expects: Object;
         mappings: Object[];
         constructor(values?: {});
@@ -61,23 +62,9 @@ declare var _: any;
 declare module Chinchilla {
     class Result {
         headers: any;
-        data: any;
         objects: any[];
         success(result: any): void;
         object: any;
-    }
-}
-declare var _: any;
-declare var request: any;
-declare module Chinchilla {
-    class Action {
-        ready: Promise<Result>;
-        params: Object;
-        body: Object;
-        uriTmpl: UriTemplate;
-        result: Result;
-        constructor(uri: string, params?: {}, body?: {});
-        private cleanupBody();
     }
 }
 declare var _: any;
@@ -89,6 +76,23 @@ declare module Chinchilla {
         private static extractParams(contextAction, obj);
         private static extractValues(contextAction, object);
         private static extractArrayValues(contextAction, objects);
+    }
+}
+declare var _: any;
+declare var request: any;
+declare module Chinchilla {
+    class Action {
+        ready: Promise<Result>;
+        params: Object;
+        options: any;
+        body: Object;
+        uriTmpl: UriTemplate;
+        contextAction: ContextAction;
+        result: Result;
+        constructor(contextAction: ContextAction, params?: {}, body?: {}, options?: any);
+        private formatBody(body);
+        private cleanupObject(object);
+        private remapAttributes(object);
     }
 }
 declare var _: any;
@@ -107,7 +111,7 @@ declare module Chinchilla {
         static get(subject: Subject, name: string): any;
         getDataFor(object: Object): any;
         private fillCache(result);
-        private associationParams();
+        private associationParams;
         private readAssociationData();
     }
 }
@@ -118,13 +122,14 @@ declare module Chinchilla {
         contextUrl: string;
         id: string;
         _context: Context;
-        constructor(objects: any);
-        memberAction(name: string, inputParams: any): Promise<Context>;
-        collectionAction(name: string, inputParams: any): Promise<Context>;
+        constructor(objectsOrApp: any, model?: string);
+        memberAction(name: string, inputParams?: any, options?: any): Promise<Context>;
+        collectionAction(name: string, inputParams: any, options?: any): Promise<Context>;
         association(name: string): Association;
+        new(attrs?: {}): Subject;
         context: Context;
         object: Object;
-        extractedParams: Object;
+        objectParams: Object;
         private addObjects(objects);
         private moveAssociationReferences(object);
         private initAssociationGetters(object);

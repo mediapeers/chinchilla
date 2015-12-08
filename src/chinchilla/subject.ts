@@ -1,4 +1,5 @@
 /// <reference path = "context.ts" />
+/// <reference path = "config.ts" />
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "association.ts" />
@@ -11,41 +12,58 @@ module Chinchilla {
     id: string;
     _context: Context;
 
-    constructor(objects: any) {
+    constructor(objectsOrApp: any, model?: string) {
       // unique id for this instance (for cache key purpose)
       this.id = Math.random().toString(36).substr(2, 9);
 
       // adds and initializes objects to this Subject
-      _.isArray(objects) ? this.addObjects(objects) : this.addObjects([objects]);
+      if (_.isString(objectsOrApp)) {
+        this.contextUrl = `${Config.endpoints[objectsOrApp]}/context/${model}`
+      }
+      else {
+        _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObjects([objectsOrApp]);
+      }
     }
 
-    memberAction(name: string, inputParams: any): Promise<Context> {
+    memberAction(name: string, inputParams?: any, options?: any): Promise<Context> {
       var promise;
       return promise = this.context.ready.then((context) => {
         var contextAction = context.memberAction(name);
-        var mergedParams  = _.merge({}, this.extractedParams, inputParams);
-        var uriParams     = Extractor.uriParams(contextAction, mergedParams);
+        var mergedParams  = _.merge({}, this.objectParams, inputParams);
 
-        var action = new Action(contextAction.template, uriParams, this.object);
+        var action = new Action(contextAction, mergedParams, this.object, options);
         promise['$objects'] = action.result.objects;
 
         return action.ready;
       });
     }
 
-    collectionAction(name: string, inputParams: any): Promise<Context> {
+    collectionAction(name: string, inputParams: any, options?: any): Promise<Context> {
       return this.context.ready.then((context) => {
         var contextAction = context.collectionAction(name);
-        var mergedParams  = _.merge({}, this.extractedParams, inputParams);
-        var uriParams     = Extractor.uriParams(contextAction, mergedParams);
+        var mergedParams  = _.merge({}, this.objectParams, inputParams);
 
-        return new Action(contextAction.template, uriParams, this.objects);
+        return new Action(contextAction, mergedParams, this.objects, options).ready;
       });
     }
 
     // returns Association that resolves to a Result where the objects might belong to different Subjects
     association(name: string): Association {
       return Association.get(this, name);
+    }
+
+    // can be used to easily instantiate a new object with given context like this
+    //
+    // chch('um', 'user').new(first_name: 'Peter')
+    new(attrs = {}) {
+      this.objects = [
+        _.merge(
+          { '@context' : this.contextUrl },
+          attrs
+        )
+      ]
+
+      return this;
     }
 
     get context(): Context {
@@ -57,7 +75,7 @@ module Chinchilla {
       return _.first(this.objects);
     }
 
-    get extractedParams(): Object {
+    get objectParams(): Object {
       return Extractor.extractMemberParams(this.context, this.objects);
     }
 
@@ -101,12 +119,12 @@ module Chinchilla {
 
         Object.defineProperty(object, key, {
           get: () => {
-            this.association(key).getDataFor(object);
+            return this.association(key).getDataFor(object);
           }
         });
         Object.defineProperty(object, `${key}Promise`, {
           get: () => {
-            this.association(key).ready;
+            return this.association(key).ready;
           }
         });
       });

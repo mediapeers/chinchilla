@@ -27,7 +27,8 @@ module Chinchilla {
       this.associationData  = this.readAssociationData();
 
       // array of arrays => HABTM!
-      this.habtm = _.isArray(this.associationData) && _.isArray(_.first(this.associationData));
+      this.habtm = _.isArray(_.first(this.associationData));
+      if (this.habtm) this.associationData = _.flatten(this.associationData);
 
       this.ready = this.subject.context.ready.then((context) => {
         this.associationProperty = context.association(name);
@@ -35,16 +36,16 @@ module Chinchilla {
         return new Context(this.associationProperty.type).ready.then((associationContext) => {
           this.context = associationContext;
 
-          var action = this.associationProperty.collection ?
+          var contextAction = this.associationData.length > 1 || this.associationProperty.collection ? 
             associationContext.collectionAction('get') :
             associationContext.memberAction('get');
 
-          if (!action) throw new Error(`could not load association ${name}`);
+          if (!contextAction) throw new Error(`could not load association ${name}`);
 
           //var extractedParams = Extractor.extractCollectionParams(this.subject.context, this.subject.objects);
           //TODO is ^^ this needed?
 
-          return new Action(action.template, this.associationParams(), {}).ready.then((result) => {
+          return new Action(contextAction, this.associationParams, {}).ready.then((result) => {
             this.fillCache(result);
             return result;
           });
@@ -121,11 +122,12 @@ module Chinchilla {
             });  
           }
 
-          _.each(this.subject.objects, (obj) => {
+          _.each(result.objects, (obj) => {
             var backReference = obj && obj.$associations && obj.$associations[associationName] && obj.$associations[associationName]['@id'];
             if (!backReference) return;
 
-            this.cache[backReference] = obj;
+            if (!this.cache[backReference]) this.cache[backReference] = [];
+            this.cache[backReference].push(obj);
           });
         }
       }
@@ -137,7 +139,7 @@ module Chinchilla {
         });
 
         _.each(this.subject.objects, (obj) => {
-          var requestedId = obj.$associations && obj.$associations[this.name] && obj.$associations['@id'];
+          var requestedId = obj.$associations && obj.$associations[this.name] && obj.$associations[this.name]['@id'];
           if (!requestedId) return;
 
           var result = sorted[requestedId];
@@ -148,8 +150,7 @@ module Chinchilla {
       }
     }
 
-    private associationParams() {
-      debugger
+    private get associationParams() {
       if (this.habtm) {
         return Extractor.extractMemberParams(this.context, _.flatten(this.associationData));
       }
