@@ -1,1043 +1,584 @@
-(function () {
-  var module;
-  module = angular.module('chinchilla', ['ngCookies']);
-  module.provider('$ch', function () {
-    var endpoints;
-    endpoints = {};
-    this.setEndpoint = function (systemId, url) {
-      return endpoints[systemId] = url;
-    };
-    this.$get = [
-      'ChContextOperation',
-      'ChObjectsOperation',
-      function (ChContextOperation, ChObjectsOperation) {
-        var fn;
-        fn = function (subject) {
-          var endpoint;
-          if (_.isString(subject)) {
-            endpoint = endpoints[subject];
-            if (!endpoint) {
-              throw new Error('no endpoint url defined for ' + subject);
-            }
-            return new ChContextOperation(null, { '@context': '' + endpoint + '/context/entry_point' });
-          } else {
-            return new ChContextOperation(null, subject);
-          }
-        };
-        fn.o = function (objects) {
-          return new ChObjectsOperation(objects);
-        };
-        fn.c = function () {
-          var contextUrl, endpoint, model, system;
-          if (arguments.length === 2) {
-            system = arguments[0], model = arguments[1];
-            endpoint = endpoints[system];
-            if (!endpoint) {
-              throw new Error('no endpoint url defined for ' + system);
-            }
-            return new ChContextOperation(null, { '@context': '' + endpoint + '/context/' + model });
-          } else {
-            contextUrl = arguments[0];
-            return new ChContextOperation(null, contextUrl);
-          }
-        };
-        return fn;
-      }
-    ];
-    return this;
-  });
-  module.provider('$chTimestampedUrl', function () {
-    var timestamp;
-    timestamp = new Date().getTime();
-    this.$get = function () {
-      return function (url) {
-        var uri;
-        uri = new URI(url);
-        uri.addQuery({ t: timestamp });
-        return uri.toString();
-      };
-    };
-    return this;
-  });
-  module.provider('$chSession', function () {
-    var domain, opts;
-    domain = null;
-    opts = null;
-    this.$get = [
-      '$cookies',
-      '$location',
-      function ($cookies, $location) {
-        return {
-          cookieKey: 'chSessionId',
-          domain: function () {
-            return domain || (domain = $location.host().split('.').slice(-2).join('.'));
-          },
-          cookieOpts: function () {
-            return opts || (opts = {
-              path: '/',
-              domain: this.domain(),
-              expires: moment().add(1, 'year').toISOString()
-            });
-          },
-          setSessionDomain: function (domainName) {
-            return domain = domainName;
-          },
-          setSessionId: function (id) {
-            $cookies.put(this.cookieKey, id, this.cookieOpts());
-            return id;
-          },
-          getSessionId: function () {
-            return $cookies.get(this.cookieKey);
-          },
-          clearSessionId: function () {
-            return $cookies.remove(this.cookieKey, { domain: this.domain() });
-          }
-        };
-      }
-    ];
-    return this;
-  });
-}.call(this));
-(function () {
-  var __hasProp = {}.hasOwnProperty, __extends = function (child, parent) {
-      for (var key in parent) {
-        if (__hasProp.call(parent, key))
-          child[key] = parent[key];
-      }
-      function ctor() {
-        this.constructor = child;
-      }
-      ctor.prototype = parent.prototype;
-      child.prototype = new ctor();
-      child.__super__ = parent.prototype;
-      return child;
-    };
-  angular.module('chinchilla').factory('ChActionOperation', [
-    '$q',
-    '$ch',
-    '$chSession',
-    'ChOperation',
-    'ChRequestBuilder',
-    'ChLazyLoader',
-    function ($q, $ch, $chSession, ChOperation, ChRequestBuilder, ChLazyLoader) {
-      var ChActionOperation;
-      return ChActionOperation = function (_super) {
-        __extends(ChActionOperation, _super);
-        function ChActionOperation($parent, $type, $action, $params, $options) {
-          var error, success;
-          this.$parent = $parent;
-          this.$type = $type;
-          this.$action = $action;
-          this.$params = $params != null ? $params : {};
-          this.$options = $options != null ? $options : {};
-          ChOperation.init(this);
-          this.$subject = null;
-          this.$arr = [];
-          this.$obj = {};
-          this.$graph = [];
-          this.$headers = {};
-          if (!this.$options['withoutSession']) {
-            this.$options['http'] = { headers: { 'Session-Id': $chSession.getSessionId() } };
-          }
-          success = function (_this) {
-            return function () {
-              _this.$context = _this.$parent.$context;
-              if (!_.isString(_this.$parent.$subject)) {
-                _this.$subject = _this.$parent.$subject;
-              }
-              _this.$associationData = _this.$parent.$associationData;
-              _this.$associationProperty = _this.$parent.$associationProperty;
-              _this.$associationType = _this.$associationProperty && _this.$associationProperty.collection ? 'collection' : 'member';
-              if (_.isNull(_this.$type)) {
-                _this.$type = _.isArray(_this.$associationData) || _.isArray(_this.$parent.$subject) ? 'collection' : _.isPlainObject(_this.$associationType) ? 'member' : _this.$associationType;
-              }
-              return _this._run();
-            };
-          }(this);
-          error = function (_this) {
-            return function () {
-              return _this.$deferred.reject(_this);
-            };
-          }(this);
-          this.$parent.$promise.then(success, error);
+/// <reference path = "../../typings/promise.d.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Config = (function () {
+        function Config() {
         }
-        ChActionOperation.prototype._run = function () {
-          var builder, error, flattenedAssociationData, success;
-          builder = new ChRequestBuilder(this.$context, this.$subject, this.$type, this.$action, this.$options);
-          if (this.$type === 'collection' && _.isArray(this.$associationData) && _.isArray(_.first(this.$associationData))) {
-            flattenedAssociationData = _.flatten(this.$associationData);
-            builder.extractFrom(flattenedAssociationData, 'member');
-          } else if (this.$type === 'member' && _.isArray(this.$associationData)) {
-            builder.extractFrom(this.$associationData, 'member');
-          } else {
-            builder.extractFrom(this.$associationData, this.$associationType);
-          }
-          builder.extractFrom(this.$subject, this.$type);
-          builder.mergeParams(this.$params);
-          success = function (_this) {
-            return function (response) {
-              var data;
-              _.merge(_this.$headers, response.headers());
-              if (response.data['@type'] === 'graph') {
-                _.each(response.data['@graph'], function (member) {
-                  return _this.$arr.push(member);
-                });
-                return _this._buildGraph();
-              } else {
-                data = response.data && response.data.members || response.data;
-                if (_.isArray(data)) {
-                  _.each(data, function (member) {
-                    return _this.$arr.push(member);
-                  });
-                } else {
-                  _.merge(_this.$obj, data);
-                }
-                _this._moveAssociations();
-                return _this._initLazyLoading();
-              }
-            };
-          }(this);
-          error = function (_this) {
-            return function (response) {
-              _this.$response = response;
-              _this.$error = response.data;
-              _.merge(_this.$headers, response.headers());
-              return _this.$deferred.reject(_this);
-            };
-          }(this);
-          return builder.performRequest().then(success, error);
+        // timestamp to be appended to every request
+        // will be the same for a session lifetime
+        Config.addEndpoint = function (name, url) {
+            Config.endpoints[name] = url;
         };
-        ChActionOperation.prototype._objects = function () {
-          if (_.isEmpty(this.$obj)) {
-            return this.$arr;
-          } else {
-            return [this.$obj];
-          }
+        Config.setCookieDomain = function (domain) {
+            Config.domain = domain;
         };
-        ChActionOperation.prototype._moveAssociations = function () {
-          return _.each(this._objects(), function (object) {
-            object.$associations || (object.$associations = {});
-            return _.each(object, function (value, key) {
-              if (key === '$associations') {
-                return;
-              }
-              if (_.isArray(value) && _.isPlainObject(_.first(value)) || _.isPlainObject(value) && value['@id']) {
-                object.$associations[key] = _.clone(value);
-                return delete object[key];
-              }
+        Config.setSessionId = function (id) {
+            Cookies.set(Config.sessionKey, id, { path: '/', domain: Config.domain, expires: 300 });
+        };
+        Config.getSessionId = function () {
+            return Cookies.get(Config.sessionKey);
+        };
+        Config.clearSessionId = function () {
+            Cookies.remove(Config.sessionKey, { domain: Config.domain });
+        };
+        Config.endpoints = {};
+        Config.timestamp = Date.now() / 1000 | 0;
+        Config.sessionKey = 'chinchillaSessionId';
+        return Config;
+    })();
+    Chinchilla.Config = Config;
+})(Chinchilla || (Chinchilla = {}));
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
+/// <reference path = "../../typings/promise.d.ts" />
+/// <reference path = "config.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var ContextAction = (function () {
+        function ContextAction(values) {
+            var _this = this;
+            if (values === void 0) { values = {}; }
+            _.each(values, function (value, key) {
+                _this[key] = value;
             });
-          });
-        };
-        ChActionOperation.prototype._initLazyLoading = function () {
-          var groups, promises, self;
-          self = this;
-          groups = _.groupBy(this._objects(), '@context');
-          promises = [];
-          _.each(groups, function (records, contextUrl) {
-            var operation;
-            operation = new self.ChObjectsOperation(records);
-            operation.$promise.then(function () {
-              return new ChLazyLoader(operation, records);
-            });
-            return promises.push(operation.$promise);
-          });
-          return $q.all(promises).then(function () {
-            return self.$deferred.resolve(self);
-          });
-        };
-        ChActionOperation.prototype._buildGraph = function () {
-          if (_.isEmpty(this.$arr)) {
-            return;
-          }
-          this.$graph = [];
-          _.each(this.$arr, function (_this) {
-            return function (node) {
-              var parent;
-              if (node.parent_id) {
-                if (parent = _.find(_this.$arr, function (x) {
-                    return x.id === node.parent_id;
-                  })) {
-                  node.parent = parent;
-                  if (parent.children == null) {
-                    parent.children = [];
-                  }
-                  return parent.children.push(node);
-                }
-              } else {
-                return _this.$graph.push(node);
-              }
-            };
-          }(this));
-          return this.$deferred.resolve(this);
-        };
-        return ChActionOperation;
-      }(ChOperation);
-    }
-  ]);
-}.call(this));
-(function () {
-  angular.module('chinchilla').factory('ChContext', [
-    '$log',
-    function ($log) {
-      var ChContext;
-      return ChContext = function () {
-        var isAssociation;
-        isAssociation = function (property) {
-        };
-        function ChContext(data) {
-          this.data = data != null ? data : {};
-          this.context = this.data && this.data['@context'] || {};
-          this.properties = this.context.properties || {};
-          this.constants = this.context.constants || {};
-          _.each(this.properties, function (property, name) {
-            property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
-            return true;
-          });
         }
-        ChContext.prototype.property = function (name) {
-          return this.properties[name];
-        };
-        ChContext.prototype.constant = function (name) {
-          return this.constants[name];
-        };
-        ChContext.prototype.association = function (name) {
-          var property;
-          property = this.properties[name];
-          return property.isAssociation && property;
-        };
-        ChContext.prototype.member_action = function (name) {
-          var action, context;
-          context = this.data && this.data['@context'];
-          action = context && context.member_actions && context.member_actions[name];
-          if (!action) {
-            $log.warn('requested non-existing member action \'' + name + '\'');
-            $log.debug(this.data);
-          }
-          return action;
-        };
-        ChContext.prototype.collection_action = function (name) {
-          var action, context;
-          context = this.data && this.data['@context'];
-          action = context && context.collection_actions && context.collection_actions[name];
-          if (!action) {
-            $log.warn('requested non-existing collection action \'' + name + '\'');
-            $log.debug(this.data);
-          }
-          return action;
-        };
-        return ChContext;
-      }();
-    }
-  ]);
-}.call(this));
-(function () {
-  var __hasProp = {}.hasOwnProperty, __extends = function (child, parent) {
-      for (var key in parent) {
-        if (__hasProp.call(parent, key))
-          child[key] = parent[key];
-      }
-      function ctor() {
-        this.constructor = child;
-      }
-      ctor.prototype = parent.prototype;
-      child.prototype = new ctor();
-      child.__super__ = parent.prototype;
-      return child;
-    };
-  angular.module('chinchilla').factory('ChContextOperation', [
-    '$q',
-    'ChOperation',
-    'ChContextService',
-    'ChRequestBuilder',
-    'ChUtils',
-    function ($q, ChOperation, ChContextService, ChRequestBuilder, ChUtils) {
-      var ChContextOperation;
-      return ChContextOperation = function (_super) {
-        __extends(ChContextOperation, _super);
-        function ChContextOperation($parent, $subject) {
-          var error, success;
-          this.$parent = $parent != null ? $parent : null;
-          this.$subject = $subject;
-          ChOperation.init(this);
-          this.$associationProperty = null;
-          this.$associationData = null;
-          if (this.$parent) {
-            success = function (_this) {
-              return function () {
-                var assocData;
-                if (_.isString(_this.$subject)) {
-                  _this.$associationProperty = _this.$parent.$context.association(_this.$subject);
-                  _this.$associationData = null;
-                  assocData = function (object) {
-                    return object && object.$associations && object.$associations[_this.$subject];
-                  };
-                  if (!_.isEmpty(_this.$parent.$arr)) {
-                    _this.$associationData = _.map(_this.$parent.$arr, function (member) {
-                      return assocData(member);
+        return ContextAction;
+    })();
+    Chinchilla.ContextAction = ContextAction;
+    var ContextMemberAction = (function (_super) {
+        __extends(ContextMemberAction, _super);
+        function ContextMemberAction() {
+            _super.apply(this, arguments);
+        }
+        return ContextMemberAction;
+    })(ContextAction);
+    Chinchilla.ContextMemberAction = ContextMemberAction;
+    var ContextCollectionAction = (function (_super) {
+        __extends(ContextCollectionAction, _super);
+        function ContextCollectionAction() {
+            _super.apply(this, arguments);
+        }
+        return ContextCollectionAction;
+    })(ContextAction);
+    Chinchilla.ContextCollectionAction = ContextCollectionAction;
+    var Context = (function () {
+        function Context(contextUrl) {
+            var _this = this;
+            this.ready = new Promise(function (resolve, reject) {
+                var cached;
+                if (cached = Context.cache[contextUrl]) {
+                    return resolve(cached);
+                }
+                request
+                    .get(contextUrl)
+                    .query({ t: Chinchilla.Config.timestamp })
+                    .end(function (err, res) {
+                    _this.data = res.body;
+                    _this.context = res.body && res.body['@context'] || {};
+                    _this.id = _this.context['@id'];
+                    _this.properties = _this.context.properties || {};
+                    _this.constants = _this.context.contants || {};
+                    _.each(_this.properties, function (property, name) {
+                        property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
                     });
-                  } else {
-                    _this.$associationData = assocData(_this.$parent.$obj);
-                  }
-                }
-                return _this._run();
-              };
-            }(this);
-            error = function (_this) {
-              return function () {
-                return _this.$deferred.reject();
-              };
-            }(this);
-            this.$parent.$promise.then(success, error);
-          } else {
-            this._run();
-          }
-        }
-        ChContextOperation.prototype.$new = function (attrs) {
-          var deferred, result;
-          if (attrs == null) {
-            attrs = {};
-          }
-          deferred = $q.defer();
-          result = {
-            $obj: _.extend({}, attrs),
-            $deferred: deferred,
-            $promise: deferred.promise
-          };
-          this.$promise.then(function (_this) {
-            return function () {
-              var action;
-              if (_this.$associationData && _this.$associationProperty) {
-                action = _this.$associationProperty.collection ? _this.$context.collection_action('query') : _this.$context.member_action('get');
-                result.$obj.$params = ChUtils.extractValues(action, _this.$associationData);
-              }
-              result.$obj['@context'] = _this.$contextUrl;
-              return deferred.resolve(result);
-            };
-          }(this));
-          return result;
-        };
-        ChContextOperation.prototype.$r = function (type, action) {
-          var deferred, result;
-          deferred = $q.defer();
-          result = {
-            $deferred: deferred,
-            $promise: deferred.promise
-          };
-          this.$promise.then(function (_this) {
-            return function () {
-              result.$request = new ChRequestBuilder(_this.$context, {}, type, action);
-              return deferred.resolve(result);
-            };
-          }(this));
-          return result;
-        };
-        ChContextOperation.prototype._run = function () {
-          var error, success;
-          this._findContextUrl(this.$subject);
-          success = function (_this) {
-            return function (context) {
-              _this.$context = context;
-              return _this.$deferred.resolve(_this);
-            };
-          }(this);
-          error = function (_this) {
-            return function () {
-              return _this.$deferred.reject();
-            };
-          }(this);
-          return ChContextService.get(this.$contextUrl).then(success, error);
-        };
-        return ChContextOperation;
-      }(ChOperation);
-    }
-  ]);
-}.call(this));
-(function () {
-  angular.module('chinchilla').factory('ChContextService', [
-    '$q',
-    '$http',
-    '$chTimestampedUrl',
-    'ChContext',
-    function ($q, $http, $chTimestampedUrl, ChContext) {
-      return {
-        contexts: {},
-        pendingRequests: {},
-        get: function (url) {
-          var context, deferred, error, success;
-          deferred = $q.defer();
-          if (context = this.contexts[url]) {
-            deferred.resolve(context);
-          } else {
-            success = function (_this) {
-              return function (response) {
-                context = new ChContext(response.data);
-                _this.contexts[url] = context;
-                return _this._resolvePendingRequests(url, context);
-              };
-            }(this);
-            error = function (_this) {
-              return function () {
-                return _this._rejectPendingRequests(url);
-              };
-            }(this);
-            if (this.pendingRequests[url]) {
-              this._addToPendingRequests(url, deferred);
-            } else {
-              this._addToPendingRequests(url, deferred);
-              $http.get($chTimestampedUrl(url)).then(success, error);
-            }
-          }
-          return deferred.promise;
-        },
-        _addToPendingRequests: function (url, deferred) {
-          var _base;
-          (_base = this.pendingRequests)[url] || (_base[url] = []);
-          return this.pendingRequests[url].push(deferred);
-        },
-        _resolvePendingRequests: function (url, context) {
-          return _.each(this.pendingRequests[url], function (deferred) {
-            return deferred.resolve(context);
-          });
-        },
-        _rejectPendingRequests: function (url) {
-          return _.each(this.pendingRequests[url], function (deferred) {
-            return deferred.reject();
-          });
-        }
-      };
-    }
-  ]);
-}.call(this));
-(function () {
-  angular.module('chinchilla').factory('ChLazyAssociation', [
-    '$injector',
-    '$q',
-    function ($injector, $q) {
-      var ChLazyAssociation;
-      return ChLazyAssociation = function () {
-        function ChLazyAssociation($operation, $objects, $name) {
-          this.$operation = $operation;
-          this.$objects = $objects;
-          this.$name = $name;
-          this.cache = {};
-          this.deferredCache = {};
-          this.isCollection = this.$operation.$context.association(this.$name).collection;
-          this._initCache();
-        }
-        ChLazyAssociation.prototype.load = function () {
-          this.contextOperation || (this.contextOperation = this.$operation.$(this.$name));
-          return this.actionOperation || (this.actionOperation = this.contextOperation.$$('get').$promise.then(this._assign.bind(this)));
-        };
-        ChLazyAssociation.prototype.retrieve = function (object) {
-          this.load();
-          return this.cache[object['@id']];
-        };
-        ChLazyAssociation.prototype.retrievePromise = function (object) {
-          this.load();
-          return this.retrieveDeferred(object).promise;
-        };
-        ChLazyAssociation.prototype.retrieveDeferred = function (object) {
-          var _base, _name;
-          return (_base = this.deferredCache)[_name = object['@id']] || (_base[_name] = $q.defer());
-        };
-        ChLazyAssociation.prototype._initCache = function () {
-          return _.each(this.$objects, function (_this) {
-            return function (object) {
-              return _this.cache[object['@id']] = _this.isCollection ? [] : {};
-            };
-          }(this));
-        };
-        ChLazyAssociation.prototype._assign = function (actionOp) {
-          var associationName, backReferences, habtm, parentContextId, results, sortedResults;
-          results = _.isEmpty(actionOp.$obj) ? actionOp.$arr : [actionOp.$obj];
-          if (this.isCollection) {
-            habtm = _.any(this.$objects, function (_this) {
-              return function (object) {
-                var reference;
-                reference = object.$associations && object.$associations[_this.$name];
-                if (!reference) {
-                  return;
-                }
-                return _.isArray(reference);
-              };
-            }(this));
-            if (habtm) {
-              sortedResults = {};
-              _.each(results, function (result) {
-                return sortedResults[result['@id']] = result;
-              });
-              return _.each(this.$objects, function (_this) {
-                return function (object) {
-                  var references;
-                  references = object.$associations && object.$associations[_this.$name];
-                  if (!_.isArray(references)) {
-                    return;
-                  }
-                  _.each(references, function (reference) {
-                    var result;
-                    result = sortedResults[reference['@id']];
-                    if (!result) {
-                      return;
-                    }
-                    return _this.cache[object['@id']].push(result);
-                  });
-                  return _this.retrieveDeferred(object).resolve();
-                };
-              }(this));
-            } else {
-              parentContextId = this.$operation.$context.data['@context']['@id'];
-              associationName = _.findKey(this.contextOperation.$context.data['@context']['properties'], function (value, key) {
-                return value && value.type && value.type === parentContextId;
-              });
-              associationName || (associationName = _.findKey(this.contextOperation.$context.data['@context']['properties'], function (_this) {
-                return function (value, key) {
-                  return value && value.inverse_of && value.inverse_of === _this.$name;
-                };
-              }(this)));
-              backReferences = [];
-              try {
-                _.each(results, function (_this) {
-                  return function (result) {
-                    var backReference;
-                    backReference = result && result.$associations && result.$associations[associationName] && result.$associations[associationName]['@id'];
-                    if (!backReference) {
-                      throw new Error();
-                    }
-                    backReferences.push(backReference);
-                    return _this.cache[backReference].push(result);
-                  };
-                }(this));
-                return _.each(backReferences, function (_this) {
-                  return function (backReference) {
-                    return _this.retrieveDeferred({ '@id': backReference }).resolve();
-                  };
-                }(this));
-              } catch (_error) {
-                return _.each(this.$objects, function (_this) {
-                  return function (object) {
-                    return _this.retrieveDeferred(object).reject();
-                  };
-                }(this));
-              }
-            }
-          } else {
-            sortedResults = {};
-            _.each(results, function (result) {
-              return sortedResults[result['@id']] = result;
-            });
-            return _.each(this.$objects, function (_this) {
-              return function (object) {
-                var requestedId, result;
-                requestedId = object.$associations && object.$associations[_this.$name] && object.$associations[_this.$name]['@id'];
-                if (!requestedId) {
-                  return;
-                }
-                result = sortedResults[requestedId];
-                if (!result) {
-                  return;
-                }
-                _this.cache[object['@id']] = result;
-                return _this.retrieveDeferred(object).resolve();
-              };
-            }(this));
-          }
-        };
-        return ChLazyAssociation;
-      }();
-    }
-  ]);
-}.call(this));
-(function () {
-  angular.module('chinchilla').factory('ChLazyLoader', [
-    'ChLazyAssociation',
-    function (ChLazyAssociation) {
-      var ChLazyLoader;
-      return ChLazyLoader = function () {
-        function ChLazyLoader($operation, $objects) {
-          this.$operation = $operation;
-          this.$objects = $objects != null ? $objects : [];
-          this.$cache = {};
-          this._turnLazy();
-        }
-        ChLazyLoader.prototype._turnLazy = function () {
-          var self;
-          self = this;
-          return _.each(this.$objects, function (object) {
-            if (!object.$associations) {
-              return;
-            }
-            return _.each(object.$associations, function (value, key) {
-              Object.defineProperty(object, key, {
-                get: function () {
-                  return self._association(key).retrieve(object);
-                }
-              });
-              return Object.defineProperty(object, '' + key + 'Promise', {
-                get: function () {
-                  return self._association(key).retrievePromise(object);
-                }
-              });
-            });
-          });
-        };
-        ChLazyLoader.prototype._association = function (name) {
-          var _base;
-          return (_base = this.$cache)[name] || (_base[name] = new ChLazyAssociation(this.$operation, this.$objects, name));
-        };
-        return ChLazyLoader;
-      }();
-    }
-  ]);
-}.call(this));
-(function () {
-  var __hasProp = {}.hasOwnProperty, __extends = function (child, parent) {
-      for (var key in parent) {
-        if (__hasProp.call(parent, key))
-          child[key] = parent[key];
-      }
-      function ctor() {
-        this.constructor = child;
-      }
-      ctor.prototype = parent.prototype;
-      child.prototype = new ctor();
-      child.__super__ = parent.prototype;
-      return child;
-    };
-  angular.module('chinchilla').factory('ChObjectsOperation', [
-    'ChOperation',
-    'ChContextService',
-    function (ChOperation, ChContextService) {
-      var ChObjectsOperation;
-      return ChObjectsOperation = function (_super) {
-        __extends(ChObjectsOperation, _super);
-        function ChObjectsOperation($objects) {
-          this.$objects = $objects;
-          ChOperation.init(this);
-          this.$arr = [];
-          this.$obj = {};
-          this.$headers = {};
-          this.$contextUrl = null;
-          if (_.isArray(this.$objects)) {
-            this.$arr = this.$objects;
-          } else {
-            this.$obj = this.$objects;
-          }
-          this._run();
-        }
-        ChObjectsOperation.prototype._run = function () {
-          var error, success;
-          this._findContextUrl(this.$objects);
-          success = function (_this) {
-            return function (context) {
-              _this.$context = context;
-              return _this.$deferred.resolve(_this);
-            };
-          }(this);
-          error = function (_this) {
-            return function () {
-              return _this.$deferred.reject();
-            };
-          }(this);
-          return ChContextService.get(this.$contextUrl).then(success, error);
-        };
-        return ChObjectsOperation;
-      }(ChOperation);
-    }
-  ]);
-}.call(this));
-(function () {
-  angular.module('chinchilla').factory('ChOperation', [
-    '$q',
-    '$injector',
-    function ($q, $injector) {
-      var ChOperation;
-      return ChOperation = function () {
-        function ChOperation() {
-        }
-        ChOperation.init = function (instance) {
-          instance.$context = null;
-          instance.$error = {};
-          instance.$deferred = $q.defer();
-          instance.$promise = instance.$deferred.promise;
-          instance.ChContextOperation = $injector.get('ChContextOperation');
-          instance.ChActionOperation = $injector.get('ChActionOperation');
-          return instance.ChObjectsOperation = $injector.get('ChObjectsOperation');
-        };
-        ChOperation.prototype.$ = function (subject) {
-          var contextOp;
-          return contextOp = new this.ChContextOperation(this, subject);
-        };
-        ChOperation.prototype.$$ = function (action, params, options) {
-          if (params == null) {
-            params = {};
-          }
-          if (options == null) {
-            options = {};
-          }
-          return new this.ChActionOperation(this, null, action, params, options);
-        };
-        ChOperation.prototype.$c = function (action, params, options) {
-          if (params == null) {
-            params = {};
-          }
-          if (options == null) {
-            options = {};
-          }
-          return new this.ChActionOperation(this, 'collection', action, params, options);
-        };
-        ChOperation.prototype.$m = function (action, params, options) {
-          if (params == null) {
-            params = {};
-          }
-          if (options == null) {
-            options = {};
-          }
-          return new this.ChActionOperation(this, 'member', action, params, options);
-        };
-        ChOperation.prototype._findContextUrl = function (subject) {
-          var first;
-          this.$contextUrl = null;
-          if (_.isString(subject)) {
-            this.$contextUrl = this.$associationProperty && this.$associationProperty.type;
-            if (!this.$contextUrl) {
-              throw new Error('ChContextOperation#_findContextUrl: no association \'' + subject + '\' found');
-            }
-          } else if (_.isArray(subject)) {
-            first = _.first(subject);
-            this.$contextUrl = first && first['@context'];
-            if (!first || !this.$contextUrl) {
-              console.log(this);
-              throw new Error('ChContextOperation#_findContextUrl: empty array of objects given or missing context');
-            }
-          } else if (_.isPlainObject(subject)) {
-            this.$contextUrl = subject['@context'];
-            if (!this.$contextUrl) {
-              console.log(this);
-              throw new Error('ChContextOperation#_findContextUrl: missing context');
-            }
-          } else {
-            console.log(this);
-            throw new Error('ChContextOperation#_findContextUrl: unsupported subject');
-          }
-        };
-        return ChOperation;
-      }();
-    }
-  ]);
-}.call(this));
-(function () {
-  angular.module('chinchilla').factory('ChRequestBuilder', [
-    '$q',
-    '$injector',
-    '$http',
-    '$chTimestampedUrl',
-    'ChUtils',
-    function ($q, $injector, $http, $chTimestampedUrl, ChUtils) {
-      var ChRequestBuilder;
-      return ChRequestBuilder = function () {
-        function ChRequestBuilder($context, $subject, $type, $actionName, $options) {
-          this.$context = $context;
-          this.$subject = $subject;
-          this.$type = $type;
-          this.$actionName = $actionName;
-          this.$options = $options != null ? $options : {};
-          this.$mergedParams = {};
-          this.$action = this.$type === 'collection' ? this.$context.collection_action(this.$actionName) : this.$context.member_action(this.$actionName);
-        }
-        ChRequestBuilder.prototype.extractFrom = function (source, type) {
-          var first, params;
-          params = _.isArray(source) && type === 'member' ? this._extractMemberArray(source) : _.isArray(source) && type === 'collection' ? (first = _.first(source), _.has(first, '@context') ? this._extractMemberArray(source) : this._extractCollectionArray(source)) : type === 'collection' ? this._extractCollection(source) : this._extractMember(source);
-          this.mergeParams(params);
-          return params;
-        };
-        ChRequestBuilder.prototype.mergeParams = function (params) {
-          return _.merge(this.$mergedParams, params || {});
-        };
-        ChRequestBuilder.prototype.performRequest = function () {
-          var data, options;
-          data = _.include([
-            'POST',
-            'PUT',
-            'PATCH'
-          ], this.$action.method) ? this.data() : null;
-          options = _.merge({}, {
-            method: this.$action.method,
-            url: $chTimestampedUrl(this.buildUrl()),
-            data: data
-          }, this.$options['http']);
-          return $http(options);
-        };
-        ChRequestBuilder.prototype.buildUrl = function () {
-          var uriTmpl;
-          uriTmpl = new UriTemplate(this.$action.template);
-          return uriTmpl.fillFromObject(this._buildParams());
-        };
-        ChRequestBuilder.prototype.data = function () {
-          var data;
-          if (this.$options['raw']) {
-            return this._cleanup(this.$subject);
-          } else if (_.isArray(this.$subject)) {
-            data = {};
-            _.each(this.$subject, function (_this) {
-              return function (obj) {
-                return data[obj.id] = _this._remapAttributes(_this._cleanup(obj));
-              };
-            }(this));
-            return data;
-          } else {
-            return this._cleanup(this._remapAttributes(this.$subject));
-          }
-        };
-        ChRequestBuilder.prototype._cleanup = function (object) {
-          var newObject, self;
-          self = this;
-          newObject = {};
-          _.each(object, function (v, k) {
-            var obj, subset;
-            if (/^\$/.test(k) || k === 'errors' || k === 'isPristine' || _.isFunction(v)) {
-            } else if (_.isArray(v)) {
-              if (_.isPlainObject(v[0])) {
-                subset = _.map(v, function (x) {
-                  return self._cleanup(x);
+                    resolve(_this);
                 });
-                return newObject[k] = _.reject(subset, function (x) {
-                  return _.isEmpty(x);
-                });
-              } else {
-                return newObject[k] = v;
-              }
-            } else if (_.isPlainObject(v)) {
-              obj = self._cleanup(v);
-              if (!_.isEmpty(obj)) {
-                return newObject[k] = obj;
-              }
-            } else {
-              return newObject[k] = v;
-            }
-          });
-          return newObject;
+            });
+        }
+        Context.prototype.property = function (name) {
+            return this.properties[name];
         };
-        ChRequestBuilder.prototype._remapAttributes = function (object) {
-          var self;
-          self = this;
-          return _.each(object, function (value, key) {
-            var values;
-            if (_.isString(value) && /(^tags|_ids$)/.test(key)) {
-              values = _.select(value.split(','), function (item) {
-                return !_.isEmpty(item);
-              });
-              return object[key] = values;
-            } else if (_.isObject(value)) {
-              object['' + key + '_attributes'] = value;
-              return delete object[key];
-            }
-          });
+        Context.prototype.constant = function (name) {
+            return this.constants[name];
         };
-        ChRequestBuilder.prototype._buildParams = function () {
-          var mappings, result;
-          mappings = this.$action.mappings;
-          result = {};
-          _.each(mappings, function (_this) {
-            return function (mapping) {
-              var value;
-              value = _this.$mergedParams[mapping.source] || _this.$mergedParams[mapping.variable];
-              if (!value) {
+        Context.prototype.association = function (name) {
+            var property = this.property(name);
+            return property.isAssociation && property;
+        };
+        Context.prototype.memberAction = function (name) {
+            var action = this.context && this.context.member_actions && this.context.member_actions[name];
+            if (!action) {
+                console.log("requested non-existing member action " + name);
                 return;
-              }
-              return result[mapping.variable] = value;
+            }
+            return new ContextMemberAction(action);
+        };
+        Context.prototype.collectionAction = function (name) {
+            var action = this.context && this.context.collection_actions && this.context.collection_actions[name];
+            if (!action) {
+                console.log("requested non-existing collection action " + name);
+                return;
+            }
+            return new ContextCollectionAction(action);
+        };
+        Context.cache = {};
+        return Context;
+    })();
+    Chinchilla.Context = Context;
+})(Chinchilla || (Chinchilla = {}));
+/// <reference path = "subject.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Result = (function () {
+        function Result() {
+            this.objects = [];
+        }
+        Result.prototype.success = function (result) {
+            var _this = this;
+            this.headers = result.headers;
+            this.data = (result.body && result.body.members) || result.body;
+            switch (result.body['@type']) {
+                case 'graph':
+                    var members = result.body['@graph'];
+                    if (!members)
+                        return;
+                    new Chinchilla.Subject(members);
+                    _.each(members, function (node) {
+                        if (node.parent_id) {
+                            // this is a child
+                            var parent = _.find(members, function (x) {
+                                return x.id === node.parent_id;
+                            });
+                            if (parent) {
+                                node.parent = parent;
+                                if (!parent.children)
+                                    parent.children = [];
+                                parent.children.push(node);
+                            }
+                            return true; // continue loop
+                        }
+                        else {
+                            // root
+                            _this.objects.push(node);
+                        }
+                    });
+                    break;
+                case 'collection':
+                    _.each(result.body.members, function (member) {
+                        _this.objects.push(member);
+                    });
+                    var byContext = _.groupBy(this.objects, '@context');
+                    // creates new Subject for each group ob objects that share the same @context
+                    _.each(byContext, function (objects, context) {
+                        new Chinchilla.Subject(objects);
+                    });
+                    break;
+                default:
+                    if (_.isArray(result.body))
+                        throw new Error("Unexpectedly got an array");
+                    this.objects.push(result.body);
+                    new Chinchilla.Subject(this.objects);
+                    break;
+            }
+        };
+        Object.defineProperty(Result.prototype, "object", {
+            get: function () {
+                return _.first(this.objects);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Result;
+    })();
+    Chinchilla.Result = Result;
+})(Chinchilla || (Chinchilla = {}));
+/// <reference path = "../../typings/uriTemplate.d.ts" />
+/// <reference path = "../../typings/promise.d.ts" />
+/// <reference path = "config.ts" />
+/// <reference path = "result.ts" />
+/// <reference path = "context.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Action = (function () {
+        function Action(uri, params, body) {
+            var _this = this;
+            if (params === void 0) { params = {}; }
+            if (body === void 0) { body = {}; }
+            this.result = new Chinchilla.Result();
+            this.uriTmpl = new UriTemplate(uri);
+            this.params = params;
+            this.body = body;
+            // 2. remap params
+            // 3. cleanup body
+            // 4. merge params
+            this.ready = new Promise(function (resolve, reject) {
+                // 5. do request
+                // 6. on data resolve with Result
+                var req = request
+                    .get(_this.uriTmpl.fillFromObject(_this.params))
+                    .query({ t: Chinchilla.Config.timestamp });
+                req = req.set('Session-Id', Chinchilla.Config.getSessionId());
+                req = req
+                    .end(function (err, res) {
+                    if (err) {
+                        // TODO create error result
+                        return reject(_this.result);
+                    }
+                    _this.result.success(res);
+                    resolve(_this.result);
+                });
+            });
+        }
+        Action.prototype.cleanupBody = function () {
+        };
+        return Action;
+    })();
+    Chinchilla.Action = Action;
+})(Chinchilla || (Chinchilla = {}));
+/// <reference path = "../../typings/uriTemplate.d.ts" />
+/// <reference path = "context.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Extractor = (function () {
+        function Extractor() {
+        }
+        Extractor.extractMemberParams = function (context, obj) {
+            var action = context.memberAction('get');
+            return Extractor.extractParams(action, obj);
+        };
+        Extractor.extractCollectionParams = function (context, obj) {
+            var action = context.collectionAction('query');
+            return Extractor.extractParams(action, obj);
+        };
+        Extractor.uriParams = function (action, params) {
+            if (params === void 0) { params = {}; }
+            var uriParams = {};
+            _.each(action.mappings, function (mapping) {
+                uriParams[mapping.variable] = params[mapping.source];
+            });
+            return uriParams;
+        };
+        Extractor.extractParams = function (contextAction, obj) {
+            if (_.isEmpty(obj) || _.isEmpty(contextAction))
+                return {};
+            if (_.isArray(obj)) {
+                return Extractor.extractArrayValues(contextAction, obj);
+            }
+            else {
+                return Extractor.extractValues(contextAction, obj);
+            }
+        };
+        Extractor.extractValues = function (contextAction, object) {
+            var id = object && object['@id'];
+            if (!id)
+                return {};
+            var result = {};
+            var template = new UriTemplate(contextAction.template);
+            var values = template.fromUri(id);
+            if (_.isEmpty(values))
+                return {};
+            _.each(contextAction.mappings, function (mapping) {
+                var value = values[mapping.variable];
+                if (!value)
+                    return;
+                result[mapping.source] = value;
+            });
+            return result;
+        };
+        Extractor.extractArrayValues = function (contextAction, objects) {
+            var values = _.map(objects, function (obj) {
+                Extractor.extractValues(contextAction, obj);
+            });
+            values = _.compact(values);
+            var result = {};
+            _.each(contextAction.mappings, function (mapping) {
+                result[mapping.source] = [];
+                _.each(values, function (attrs) {
+                    if (!attrs[mapping.source])
+                        return;
+                    if (_.include(result[mapping.source], attrs[mapping.source]))
+                        return;
+                    result[mapping.source].push(attrs[mapping.source]);
+                });
+            });
+            return result;
+        };
+        return Extractor;
+    })();
+    Chinchilla.Extractor = Extractor;
+})(Chinchilla || (Chinchilla = {}));
+/// <reference path = "../../typings/promise.d.ts" />
+/// <reference path = "subject.ts" />
+/// <reference path = "action.ts" />
+/// <reference path = "extractor.ts" />
+/// <reference path = "context.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Association = (function () {
+        function Association(subject, name) {
+            var _this = this;
+            this.habtm = false;
+            // this cache contains the association data for each of the subject's objects
+            this.cache = {};
+            this.subject = subject;
+            this.name = name;
+            this.associationData = this.readAssociationData();
+            // array of arrays => HABTM!
+            this.habtm = _.isArray(this.associationData) && _.isArray(_.first(this.associationData));
+            this.ready = this.subject.context.ready.then(function (context) {
+                _this.associationProperty = context.association(name);
+                return new Chinchilla.Context(_this.associationProperty.type).ready.then(function (associationContext) {
+                    _this.context = associationContext;
+                    var action = _this.associationProperty.collection ?
+                        associationContext.collectionAction('get') :
+                        associationContext.memberAction('get');
+                    if (!action)
+                        throw new Error("could not load association " + name);
+                    //var extractedParams = Extractor.extractCollectionParams(this.subject.context, this.subject.objects);
+                    //TODO is ^^ this needed?
+                    return new Chinchilla.Action(action.template, _this.associationParams(), {}).ready.then(function (result) {
+                        _this.fillCache(result);
+                        return result;
+                    });
+                });
+            });
+        }
+        // instances of Association get cached for every Subject. this means for any Subject the association data
+        // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
+        // them loads their associations individually
+        Association.get = function (subject, name) {
+            var key = "subject-" + subject.id + "-" + name;
+            var instance;
+            if (instance = Association.cache[key]) {
+                return instance;
+            }
+            else {
+                instance = new Association(subject, name);
+                Association.cache[key] = instance;
+                return instance;
+            }
+        };
+        Association.prototype.getDataFor = function (object) {
+            return this.cache[object && object['@id']];
+        };
+        // after association data has been retrieved this function sorts result data into cache where the cache key
+        // if the parent (subject's) objects id
+        Association.prototype.fillCache = function (result) {
+            var _this = this;
+            if (this.associationProperty.collection) {
+                if (this.habtm) {
+                    // HAS AND BELONGS TO MANY
+                    var sorted = {};
+                    _.each(result.objects, function (obj) {
+                        sorted[obj['@id']] = obj;
+                    });
+                    _.each(this.subject.objects, function (obj) {
+                        var key = obj['@id'];
+                        _this.cache[key] = [];
+                        var references = obj.$associations && obj.$associations[_this.name];
+                        if (!_.isArray(references))
+                            return true;
+                        _.each(references, function (reference) {
+                            var result = sorted[reference['@id']];
+                            if (!result)
+                                return true;
+                            _this.cache[key] = result;
+                        });
+                    });
+                }
+                else {
+                    // HAS MANY
+                    // find back reference association, -> association that points to same context the parent context does
+                    // say you want to load user phones..
+                    // - @$operation is a user action operation, which $context is the user context
+                    // - @contextOperation.$context is the phone context
+                    // - -> find the association inside of phone context which points to @id of user context
+                    // 1. attempt: try to find association name using parent context id in own associations
+                    var associationName;
+                    associationName = _.findKey(this.context.properties, function (value, key) {
+                        return value && value.type && value.type === _this.subject.context.id;
+                    });
+                    // 2. attempt: try to find association name using inverse_of if given
+                    if (!associationName) {
+                        associationName = _.findKey(this.context.properties, function (value, key) {
+                            return value && value.inverse_of && value.inverse_of === _this.name;
+                        });
+                    }
+                    _.each(this.subject.objects, function (obj) {
+                        var backReference = obj && obj.$associations && obj.$associations[associationName] && obj.$associations[associationName]['@id'];
+                        if (!backReference)
+                            return;
+                        _this.cache[backReference] = obj;
+                    });
+                }
+            }
+            else {
+                // HAS ONE / BELONGS TO
+                var sorted = {};
+                _.each(result.objects, function (obj) {
+                    sorted[obj['@id']] = obj;
+                });
+                _.each(this.subject.objects, function (obj) {
+                    var requestedId = obj.$associations && obj.$associations[_this.name] && obj.$associations['@id'];
+                    if (!requestedId)
+                        return;
+                    var result = sorted[requestedId];
+                    if (!result)
+                        return;
+                    _this.cache[obj['@id']] = result;
+                });
+            }
+        };
+        Association.prototype.associationParams = function () {
+            debugger;
+            if (this.habtm) {
+                return Chinchilla.Extractor.extractMemberParams(this.context, _.flatten(this.associationData));
+            }
+            else if (this.associationProperty.collection) {
+                return Chinchilla.Extractor.extractCollectionParams(this.context, this.associationData);
+            }
+            else {
+                return Chinchilla.Extractor.extractMemberParams(this.context, this.associationData);
+            }
+        };
+        // extract reference data from parent objects
+        Association.prototype.readAssociationData = function () {
+            var name = this.name;
+            var assocData = function (obj) {
+                return obj && obj.$associations && obj.$associations[name];
             };
-          }(this));
-          return result;
+            return _.map(this.subject.objects, function (obj) {
+                return assocData(obj);
+            });
         };
-        ChRequestBuilder.prototype._extractMemberArray = function (source) {
-          var action;
-          action = this.$context.member_action('get');
-          if (_.isEmpty(source) || _.isEmpty(action)) {
-            return {};
-          }
-          return ChUtils.extractArrayValues(action, source);
-        };
-        ChRequestBuilder.prototype._extractCollectionArray = function (source) {
-          var action;
-          action = this.$context.collection_action('query');
-          if (_.isEmpty(source) || _.isEmpty(action)) {
-            return {};
-          }
-          return ChUtils.extractArrayValues(action, source);
-        };
-        ChRequestBuilder.prototype._extractCollection = function (source) {
-          var action;
-          action = this.$context.collection_action('query');
-          if (_.isEmpty(source) || _.isEmpty(action)) {
-            return {};
-          }
-          return ChUtils.extractValues(action, source);
-        };
-        ChRequestBuilder.prototype._extractMember = function (source) {
-          var action;
-          action = this.$context.member_action('get');
-          if (_.isEmpty(source) || _.isEmpty(action)) {
-            return {};
-          }
-          return ChUtils.extractValues(action, source);
-        };
-        return ChRequestBuilder;
-      }();
-    }
-  ]);
-}.call(this));
-(function () {
-  angular.module('chinchilla').factory('ChUtils', function () {
-    var ChUtils;
-    return ChUtils = function () {
-      function ChUtils() {
-      }
-      ChUtils.extractValues = function (action, object) {
-        var id, mappings, result, template, values;
-        id = object && object['@id'];
-        if (!id) {
-          return {};
+        // this is a cache for all Association instances
+        Association.cache = {};
+        return Association;
+    })();
+    Chinchilla.Association = Association;
+})(Chinchilla || (Chinchilla = {}));
+/// <reference path = "context.ts" />
+/// <reference path = "action.ts" />
+/// <reference path = "extractor.ts" />
+/// <reference path = "association.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Subject = (function () {
+        function Subject(objects) {
+            // unique id for this instance (for cache key purpose)
+            this.id = Math.random().toString(36).substr(2, 9);
+            // adds and initializes objects to this Subject
+            _.isArray(objects) ? this.addObjects(objects) : this.addObjects([objects]);
         }
-        result = {};
-        template = new UriTemplate(action.template);
-        values = template.fromUri(id);
-        if (_.isEmpty(values)) {
-          return {};
-        }
-        mappings = action.mappings;
-        _.each(mappings, function (mapping) {
-          var value;
-          value = values[mapping.variable];
-          if (!value) {
-            return;
-          }
-          return result[mapping.source] = value;
+        Subject.prototype.memberAction = function (name, inputParams) {
+            var _this = this;
+            var promise;
+            return promise = this.context.ready.then(function (context) {
+                var contextAction = context.memberAction(name);
+                var mergedParams = _.merge({}, _this.extractedParams, inputParams);
+                var uriParams = Chinchilla.Extractor.uriParams(contextAction, mergedParams);
+                var action = new Chinchilla.Action(contextAction.template, uriParams, _this.object);
+                promise['$objects'] = action.result.objects;
+                return action.ready;
+            });
+        };
+        Subject.prototype.collectionAction = function (name, inputParams) {
+            var _this = this;
+            return this.context.ready.then(function (context) {
+                var contextAction = context.collectionAction(name);
+                var mergedParams = _.merge({}, _this.extractedParams, inputParams);
+                var uriParams = Chinchilla.Extractor.uriParams(contextAction, mergedParams);
+                return new Chinchilla.Action(contextAction.template, uriParams, _this.objects);
+            });
+        };
+        // returns Association that resolves to a Result where the objects might belong to different Subjects
+        Subject.prototype.association = function (name) {
+            return Chinchilla.Association.get(this, name);
+        };
+        Object.defineProperty(Subject.prototype, "context", {
+            get: function () {
+                if (this._context)
+                    return this._context;
+                return this._context = new Chinchilla.Context(this.contextUrl);
+            },
+            enumerable: true,
+            configurable: true
         });
-        return result;
-      };
-      ChUtils.extractArrayValues = function (action, objects) {
-        var mappings, result, values;
-        mappings = action.mappings;
-        values = _.map(objects, function (obj) {
-          return ChUtils.extractValues(action, obj);
+        Object.defineProperty(Subject.prototype, "object", {
+            get: function () {
+                return _.first(this.objects);
+            },
+            enumerable: true,
+            configurable: true
         });
-        values = _.compact(values);
-        result = {};
-        _.each(mappings, function (mapping) {
-          result[mapping.source] = [];
-          return _.each(values, function (attrs) {
-            if (!attrs[mapping.source]) {
-              return;
-            }
-            if (_.include(result[mapping.source], attrs[mapping.source])) {
-              return;
-            }
-            return result[mapping.source].push(attrs[mapping.source]);
-          });
+        Object.defineProperty(Subject.prototype, "extractedParams", {
+            get: function () {
+                return Chinchilla.Extractor.extractMemberParams(this.context, this.objects);
+            },
+            enumerable: true,
+            configurable: true
         });
-        return result;
-      };
-      return ChUtils;
-    }();
-  });
-}.call(this));
+        Subject.prototype.addObjects = function (objects) {
+            var _this = this;
+            this.objects = [];
+            _.each(objects, function (obj) {
+                obj.$subject = _this;
+                _this.moveAssociationReferences(obj);
+                _this.initAssociationGetters(obj);
+                _this.objects.push(obj);
+            });
+            this.contextUrl = this.object['@context'];
+        };
+        Subject.prototype.moveAssociationReferences = function (object) {
+            object.$associations = {};
+            _.each(object, function (value, key) {
+                if (key === '$associations')
+                    return;
+                var el;
+                if (_.isArray(value) && (el = _.first(value) && _.isPlainObject(el) && el['@id'])) {
+                    // HABTM
+                    object.$associations[key] = _.clone(value);
+                    delete object[key];
+                }
+                else if (_.isPlainObject(value) && value['@id']) {
+                    object.$associations[key] = _.clone(value);
+                    delete object[key];
+                }
+                return true;
+            });
+        };
+        Subject.prototype.initAssociationGetters = function (object) {
+            var _this = this;
+            if (!object.$associations)
+                return;
+            _.each(object.$associations, function (value, key) {
+                var promiseKey = key + "Promise";
+                Object.defineProperty(object, key, {
+                    get: function () {
+                        _this.association(key).getDataFor(object);
+                    }
+                });
+                Object.defineProperty(object, key + "Promise", {
+                    get: function () {
+                        _this.association(key).ready;
+                    }
+                });
+            });
+        };
+        return Subject;
+    })();
+    Chinchilla.Subject = Subject;
+})(Chinchilla || (Chinchilla = {}));
+// new Chinchilla.Subject(object).memberAction('delete') => Chinchilla.Result
+// new Chinchilla.Context('um', 'user').memberAction('get', { id: 3 }) => Chinchilla.Subject
+//
+// var userSubject = new Chinchilla.Context('um', 'user').memberAction('get', { id: 3})
+//
+// var user;
+// userSubject.onResolve((c) => user = c; )
+// 
+// var organizationSubject = user.organization (== user.association('organization').content)
+//
+// result groups objects by context, instantiates a new subject for every group
+// result initializes lazy loading on objects, pointing to this group's subject#association method
+//
+// var users = [];
+//
+// new Chinchilla.Subject(users).association('organization') => Chinchilla.Result
+//
+// 
+/// <reference path = "chinchilla/subject.ts" />
+window['chch'] = Chinchilla;
