@@ -18,7 +18,7 @@ module Chinchilla {
     contextAction: ContextAction
     result: Result = new Result();
 
-    constructor(contextAction: ContextAction, params = {}, body = {}, options?: any) {
+    constructor(contextAction: ContextAction, params = {}, body: any, options?: any) {
       this.contextAction  = contextAction;
       this.uriTmpl        = new UriTemplate(contextAction.template);
       this.params         = Extractor.uriParams(contextAction, params); 
@@ -37,7 +37,6 @@ module Chinchilla {
             break;
 
           case 'POST':
-            debugger
             req = request.post(uri)
               .send(this.body);
             break;
@@ -67,8 +66,15 @@ module Chinchilla {
 
         req.end((err, res) => {
           if (err) {
-            // TODO create error result
-            return reject(this.result);
+            var error = new ErrorResult(error).error(res);
+            error.stack = err.stack;
+
+            if (Config.errorInterceptor) {
+              // if error interceptor returns true, then abort (don't resolve nor reject)
+              if (Config.errorInterceptor(error)) return;
+            }
+
+            return reject(error);
           }
           
           this.result.success(res);
@@ -86,7 +92,7 @@ module Chinchilla {
         formatted = this.cleanupObject(body);
       }
       else if (_.isArray(body)) {
-        _.each(this.body, (obj) => {
+        _.each(body, (obj) => {
           formatted[obj.id] = this.remapAttributes(this.cleanupObject(obj));
         });
       }

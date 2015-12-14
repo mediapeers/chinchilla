@@ -33,7 +33,7 @@ module Chinchilla {
       this.ready = this.subject.context.ready.then((context) => {
         this.associationProperty = context.association(name);
         
-        return new Context(this.associationProperty.type).ready.then((associationContext) => {
+        return Context.get(this.associationProperty.type).ready.then((associationContext) => {
           this.context = associationContext;
 
           var contextAction = this.associationData.length > 1 || this.associationProperty.collection ? 

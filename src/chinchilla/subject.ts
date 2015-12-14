@@ -7,10 +7,34 @@ declare var _;
 
 module Chinchilla {
   export class Subject {
-    objects: any[];
+    subject: any; // the object(s) we deal with
     contextUrl: string;
     id: string;
     _context: Context;
+
+    static init(objectsOrApp: any, model?: string): Subject {
+      if (_.isArray(objectsOrApp)) {
+        // validity check for arrays
+        if (_.compact(_.map(objectsOrApp, '$subject')).length > 1) 
+          throw new Error('Objects do not share the same $subject');
+
+        var contexts = _.compact(_.map(objectsOrApp, '@context')).length
+        if (contexts > 1)   throw new Error('Objects do not share the same @context');
+        if (contexts === 0) throw new Error('None of the objects has @context set');
+
+        // return already existing Subject if present
+        var first = _.first(objectsOrApp);
+        if (first.$subject) return first.$subject;
+      }
+      else if (_.isPlainObject(objectsOrApp)) {
+        if (!objectsOrApp['@context']) throw new Error('Object has no @context set');
+
+        if (objectsOrApp.$subject) return objectsOrApp.$subject;
+      }
+      else {
+        return new Subject(objectsOrApp, model);
+      }
+    }
 
     constructor(objectsOrApp: any, model?: string) {
       // unique id for this instance (for cache key purpose)
@@ -21,7 +45,7 @@ module Chinchilla {
         this.contextUrl = `${Config.endpoints[objectsOrApp]}/context/${model}`
       }
       else {
-        _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObjects([objectsOrApp]);
+        _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
       }
     }
 
@@ -31,11 +55,16 @@ module Chinchilla {
         var contextAction = context.memberAction(name);
         var mergedParams  = _.merge({}, this.objectParams, inputParams);
 
-        var action = new Action(contextAction, mergedParams, this.object, options);
+        var action = new Action(contextAction, mergedParams, this.subject, options);
         promise['$objects'] = action.result.objects;
 
         return action.ready;
       });
+    }
+
+    // alias
+    $m(...args) {
+      return this.memberAction.apply(this, args);
     }
 
     collectionAction(name: string, inputParams: any, options?: any): Promise<Context> {
@@ -43,8 +72,22 @@ module Chinchilla {
         var contextAction = context.collectionAction(name);
         var mergedParams  = _.merge({}, this.objectParams, inputParams);
 
-        return new Action(contextAction, mergedParams, this.objects, options).ready;
+        return new Action(contextAction, mergedParams, this.subject, options).ready;
       });
+    }
+
+    // alias
+    $c(...args) {
+      return this.collectionAction.apply(this, args);
+    }
+
+    $$(...args) {
+      if (this.subject && _.isArray(this.subject) && this.subject.length > 1) {
+        return this.collectionAction.apply(this, args);
+      }
+      else {
+        return this.memberAction.apply(this, args);
+      }
     }
 
     // returns Association that resolves to a Result where the objects might belong to different Subjects
@@ -56,23 +99,24 @@ module Chinchilla {
     //
     // chch('um', 'user').new(first_name: 'Peter')
     new(attrs = {}) {
-      this.objects = [
-        _.merge(
-          { '@context' : this.contextUrl },
-          attrs
-        )
-      ]
+      this.subject = _.merge(
+        { '@context' : this.contextUrl, '$subject': this },
+        attrs
+      );
 
       return this;
     }
 
     get context(): Context {
       if (this._context) return this._context;
-      return this._context = new Context(this.contextUrl);
+      return this._context = Context.get(this.contextUrl);
     }
 
+    get objects() {
+      return _.isArray(this.subject) ? this.subject : [this.subject];
+    }
     get object(): Object {
-      return _.first(this.objects);
+      return _.isArray(this.subject) ? _.first(this.subject) : this.subject;
     }
 
     get objectParams(): Object {
@@ -80,35 +124,48 @@ module Chinchilla {
     }
 
     private addObjects(objects: any[]): void {
-      this.objects = [];
+      this.subject = [];
       _.each(objects, (obj) => {
         obj.$subject = this;
         this.moveAssociationReferences(obj);
         this.initAssociationGetters(obj);
-        this.objects.push(obj);
+        this.subject.push(obj);
       });
 
       this.contextUrl = this.object['@context'];
     }
 
+    private addObject(object: any): void {
+      object.$subject = this;
+      this.moveAssociationReferences(object);
+      this.initAssociationGetters(object);
+
+      this.contextUrl = object['@context'];
+      this.subject    = object;
+    }
+
     private moveAssociationReferences(object: any): void {
       object.$associations = {};
 
-      _.each(object, (value, key) => {
-        if (key === '$associations') return; 
+      var key;
+      for (key in object) {
+        if (!object.hasOwnProperty(key)) continue;
 
-        var el;
-        if (_.isArray(value) && (el = _.first(value) && _.isPlainObject(el) && el['@id'])) {
-          // HABTM
-          object.$associations[key] = _.clone(value);
-          delete object[key];
+        var value = object[key];
+
+        if (key === '$associations') continue; 
+
+        if (_.isArray(value)) {
+          var el = _.first(value);
+          if (_.isPlainObject(el) && el['@id']) {
+            // HABTM
+            object.$associations[key] = _.clone(value);
+          }
         }
         else if (_.isPlainObject(value) && value['@id']) {
           object.$associations[key] = _.clone(value);
-          delete object[key];
         }
-        return true;
-      });
+      }
     }
 
     private initAssociationGetters(object: any): void {

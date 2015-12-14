@@ -9,6 +9,7 @@ module Chinchilla {
     static domain: string;
     static sessionId: string;
     static sessionKey = 'chinchillaSessionId';
+    static errorInterceptor: any;
 
     // timestamp to be appended to every request
     // will be the same for a session lifetime
@@ -23,6 +24,10 @@ module Chinchilla {
 
     static setSessionId(id: string): void {
       Cookies.set(Config.sessionKey, id, { path: '/', domain: Config.domain, expires: 300});
+    }
+
+    static setErrorInterceptor(fn) {
+      Config.errorInterceptor = fn;
     }
 
     static getSessionId(): string {

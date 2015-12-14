@@ -15,6 +15,9 @@ var Chinchilla;
         Config.setSessionId = function (id) {
             Cookies.set(Config.sessionKey, id, { path: '/', domain: Config.domain, expires: 300 });
         };
+        Config.setErrorInterceptor = function (fn) {
+            Config.errorInterceptor = fn;
+        };
         Config.getSessionId = function () {
             return Cookies.get(Config.sessionKey);
         };
@@ -68,18 +71,15 @@ var Chinchilla;
         function Context(contextUrl) {
             var _this = this;
             this.ready = new Promise(function (resolve, reject) {
-                var cached;
-                if (cached = Context.cache[contextUrl]) {
-                    return resolve(cached);
-                }
                 request
                     .get(contextUrl)
+                    .query({ t: Chinchilla.Config.timestamp })
                     .end(function (err, res) {
                     _this.data = res.body;
                     _this.context = res.body && res.body['@context'] || {};
                     _this.id = _this.context['@id'];
                     _this.properties = _this.context.properties || {};
-                    _this.constants = _this.context.contants || {};
+                    _this.constants = _this.context.constants || {};
                     _.each(_this.properties, function (property, name) {
                         property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
                     });
@@ -87,6 +87,16 @@ var Chinchilla;
                 });
             });
         }
+        Context.get = function (contextUrl) {
+            var key = _.first(contextUrl.split('?'));
+            var cached;
+            if (cached = Context.cache[key]) {
+                return cached;
+            }
+            else {
+                return Context.cache[key] = new Context(contextUrl);
+            }
+        };
         Context.prototype.property = function (name) {
             return this.properties[name];
         };
@@ -171,7 +181,7 @@ var Chinchilla;
                     if (_.isEmpty(result.body))
                         break;
                     this.objects.push(result.body);
-                    new Chinchilla.Subject(this.objects);
+                    new Chinchilla.Subject(this.object);
                     break;
             }
         };
@@ -185,6 +195,23 @@ var Chinchilla;
         return Result;
     })();
     Chinchilla.Result = Result;
+    var ErrorResult = (function (_super) {
+        __extends(ErrorResult, _super);
+        function ErrorResult() {
+            _super.apply(this, arguments);
+        }
+        ErrorResult.prototype.error = function (result) {
+            this.headers = result.headers;
+            this.object = result.body;
+            this.statusCode = result.statusCode;
+            this.statusText = result.statusText;
+            this.url = result.req.url;
+            this.method = result.req.method;
+            return this;
+        };
+        return ErrorResult;
+    })(Error);
+    Chinchilla.ErrorResult = ErrorResult;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "../../typings/uriTemplate.d.ts" />
 /// <reference path = "context.ts" />
@@ -281,7 +308,6 @@ var Chinchilla;
         function Action(contextAction, params, body, options) {
             var _this = this;
             if (params === void 0) { params = {}; }
-            if (body === void 0) { body = {}; }
             this.result = new Chinchilla.Result();
             this.contextAction = contextAction;
             this.uriTmpl = new UriTemplate(contextAction.template);
@@ -297,7 +323,6 @@ var Chinchilla;
                         req = request.get(uri);
                         break;
                     case 'POST':
-                        debugger;
                         req = request.post(uri)
                             .send(_this.body);
                         break;
@@ -321,8 +346,14 @@ var Chinchilla;
                 }
                 req.end(function (err, res) {
                     if (err) {
-                        // TODO create error result
-                        return reject(_this.result);
+                        var error = new Chinchilla.ErrorResult(error).error(res);
+                        error.stack = err.stack;
+                        if (Chinchilla.Config.errorInterceptor) {
+                            // if error interceptor returns true, then abort (don't resolve nor reject)
+                            if (Chinchilla.Config.errorInterceptor(error))
+                                return;
+                        }
+                        return reject(error);
                     }
                     _this.result.success(res);
                     resolve(_this.result);
@@ -338,7 +369,7 @@ var Chinchilla;
                 formatted = this.cleanupObject(body);
             }
             else if (_.isArray(body)) {
-                _.each(this.body, function (obj) {
+                _.each(body, function (obj) {
                     formatted[obj.id] = _this.remapAttributes(_this.cleanupObject(obj));
                 });
             }
@@ -427,7 +458,7 @@ var Chinchilla;
                 this.associationData = _.flatten(this.associationData);
             this.ready = this.subject.context.ready.then(function (context) {
                 _this.associationProperty = context.association(name);
-                return new Chinchilla.Context(_this.associationProperty.type).ready.then(function (associationContext) {
+                return Chinchilla.Context.get(_this.associationProperty.type).ready.then(function (associationContext) {
                     _this.context = associationContext;
                     var contextAction = _this.associationData.length > 1 || _this.associationProperty.collection ?
                         associationContext.collectionAction('get') :
@@ -578,27 +609,80 @@ var Chinchilla;
                 this.contextUrl = Chinchilla.Config.endpoints[objectsOrApp] + "/context/" + model;
             }
             else {
-                _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObjects([objectsOrApp]);
+                _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
             }
         }
+        Subject.init = function (objectsOrApp, model) {
+            if (_.isArray(objectsOrApp)) {
+                // validity check for arrays
+                if (_.compact(_.map(objectsOrApp, '$subject')).length > 1)
+                    throw new Error('Objects do not share the same $subject');
+                var contexts = _.compact(_.map(objectsOrApp, '@context')).length;
+                if (contexts > 1)
+                    throw new Error('Objects do not share the same @context');
+                if (contexts === 0)
+                    throw new Error('None of the objects has @context set');
+                // return already existing Subject if present
+                var first = _.first(objectsOrApp);
+                if (first.$subject)
+                    return first.$subject;
+            }
+            else if (_.isPlainObject(objectsOrApp)) {
+                if (!objectsOrApp['@context'])
+                    throw new Error('Object has no @context set');
+                if (objectsOrApp.$subject)
+                    return objectsOrApp.$subject;
+            }
+            else {
+                return new Subject(objectsOrApp, model);
+            }
+        };
         Subject.prototype.memberAction = function (name, inputParams, options) {
             var _this = this;
             var promise;
             return promise = this.context.ready.then(function (context) {
                 var contextAction = context.memberAction(name);
                 var mergedParams = _.merge({}, _this.objectParams, inputParams);
-                var action = new Chinchilla.Action(contextAction, mergedParams, _this.object, options);
+                var action = new Chinchilla.Action(contextAction, mergedParams, _this.subject, options);
                 promise['$objects'] = action.result.objects;
                 return action.ready;
             });
+        };
+        // alias
+        Subject.prototype.$m = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i - 0] = arguments[_i];
+            }
+            return this.memberAction.apply(this, args);
         };
         Subject.prototype.collectionAction = function (name, inputParams, options) {
             var _this = this;
             return this.context.ready.then(function (context) {
                 var contextAction = context.collectionAction(name);
                 var mergedParams = _.merge({}, _this.objectParams, inputParams);
-                return new Chinchilla.Action(contextAction, mergedParams, _this.objects, options).ready;
+                return new Chinchilla.Action(contextAction, mergedParams, _this.subject, options).ready;
             });
+        };
+        // alias
+        Subject.prototype.$c = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i - 0] = arguments[_i];
+            }
+            return this.collectionAction.apply(this, args);
+        };
+        Subject.prototype.$$ = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i - 0] = arguments[_i];
+            }
+            if (this.subject && _.isArray(this.subject) && this.subject.length > 1) {
+                return this.collectionAction.apply(this, args);
+            }
+            else {
+                return this.memberAction.apply(this, args);
+            }
         };
         // returns Association that resolves to a Result where the objects might belong to different Subjects
         Subject.prototype.association = function (name) {
@@ -609,23 +693,28 @@ var Chinchilla;
         // chch('um', 'user').new(first_name: 'Peter')
         Subject.prototype.new = function (attrs) {
             if (attrs === void 0) { attrs = {}; }
-            this.objects = [
-                _.merge({ '@context': this.contextUrl }, attrs)
-            ];
+            this.subject = _.merge({ '@context': this.contextUrl, '$subject': this }, attrs);
             return this;
         };
         Object.defineProperty(Subject.prototype, "context", {
             get: function () {
                 if (this._context)
                     return this._context;
-                return this._context = new Chinchilla.Context(this.contextUrl);
+                return this._context = Chinchilla.Context.get(this.contextUrl);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Subject.prototype, "objects", {
+            get: function () {
+                return _.isArray(this.subject) ? this.subject : [this.subject];
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Subject.prototype, "object", {
             get: function () {
-                return _.first(this.objects);
+                return _.isArray(this.subject) ? _.first(this.subject) : this.subject;
             },
             enumerable: true,
             configurable: true
@@ -639,32 +728,42 @@ var Chinchilla;
         });
         Subject.prototype.addObjects = function (objects) {
             var _this = this;
-            this.objects = [];
+            this.subject = [];
             _.each(objects, function (obj) {
                 obj.$subject = _this;
                 _this.moveAssociationReferences(obj);
                 _this.initAssociationGetters(obj);
-                _this.objects.push(obj);
+                _this.subject.push(obj);
             });
             this.contextUrl = this.object['@context'];
         };
+        Subject.prototype.addObject = function (object) {
+            object.$subject = this;
+            this.moveAssociationReferences(object);
+            this.initAssociationGetters(object);
+            this.contextUrl = object['@context'];
+            this.subject = object;
+        };
         Subject.prototype.moveAssociationReferences = function (object) {
             object.$associations = {};
-            _.each(object, function (value, key) {
+            var key;
+            for (key in object) {
+                if (!object.hasOwnProperty(key))
+                    continue;
+                var value = object[key];
                 if (key === '$associations')
-                    return;
-                var el;
-                if (_.isArray(value) && (el = _.first(value) && _.isPlainObject(el) && el['@id'])) {
-                    // HABTM
-                    object.$associations[key] = _.clone(value);
-                    delete object[key];
+                    continue;
+                if (_.isArray(value)) {
+                    var el = _.first(value);
+                    if (_.isPlainObject(el) && el['@id']) {
+                        // HABTM
+                        object.$associations[key] = _.clone(value);
+                    }
                 }
                 else if (_.isPlainObject(value) && value['@id']) {
                     object.$associations[key] = _.clone(value);
-                    delete object[key];
                 }
-                return true;
-            });
+            }
         };
         Subject.prototype.initAssociationGetters = function (object) {
             var _this = this;
@@ -708,6 +807,22 @@ var Chinchilla;
 // 
 /// <reference path = "chinchilla/subject.ts" />
 window['chch'] = function (objectsOrApp, model) {
-    return new Chinchilla.Subject(objectsOrApp, model);
+    return Chinchilla.Subject.init(objectsOrApp, model);
 };
 window['chch'].config = Chinchilla.Config;
+window['chch'].new = function (app, model, attrs) {
+    if (attrs === void 0) { attrs = {}; }
+    return _.merge({ '@context': Chinchilla.Config.endpoints[app] + "/context/" + model }, attrs);
+};
+window['chch'].contextUrl = function (app, model) {
+    return Chinchilla.Config.endpoints[app] + "/context/" + model;
+};
+window['chch'].context = function (urlOrApp, model) {
+    if (!model) {
+        // assume first param is the context url
+        return Chinchilla.Context.get(urlOrApp);
+    }
+    else {
+        return Chinchilla.Context.get(Chinchilla.Config.endpoints[urlOrApp] + "/context/" + model);
+    }
+};

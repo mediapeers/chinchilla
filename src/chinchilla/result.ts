@@ -54,13 +54,32 @@ module Chinchilla {
           if (_.isArray(result.body)) throw new Error("Unexpectedly got an array");
           if (_.isEmpty(result.body)) break;
           this.objects.push(result.body);
-          new Subject(this.objects);
+          new Subject(this.object);
           break;
       }
     }
 
     get object() {
       return _.first(this.objects);
+    }
+  }
+
+  export class ErrorResult extends Error {
+    headers: any;
+    object: any;
+    statusCode: number;
+    statusText: string;
+    url: string;
+    method: string;
+
+    error(result) {
+      this.headers    = result.headers;
+      this.object     = result.body;
+      this.statusCode = result.statusCode;
+      this.statusText = result.statusText;
+      this.url        = result.req.url;
+      this.method     = result.req.method;
+      return this;
     }
   }
 }

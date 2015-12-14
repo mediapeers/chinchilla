@@ -43,30 +43,37 @@ module Chinchilla {
     properties: any;
     constants: any;
 
+    static get(contextUrl: string): Context {
+      var key = _.first(contextUrl.split('?'));
+      var cached;
+
+      if (cached = Context.cache[key]) {
+        return cached;
+      }
+      else {
+        return Context.cache[key] = new Context(contextUrl);
+      }
+    }
+
     constructor(contextUrl: string) {
       this.ready = new Promise((resolve, reject) => {
-        var cached;
-
-        if (cached = Context.cache[contextUrl]) {
-          return resolve(cached);
-        }
-
         request
           .get(contextUrl)
+          .query({ t: Config.timestamp })
           .end((err, res) => {
             this.data       = res.body;        
             this.context    = res.body && res.body['@context'] || {};
             this.id         = this.context['@id'];
             this.properties = this.context.properties || {};
-            this.constants  = this.context.contants || {};
+            this.constants  = this.context.constants || {};
 
             _.each(this.properties, function(property, name) {
               property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
             });
 
             resolve(this);
-          })
-      })
+          });
+      });
     }
 
     property(name: string): ContextProperty {
