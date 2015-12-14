@@ -31,9 +31,8 @@ module Chinchilla {
 
         if (objectsOrApp.$subject) return objectsOrApp.$subject;
       }
-      else {
-        return new Subject(objectsOrApp, model);
-      }
+
+      return new Subject(objectsOrApp, model);
     }
 
     constructor(objectsOrApp: any, model?: string) {
@@ -160,10 +159,12 @@ module Chinchilla {
           if (_.isPlainObject(el) && el['@id']) {
             // HABTM
             object.$associations[key] = _.clone(value);
+            delete object[key];
           }
         }
         else if (_.isPlainObject(value) && value['@id']) {
           object.$associations[key] = _.clone(value);
+          delete object[key];
         }
       }
     }

@@ -98,7 +98,7 @@ module Chinchilla {
               var result = sorted[reference['@id']];
               if (!result) return true;
 
-              this.cache[key] = result; 
+              this.cache[key].push(result); 
             });
           });
         } 

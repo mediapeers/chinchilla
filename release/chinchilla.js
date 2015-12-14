@@ -513,7 +513,7 @@ var Chinchilla;
                             var result = sorted[reference['@id']];
                             if (!result)
                                 return true;
-                            _this.cache[key] = result;
+                            _this.cache[key].push(result);
                         });
                     });
                 }
@@ -633,9 +633,7 @@ var Chinchilla;
                 if (objectsOrApp.$subject)
                     return objectsOrApp.$subject;
             }
-            else {
-                return new Subject(objectsOrApp, model);
-            }
+            return new Subject(objectsOrApp, model);
         };
         Subject.prototype.memberAction = function (name, inputParams, options) {
             var _this = this;
@@ -758,10 +756,12 @@ var Chinchilla;
                     if (_.isPlainObject(el) && el['@id']) {
                         // HABTM
                         object.$associations[key] = _.clone(value);
+                        delete object[key];
                     }
                 }
                 else if (_.isPlainObject(value) && value['@id']) {
                     object.$associations[key] = _.clone(value);
+                    delete object[key];
                 }
             }
         };
