@@ -134,7 +134,7 @@ declare module Chinchilla {
         contextUrl: string;
         id: string;
         _context: Context;
-        static init(objectsOrApp: any, model?: string): Subject;
+        static detachFromSubject(objects: any): any;
         constructor(objectsOrApp: any, model?: string);
         memberAction(name: string, inputParams?: any, options?: any): Promise<Context>;
         $m(...args: any[]): any;

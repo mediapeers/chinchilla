@@ -12,27 +12,21 @@ module Chinchilla {
     id: string;
     _context: Context;
 
-    static init(objectsOrApp: any, model?: string): Subject {
-      if (_.isArray(objectsOrApp)) {
-        // validity check for arrays
-        if (_.compact(_.map(objectsOrApp, '$subject')).length > 1) 
-          throw new Error('Objects do not share the same $subject');
-
-        var contexts = _.compact(_.map(objectsOrApp, '@context')).length
-        if (contexts > 1)   throw new Error('Objects do not share the same @context');
-        if (contexts === 0) throw new Error('None of the objects has @context set');
-
-        // return already existing Subject if present
-        var first = _.first(objectsOrApp);
-        if (first.$subject) return first.$subject;
+    static detachFromSubject(objects: any) {
+      var detach = function(object) {
+        var copy = _.clone(object);
+        delete copy['$subject'];
+        return copy;
       }
-      else if (_.isPlainObject(objectsOrApp)) {
-        if (!objectsOrApp['@context']) throw new Error('Object has no @context set');
-
-        if (objectsOrApp.$subject) return objectsOrApp.$subject;
+      
+      if (_.isArray(objects)) {
+        return _.map(objects, detach);
       }
-
-      return new Subject(objectsOrApp, model);
+      else if (_.isPlainObject(objects)) {
+        return detach(objects);
+      }
+      
+      return objects;
     }
 
     constructor(objectsOrApp: any, model?: string) {
@@ -144,7 +138,7 @@ module Chinchilla {
     }
 
     private moveAssociationReferences(object: any): void {
-      object.$associations = {};
+      if (!object.$associations) object.$associations = {};
 
       var key;
       for (key in object) {
@@ -189,22 +183,3 @@ module Chinchilla {
     }
   }
 }
-
-// new Chinchilla.Subject(object).memberAction('delete') => Chinchilla.Result
-// new Chinchilla.Context('um', 'user').memberAction('get', { id: 3 }) => Chinchilla.Subject
-//
-// var userSubject = new Chinchilla.Context('um', 'user').memberAction('get', { id: 3})
-//
-// var user;
-// userSubject.onResolve((c) => user = c; )
-// 
-// var organizationSubject = user.organization (== user.association('organization').content)
-//
-// result groups objects by context, instantiates a new subject for every group
-// result initializes lazy loading on objects, pointing to this group's subject#association method
-//
-// var users = [];
-//
-// new Chinchilla.Subject(users).association('organization') => Chinchilla.Result
-//
-// 

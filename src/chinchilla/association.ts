@@ -32,7 +32,7 @@ module Chinchilla {
 
       this.ready = this.subject.context.ready.then((context) => {
         this.associationProperty = context.association(name);
-        
+
         return Context.get(this.associationProperty.type).ready.then((associationContext) => {
           this.context = associationContext;
 

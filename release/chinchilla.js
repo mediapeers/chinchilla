@@ -341,7 +341,7 @@ var Chinchilla;
                 // add timestamp
                 req = req.query({ t: Chinchilla.Config.timestamp });
                 // add session by default
-                if (!options || !options.withoutSession === false) {
+                if (!options || !(options.withoutSession === true)) {
                     req = req.set('Session-Id', Chinchilla.Config.getSessionId());
                 }
                 req.end(function (err, res) {
@@ -365,7 +365,7 @@ var Chinchilla;
             if (_.isEmpty(body))
                 return;
             var formatted = {};
-            if (this.options && this.options.raw === true) {
+            if (this.options && (this.options.raw === true)) {
                 formatted = this.cleanupObject(body);
             }
             else if (_.isArray(body)) {
@@ -426,7 +426,7 @@ var Chinchilla;
                     object[key] = values;
                 }
                 else if (_.isObject(value)) {
-                    object["$(key)_attributes"] = value;
+                    object[(key + "_attributes")] = value;
                     delete object[key];
                 }
             });
@@ -612,28 +612,19 @@ var Chinchilla;
                 _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
             }
         }
-        Subject.init = function (objectsOrApp, model) {
-            if (_.isArray(objectsOrApp)) {
-                // validity check for arrays
-                if (_.compact(_.map(objectsOrApp, '$subject')).length > 1)
-                    throw new Error('Objects do not share the same $subject');
-                var contexts = _.compact(_.map(objectsOrApp, '@context')).length;
-                if (contexts > 1)
-                    throw new Error('Objects do not share the same @context');
-                if (contexts === 0)
-                    throw new Error('None of the objects has @context set');
-                // return already existing Subject if present
-                var first = _.first(objectsOrApp);
-                if (first.$subject)
-                    return first.$subject;
+        Subject.detachFromSubject = function (objects) {
+            var detach = function (object) {
+                var copy = _.clone(object);
+                delete copy['$subject'];
+                return copy;
+            };
+            if (_.isArray(objects)) {
+                return _.map(objects, detach);
             }
-            else if (_.isPlainObject(objectsOrApp)) {
-                if (!objectsOrApp['@context'])
-                    throw new Error('Object has no @context set');
-                if (objectsOrApp.$subject)
-                    return objectsOrApp.$subject;
+            else if (_.isPlainObject(objects)) {
+                return detach(objects);
             }
-            return new Subject(objectsOrApp, model);
+            return objects;
         };
         Subject.prototype.memberAction = function (name, inputParams, options) {
             var _this = this;
@@ -743,7 +734,8 @@ var Chinchilla;
             this.subject = object;
         };
         Subject.prototype.moveAssociationReferences = function (object) {
-            object.$associations = {};
+            if (!object.$associations)
+                object.$associations = {};
             var key;
             for (key in object) {
                 if (!object.hasOwnProperty(key))
@@ -787,27 +779,11 @@ var Chinchilla;
     })();
     Chinchilla.Subject = Subject;
 })(Chinchilla || (Chinchilla = {}));
-// new Chinchilla.Subject(object).memberAction('delete') => Chinchilla.Result
-// new Chinchilla.Context('um', 'user').memberAction('get', { id: 3 }) => Chinchilla.Subject
-//
-// var userSubject = new Chinchilla.Context('um', 'user').memberAction('get', { id: 3})
-//
-// var user;
-// userSubject.onResolve((c) => user = c; )
-// 
-// var organizationSubject = user.organization (== user.association('organization').content)
-//
-// result groups objects by context, instantiates a new subject for every group
-// result initializes lazy loading on objects, pointing to this group's subject#association method
-//
-// var users = [];
-//
-// new Chinchilla.Subject(users).association('organization') => Chinchilla.Result
-//
-// 
 /// <reference path = "chinchilla/subject.ts" />
 window['chch'] = function (objectsOrApp, model) {
-    return Chinchilla.Subject.init(objectsOrApp, model);
+    // detach from existing Subject first before creating a new one..
+    objectsOrApp = Chinchilla.Subject.detachFromSubject(objectsOrApp);
+    return new Chinchilla.Subject(objectsOrApp, model);
 };
 window['chch'].config = Chinchilla.Config;
 window['chch'].new = function (app, model, attrs) {
@@ -820,9 +796,9 @@ window['chch'].contextUrl = function (app, model) {
 window['chch'].context = function (urlOrApp, model) {
     if (!model) {
         // assume first param is the context url
-        return Chinchilla.Context.get(urlOrApp);
+        return Chinchilla.Context.get(urlOrApp).ready;
     }
     else {
-        return Chinchilla.Context.get(Chinchilla.Config.endpoints[urlOrApp] + "/context/" + model);
+        return Chinchilla.Context.get(Chinchilla.Config.endpoints[urlOrApp] + "/context/" + model).ready;
     }
 };

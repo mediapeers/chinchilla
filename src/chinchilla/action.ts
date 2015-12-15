@@ -60,7 +60,7 @@ module Chinchilla {
         req = req.query({ t: Config.timestamp })
 
         // add session by default
-        if (!options || !options.withoutSession === false) {
+        if (!options || !(options.withoutSession === true)) {
           req = req.set('Session-Id', Config.getSessionId());
         }
 
@@ -88,7 +88,7 @@ module Chinchilla {
 
       var formatted = {};
 
-      if (this.options && this.options.raw === true) {
+      if (this.options && (this.options.raw === true)) {
         formatted = this.cleanupObject(body);
       }
       else if (_.isArray(body)) {
@@ -152,7 +152,7 @@ module Chinchilla {
           object[key] = values;
         }
         else if (_.isObject(value)) {
-          object[`$(key)_attributes`] = value;
+          object[`${key}_attributes`] = value;
           delete object[key];
         }
       });
