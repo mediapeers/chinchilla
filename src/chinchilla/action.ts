@@ -123,7 +123,7 @@ module Chinchilla {
               return this.cleanupObject(x) 
             });
             cleaned[key] = _.reject(subset, (x) => { 
-              _.isEmpty(x)
+              return _.isEmpty(x)
             });
           }
           else {
