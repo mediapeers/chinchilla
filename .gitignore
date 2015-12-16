@@ -1,10 +1,7 @@
 node_modules
 bower_components
 node_modules
-lib/fixtures.js
-lib/bower.js
-lib/chinchilla.spec.js
-lib/chinchilla.js
+lib/*
 
 [._]*.s[a-w][a-z]
 [._]s[a-w][a-z]

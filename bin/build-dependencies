@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+browserify src/dependencies.js > release/dependencies.js

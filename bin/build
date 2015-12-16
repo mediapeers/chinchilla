@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+tsc -d --target ES5 --out release/chinchilla.js src/chinchilla.ts

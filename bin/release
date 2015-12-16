@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-gulp compile::sources
-cp lib/chinchilla.js release/chinchilla.js
