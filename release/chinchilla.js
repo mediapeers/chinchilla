@@ -398,7 +398,7 @@ var Chinchilla;
                             return _this.cleanupObject(x);
                         });
                         cleaned[key] = _.reject(subset, function (x) {
-                            _.isEmpty(x);
+                            return _.isEmpty(x);
                         });
                     }
                     else {
