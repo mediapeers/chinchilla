@@ -666,7 +666,7 @@ var Chinchilla;
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i - 0] = arguments[_i];
             }
-            if (this.subject && _.isArray(this.subject) && this.subject.length > 1) {
+            if (this.subject && _.isArray(this.subject)) {
                 return this.collectionAction.apply(this, args);
             }
             else {
