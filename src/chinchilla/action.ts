@@ -21,7 +21,7 @@ module Chinchilla {
     constructor(contextAction: ContextAction, params = {}, body: any, options?: any) {
       this.contextAction  = contextAction;
       this.uriTmpl        = new UriTemplate(contextAction.template);
-      this.params         = Extractor.uriParams(contextAction, params); 
+      this.params         = Extractor.uriParams(contextAction, params);
       this.options        = options;
 
       // reformat body to match rails API
@@ -64,6 +64,18 @@ module Chinchilla {
           req = req.set('Session-Id', Config.getSessionId());
         }
 
+        // add custom headers
+        if (options && (options.customHeaders|| options.customHeader)) {
+          customHeaders = options.customHeaders || options.customHeader;
+        if (typeof customHeaders === 'string')
+          req.set(customHeaders, 'true');
+        else if (typeof customHeaders === 'object' && typeof customHeaders.length != 'undefined')
+          req.set(customHeaders.key, customHeaders.val);
+        else if (typeof customHeaders === 'object')
+          for (var customHeader in customHeaders)
+            req.set(customHeader.key, customHeader.val);
+        }
+
         req.end((err, res) => {
           if (err) {
             var error = new ErrorResult(error).error(res);
@@ -76,7 +88,7 @@ module Chinchilla {
 
             return reject(error);
           }
-          
+
           this.result.success(res);
           resolve(this.result);
         });
@@ -119,10 +131,10 @@ module Chinchilla {
         }
         else if (_.isArray(value)) {
           if (_.isPlainObject(value[0])) {
-            var subset = _.map(value, (x) => { 
-              return this.cleanupObject(x) 
+            var subset = _.map(value, (x) => {
+              return this.cleanupObject(x)
             });
-            cleaned[key] = _.reject(subset, (x) => { 
+            cleaned[key] = _.reject(subset, (x) => {
               return _.isEmpty(x)
             });
           }
