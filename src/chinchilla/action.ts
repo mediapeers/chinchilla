@@ -65,13 +65,13 @@ module Chinchilla {
         }
 
         // add custom headers
-        if (options && (options.customHeaders|| options.customHeader)) {
-          customHeaders = options.customHeaders || options.customHeader;
-        if (typeof customHeaders === 'string')
-          req.set(customHeaders, 'true');
-        else if (typeof customHeaders === 'object')
-          for (var key in customHeaders)
-            req.set(key, customHeaders[key]);
+        if (options && (options.header || options.headers)) {
+          headers = options.headers || options.header;
+        if (typeof headers === 'string')
+          req.set(headers, 'true');
+        else if (typeof headers === 'object')
+          for (var key in headers)
+            req.set(key, headers[key]);
         }
 
         req.end((err, res) => {
