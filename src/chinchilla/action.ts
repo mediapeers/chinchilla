@@ -69,11 +69,9 @@ module Chinchilla {
           customHeaders = options.customHeaders || options.customHeader;
         if (typeof customHeaders === 'string')
           req.set(customHeaders, 'true');
-        else if (typeof customHeaders === 'object' && typeof customHeaders.length != 'undefined')
-          req.set(customHeaders.key, customHeaders.val);
         else if (typeof customHeaders === 'object')
-          for (var customHeader in customHeaders)
-            req.set(customHeader.key, customHeader.val);
+          for (var key in customHeaders)
+            req.set(key, customHeaders[key]);
         }
 
         req.end((err, res) => {
