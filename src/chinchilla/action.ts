@@ -66,7 +66,7 @@ module Chinchilla {
 
         // add custom headers
         if (options && (options.header || options.headers)) {
-          headers = options.headers || options.header;
+          let headers = options.headers || options.header;
         if (typeof headers === 'string')
           req.set(headers, 'true');
         else if (typeof headers === 'object')
@@ -76,7 +76,7 @@ module Chinchilla {
 
         req.end((err, res) => {
           if (err) {
-            var error = new ErrorResult(error).error(res);
+            var error = new ErrorResult(err.response ? err.response.text : 'No error details available.').error(res);
             error.stack = err.stack;
 
             if (Config.errorInterceptor) {

@@ -344,9 +344,18 @@ var Chinchilla;
                 if (!options || !(options.withoutSession === true)) {
                     req = req.set('Session-Id', Chinchilla.Config.getSessionId());
                 }
+                // add custom headers
+                if (options && (options.header || options.headers)) {
+                    var headers = options.headers || options.header;
+                    if (typeof headers === 'string')
+                        req.set(headers, 'true');
+                    else if (typeof headers === 'object')
+                        for (var key in headers)
+                            req.set(key, headers[key]);
+                }
                 req.end(function (err, res) {
                     if (err) {
-                        var error = new Chinchilla.ErrorResult(error).error(res);
+                        var error = new Chinchilla.ErrorResult(err.response ? err.response.text : 'No error details available.').error(res);
                         error.stack = err.stack;
                         if (Chinchilla.Config.errorInterceptor) {
                             // if error interceptor returns true, then abort (don't resolve nor reject)

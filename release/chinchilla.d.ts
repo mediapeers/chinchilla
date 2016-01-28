@@ -76,7 +76,7 @@ declare module Chinchilla {
         statusText: string;
         url: string;
         method: string;
-        error(result: any): ErrorResult;
+        error(result: any): this;
     }
 }
 declare var _: any;
@@ -142,7 +142,7 @@ declare module Chinchilla {
         $c(...args: any[]): any;
         $$(...args: any[]): any;
         association(name: string): Association;
-        new(attrs?: {}): Subject;
+        new(attrs?: {}): this;
         context: Context;
         objects: any;
         object: Object;
