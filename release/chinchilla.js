@@ -502,7 +502,7 @@ var Chinchilla;
             var key = object && object['@id'];
             if (!key)
                 return;
-            if (this.associationProperty.collection && !this.cache[key]) {
+            if (this.associationProperty && this.associationProperty.collection && !this.cache[key]) {
                 return this.cache[key] = [];
             }
             return this.cache[key];
