@@ -499,7 +499,13 @@ var Chinchilla;
             }
         };
         Association.prototype.getDataFor = function (object) {
-            return this.cache[object && object['@id']];
+            var key = object && object['@id'];
+            if (!key)
+                return;
+            if (this.associationProperty.collection && !this.cache[key]) {
+                return this.cache[key] = [];
+            }
+            return this.cache[key];
         };
         // after association data has been retrieved this function sorts result data into cache where the cache key
         // if the parent (subject's) objects id
