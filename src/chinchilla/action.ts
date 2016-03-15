@@ -155,13 +155,14 @@ module Chinchilla {
     private remapAttributes(object) {
       _.each(object, (value, key) => {
         // split csv string to array
-        if (_.isString(value) && /(^tags|_ids$)/.test(key)) {
+        if (_.isString(value) && /_ids$/.test(key)) {
           var values = _.select(value.split(','), (item) => {
             return !_.isEmpty(item);
           });
           object[key] = values;
         }
-        else if (_.isObject(value)) {
+        // append '_attributes' to nested objects (attributes that are an object or are an array of objects)
+        else if (_.isPlainObject(value) || (_.isArray(value) && _.isPlainObject(_.first(value)))) {
           object[`${key}_attributes`] = value;
           delete object[key];
         }

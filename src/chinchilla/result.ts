@@ -67,10 +67,15 @@ module Chinchilla {
   export class ErrorResult extends Error {
     headers: any;
     object: any;
+    stack: any;
     statusCode: number;
     statusText: string;
     url: string;
     method: string;
+
+    constructor(message) {
+      super(message);
+    }
 
     error(result) {
       this.headers    = result.headers;

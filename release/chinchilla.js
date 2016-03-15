@@ -197,8 +197,8 @@ var Chinchilla;
     Chinchilla.Result = Result;
     var ErrorResult = (function (_super) {
         __extends(ErrorResult, _super);
-        function ErrorResult() {
-            _super.apply(this, arguments);
+        function ErrorResult(message) {
+            _super.call(this, message);
         }
         ErrorResult.prototype.error = function (result) {
             this.headers = result.headers;
@@ -428,13 +428,13 @@ var Chinchilla;
         Action.prototype.remapAttributes = function (object) {
             _.each(object, function (value, key) {
                 // split csv string to array
-                if (_.isString(value) && /(^tags|_ids$)/.test(key)) {
+                if (_.isString(value) && /_ids$/.test(key)) {
                     var values = _.select(value.split(','), function (item) {
                         return !_.isEmpty(item);
                     });
                     object[key] = values;
                 }
-                else if (_.isObject(value)) {
+                else if (_.isPlainObject(value) || (_.isArray(value) && _.isPlainObject(_.first(value)))) {
                     object[(key + "_attributes")] = value;
                     delete object[key];
                 }
