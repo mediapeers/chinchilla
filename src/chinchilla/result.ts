@@ -4,10 +4,12 @@ declare var _;
 module Chinchilla {
   export class Result {
     headers: any;
+    aggregations: any;
     objects: any[] = [];
 
     success(result): void {
       this.headers  = result.headers;
+      if (result.body && result.body.aggregations) this.aggregations = result.body.aggregations;
 
       switch (result.body && result.body['@type']) {
         case 'graph':

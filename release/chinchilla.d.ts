@@ -65,6 +65,7 @@ declare var _: any;
 declare module Chinchilla {
     class Result {
         headers: any;
+        aggregations: any;
         objects: any[];
         success(result: any): void;
         object: any;

@@ -138,6 +138,8 @@ var Chinchilla;
         Result.prototype.success = function (result) {
             var _this = this;
             this.headers = result.headers;
+            if (result.body && result.body.aggregations)
+                this.aggregations = result.body.aggregations;
             switch (result.body && result.body['@type']) {
                 case 'graph':
                     var members = result.body['@graph'];
