@@ -67,6 +67,7 @@ declare module Chinchilla {
         headers: any;
         aggregations: any;
         objects: any[];
+        objects_raw: any[];
         success(result: any): void;
         object: any;
     }

@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 /// <reference path = "../../typings/promise.d.ts" />
 var Chinchilla;
 (function (Chinchilla) {
@@ -28,14 +33,9 @@ var Chinchilla;
         Config.timestamp = Date.now() / 1000 | 0;
         Config.sessionKey = 'chinchillaSessionId';
         return Config;
-    })();
+    }());
     Chinchilla.Config = Config;
 })(Chinchilla || (Chinchilla = {}));
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
 /// <reference path = "../../typings/promise.d.ts" />
 /// <reference path = "config.ts" />
 var Chinchilla;
@@ -49,7 +49,7 @@ var Chinchilla;
             });
         }
         return ContextAction;
-    })();
+    }());
     Chinchilla.ContextAction = ContextAction;
     var ContextMemberAction = (function (_super) {
         __extends(ContextMemberAction, _super);
@@ -57,7 +57,7 @@ var Chinchilla;
             _super.apply(this, arguments);
         }
         return ContextMemberAction;
-    })(ContextAction);
+    }(ContextAction));
     Chinchilla.ContextMemberAction = ContextMemberAction;
     var ContextCollectionAction = (function (_super) {
         __extends(ContextCollectionAction, _super);
@@ -65,7 +65,7 @@ var Chinchilla;
             _super.apply(this, arguments);
         }
         return ContextCollectionAction;
-    })(ContextAction);
+    }(ContextAction));
     Chinchilla.ContextCollectionAction = ContextCollectionAction;
     var Context = (function () {
         function Context(contextUrl) {
@@ -125,7 +125,7 @@ var Chinchilla;
         };
         Context.cache = {};
         return Context;
-    })();
+    }());
     Chinchilla.Context = Context;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "subject.ts" />
@@ -134,6 +134,7 @@ var Chinchilla;
     var Result = (function () {
         function Result() {
             this.objects = [];
+            this.objects_raw = [];
         }
         Result.prototype.success = function (result) {
             var _this = this;
@@ -145,6 +146,7 @@ var Chinchilla;
                     var members = result.body['@graph'];
                     if (!members)
                         return;
+                    this.objects_raw = members;
                     new Chinchilla.Subject(members);
                     _.each(members, function (node) {
                         if (node.parent_id) {
@@ -195,7 +197,7 @@ var Chinchilla;
             configurable: true
         });
         return Result;
-    })();
+    }());
     Chinchilla.Result = Result;
     var ErrorResult = (function (_super) {
         __extends(ErrorResult, _super);
@@ -212,7 +214,7 @@ var Chinchilla;
             return this;
         };
         return ErrorResult;
-    })(Error);
+    }(Error));
     Chinchilla.ErrorResult = ErrorResult;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "../../typings/uriTemplate.d.ts" />
@@ -295,7 +297,7 @@ var Chinchilla;
             return result;
         };
         return Extractor;
-    })();
+    }());
     Chinchilla.Extractor = Extractor;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "../../typings/uriTemplate.d.ts" />
@@ -444,7 +446,7 @@ var Chinchilla;
             return object;
         };
         return Action;
-    })();
+    }());
     Chinchilla.Action = Action;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "../../typings/promise.d.ts" />
@@ -607,7 +609,7 @@ var Chinchilla;
         // this is a cache for all Association instances
         Association.cache = {};
         return Association;
-    })();
+    }());
     Chinchilla.Association = Association;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "context.ts" />
@@ -793,7 +795,7 @@ var Chinchilla;
             });
         };
         return Subject;
-    })();
+    }());
     Chinchilla.Subject = Subject;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "chinchilla/subject.ts" />

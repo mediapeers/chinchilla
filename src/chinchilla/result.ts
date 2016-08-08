@@ -6,6 +6,7 @@ module Chinchilla {
     headers: any;
     aggregations: any;
     objects: any[] = [];
+    objects_raw: any[] = [];
 
     success(result): void {
       this.headers  = result.headers;
@@ -16,13 +17,15 @@ module Chinchilla {
           var members = result.body['@graph'];
           if (!members) return;
 
+          this.objects_raw = members;
+
           new Subject(members);
 
           _.each(members, (node) => {
             if (node.parent_id) {
               // this is a child
               var parent = _.find(members, (x) => {
-                return x.id === node.parent_id; 
+                return x.id === node.parent_id;
               });
               if (parent) {
                 node.parent = parent;
