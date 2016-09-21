@@ -29,3 +29,32 @@ window['chch'].context = function(urlOrApp, model) {
     return Chinchilla.Context.get(`${Chinchilla.Config.endpoints[urlOrApp]}/context/${model}`).ready;
   }
 };
+
+window['chch'].unfurl = function(app, model, actionName, params) {
+  return new Promise(function(resolve, reject) {
+    var page = 1;
+    var result = { objects: [] };
+    var subject = new Chinchilla.Subject(app, model);
+    _.merge(params, { page: page });
+
+    var fetch = function() {
+      subject.$c(actionName, params)
+        .then(function(pageResult) {
+          page = page + 1;
+          _.merge(params, { page: page });
+          result.objects = result.objects.concat(pageResult.objects)
+
+          if ((page <= 100) && (page < (pageResult.headers && pageResult.headers['x-total-pages'] || 0))) {
+            fetch();
+          }
+          else {
+            resolve(result);
+          }
+        }, function() {
+          reject(null);
+        });
+    };
+
+    fetch();
+  });
+};
