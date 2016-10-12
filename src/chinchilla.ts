@@ -44,7 +44,7 @@ window['chch'].unfurl = function(app, model, actionName, params) {
           _.merge(params, { page: page });
           result.objects = result.objects.concat(pageResult.objects)
 
-          if ((page <= 100) && (page < (pageResult.headers && pageResult.headers['x-total-pages'] || 0))) {
+          if ((page <= 100) && (page <= (pageResult.headers && pageResult.headers['x-total-pages'] || 0))) {
             fetch();
           }
           else {
