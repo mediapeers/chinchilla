@@ -56,9 +56,6 @@ module Chinchilla {
             break;
         }
 
-        // add timestamp
-        req = req.query({ t: Config.timestamp })
-
         // add session by default
         if (!options || !(options.withoutSession === true)) {
           req = req.set('Session-Id', Config.getSessionId());

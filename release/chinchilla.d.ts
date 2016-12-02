@@ -69,7 +69,7 @@ declare module Chinchilla {
         objects: any[];
         objects_raw: any[];
         success(result: any): void;
-        object: any;
+        readonly object: any;
     }
     class ErrorResult extends Error {
         headers: any;
@@ -127,7 +127,7 @@ declare module Chinchilla {
         static get(subject: Subject, name: string): any;
         getDataFor(object: Object): any;
         private fillCache(result);
-        private associationParams;
+        private readonly associationParams;
         private readAssociationData();
     }
 }
@@ -147,10 +147,10 @@ declare module Chinchilla {
         $$(...args: any[]): any;
         association(name: string): Association;
         new(attrs?: {}): this;
-        context: Context;
-        objects: any;
-        object: Object;
-        objectParams: Object;
+        readonly context: Context;
+        readonly objects: any;
+        readonly object: Object;
+        readonly objectParams: Object;
         private addObjects(objects);
         private addObject(object);
         private moveAssociationReferences(object);

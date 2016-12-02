@@ -342,8 +342,6 @@ var Chinchilla;
                         req = request.del(uri);
                         break;
                 }
-                // add timestamp
-                req = req.query({ t: Chinchilla.Config.timestamp });
                 // add session by default
                 if (!options || !(options.withoutSession === true)) {
                     req = req.set('Session-Id', Chinchilla.Config.getSessionId());
