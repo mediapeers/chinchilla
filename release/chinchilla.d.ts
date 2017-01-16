@@ -69,7 +69,7 @@ declare module Chinchilla {
         objects: any[];
         objects_raw: any[];
         success(result: any): void;
-        object: any;
+        readonly object: any;
     }
     class ErrorResult extends Error {
         headers: any;
@@ -113,6 +113,16 @@ declare module Chinchilla {
 }
 declare var _: any;
 declare module Chinchilla {
+    interface SlicedCache {
+        remove: any[];
+        remain: any[];
+    }
+    class Utils {
+        static sliceCache(arr: any, size: any): SlicedCache;
+    }
+}
+declare var _: any;
+declare module Chinchilla {
     class Association {
         subject: Subject;
         name: string;
@@ -122,12 +132,14 @@ declare module Chinchilla {
         context: Context;
         associationProperty: ContextProperty;
         cache: Object;
-        static cache: {};
+        static cache: any;
+        static cacheSize: number;
         constructor(subject: Subject, name: string);
         static get(subject: Subject, name: string): any;
+        static capCache(): void;
         getDataFor(object: Object): any;
         private fillCache(result);
-        private associationParams;
+        private readonly associationParams;
         private readAssociationData();
     }
 }
@@ -138,8 +150,12 @@ declare module Chinchilla {
         contextUrl: string;
         id: string;
         _context: Context;
+        static cache: Subject[];
+        static cacheSize: number;
         static detachFromSubject(objects: any): any;
         constructor(objectsOrApp: any, model?: string);
+        static capCache(): void;
+        destroy(): void;
         memberAction(name: string, inputParams?: any, options?: any): Promise<Context>;
         $m(...args: any[]): any;
         collectionAction(name: string, inputParams: any, options?: any): Promise<Context>;
@@ -147,10 +163,10 @@ declare module Chinchilla {
         $$(...args: any[]): any;
         association(name: string): Association;
         new(attrs?: {}): this;
-        context: Context;
-        objects: any;
-        object: Object;
-        objectParams: Object;
+        readonly context: Context;
+        readonly objects: any;
+        readonly object: Object;
+        readonly objectParams: Object;
         private addObjects(objects);
         private addObject(object);
         private moveAssociationReferences(object);
