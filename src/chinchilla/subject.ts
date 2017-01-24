@@ -4,6 +4,7 @@
 /// <reference path = "extractor.ts" />
 /// <reference path = "association.ts" />
 /// <reference path = "utils.ts" />
+/// <reference path = "cache.ts" />
 declare var _;
 
 module Chinchilla {
@@ -12,9 +13,6 @@ module Chinchilla {
     contextUrl: string;
     id: string;
     _context: Context;
-
-    static cache:Subject[] = [];
-    static cacheSize = 20;
 
     static detachFromSubject(objects: any) {
       var detach = function(object) {
@@ -35,7 +33,7 @@ module Chinchilla {
 
     constructor(objectsOrApp: any, model?: string) {
       // unique id for this instance (for cache key purpose)
-      this.id = Math.random().toString(36).substr(2, 9);
+      this.id = Cache.generateKey('subject');
 
       // adds and initializes objects to this Subject
       if (_.isString(objectsOrApp)) {
@@ -45,22 +43,10 @@ module Chinchilla {
         _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
       }
 
-      Subject.cache.push(this);
-      Subject.capCache();
-    }
-
-    static capCache() {
-      var sliced = Utils.sliceCache(Subject.cache, Subject.cacheSize);
-
-      _.each(sliced.remove, (subject) => {
-        subject.destroy();
-      });
-
-      Subject.cache = sliced.remain;
+      Cache.getInstance().add(this.id, this);
     }
 
     destroy() {
-      console.log('destroy', this);
       _.each(this.objects, (object) => {
         for (var key in object) {
           delete object[key];
@@ -70,7 +56,6 @@ module Chinchilla {
       for (var key in this) {
         delete this[key];
       }
-      console.log('destroyed', this);
     }
 
     memberAction(name: string, inputParams?: any, options?: any): Promise<Context> {
@@ -124,7 +109,7 @@ module Chinchilla {
     // chch('um', 'user').new(first_name: 'Peter')
     new(attrs = {}) {
       this.subject = _.merge(
-        { '@context' : this.contextUrl, '$subject': this },
+        { '@context' : this.contextUrl, '$subject': this.id },
         attrs
       );
 
@@ -150,7 +135,7 @@ module Chinchilla {
     private addObjects(objects: any[]): void {
       this.subject = [];
       _.each(objects, (obj) => {
-        obj.$subject = this;
+        obj.$subject = this.id;
         this.moveAssociationReferences(obj);
         this.initAssociationGetters(obj);
         this.subject.push(obj);
@@ -160,7 +145,7 @@ module Chinchilla {
     }
 
     private addObject(object: any): void {
-      object.$subject = this;
+      object.$subject = this.id;
       this.moveAssociationReferences(object);
       this.initAssociationGetters(object);
 

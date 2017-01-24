@@ -4,6 +4,7 @@
 /// <reference path = "extractor.ts" />
 /// <reference path = "context.ts" />
 /// <reference path = "utils.ts" />
+/// <reference path = "cache.ts" />
 declare var _;
 
 module Chinchilla {
@@ -19,13 +20,7 @@ module Chinchilla {
     // this cache contains the association data for each of the subject's objects
     cache: Object = {};
 
-    // this is a cache for all Association instances
-    static cache:any = {};
-    static cacheSize = 10;
-
     constructor(subject: Subject, name: string) {
-      if (!Association.cache.order) Association.cache.order = [];
-
       this.subject          = subject;
       this.name             = name;
       this.associationData  = this.readAssociationData();
@@ -61,30 +56,24 @@ module Chinchilla {
     // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
     // them loads their associations individually
     static get(subject: Subject, name: string) {
-      var key = `subject-${subject.id}-${name}`;
+      var key = `association-${subject.id}-${name}`;
 
       var instance;
-      if (instance = Association.cache[key]) {
+      if (instance = Cache.getInstance().get(key)) {
         return instance;
       }
       else {
-        instance                = new Association(subject, name);
-        Association.cache[key]  = instance;
-        Association.cache.order.push(key);
+        instance = new Association(subject, name);
+        Cache.getInstance().add(key, instance);
 
-        Association.capCache();
         return instance;
       }
     }
 
-    static capCache(): void {
-      var sliced = Utils.sliceCache(Association.cache.order, Association.cacheSize);
-
-      _.each(sliced.remove, (key) => {
-        delete Association.cache[key];
-      });
-
-      Association.cache.order = sliced.remain;
+    destroy() {
+      for (var key in this) {
+        delete this[key];
+      }
     }
 
     getDataFor(object: Object) {

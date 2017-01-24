@@ -123,6 +123,21 @@ declare module Chinchilla {
 }
 declare var _: any;
 declare module Chinchilla {
+    class Cache {
+        private static instance;
+        private cacheSize;
+        private cache;
+        constructor();
+        static getInstance(): Cache;
+        static generateKey(type: string): string;
+        add(key: string, obj: any): void;
+        get(key: string): any;
+        private capCache();
+        private static sliceCache(arr, size);
+    }
+}
+declare var _: any;
+declare module Chinchilla {
     class Association {
         subject: Subject;
         name: string;
@@ -132,11 +147,9 @@ declare module Chinchilla {
         context: Context;
         associationProperty: ContextProperty;
         cache: Object;
-        static cache: any;
-        static cacheSize: number;
         constructor(subject: Subject, name: string);
         static get(subject: Subject, name: string): any;
-        static capCache(): void;
+        destroy(): void;
         getDataFor(object: Object): any;
         private fillCache(result);
         private readonly associationParams;
@@ -150,11 +163,8 @@ declare module Chinchilla {
         contextUrl: string;
         id: string;
         _context: Context;
-        static cache: Subject[];
-        static cacheSize: number;
         static detachFromSubject(objects: any): any;
         constructor(objectsOrApp: any, model?: string);
-        static capCache(): void;
         destroy(): void;
         memberAction(name: string, inputParams?: any, options?: any): Promise<Context>;
         $m(...args: any[]): any;
