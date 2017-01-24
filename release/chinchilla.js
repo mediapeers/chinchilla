@@ -821,6 +821,9 @@ window['chch'].context = function (urlOrApp, model) {
         return Chinchilla.Context.get(Chinchilla.Config.endpoints[urlOrApp] + "/context/" + model).ready;
     }
 };
+// unfurl('pm, 'product', 'query', params) -> defaults to $c
+// unfurl('pm, 'product', '$c:query', params)
+// unfurl('pm, 'product', '$m:query_descendants', params)
 window['chch'].unfurl = function (app, model, actionName, params) {
     return new Promise(function (resolve, reject) {
         var page = 1;
@@ -828,7 +831,15 @@ window['chch'].unfurl = function (app, model, actionName, params) {
         var subject = new Chinchilla.Subject(app, model);
         _.merge(params, { page: page });
         var fetch = function () {
-            subject.$c(actionName, params)
+            var action = _.last("$c:query".match(/(\$[c|m]:)?(.*)/));
+            var promise;
+            if (_.startsWith(actionName, '$m')) {
+                promise = subject.$m(action, params);
+            }
+            else {
+                promise = subject.$c(action, params);
+            }
+            promise
                 .then(function (pageResult) {
                 page = page + 1;
                 _.merge(params, { page: page });
