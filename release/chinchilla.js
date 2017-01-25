@@ -850,6 +850,7 @@ window['chch'].unfurl = function (app, model, actionName, params) {
                 else {
                     resolve(result);
                 }
+                return true;
             }, function () {
                 reject(null);
             });
