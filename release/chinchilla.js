@@ -831,7 +831,7 @@ window['chch'].unfurl = function (app, model, actionName, params) {
         var subject = new Chinchilla.Subject(app, model);
         _.merge(params, { page: page });
         var fetch = function () {
-            var action = _.last("$c:query".match(/(\$[c|m]:)?(.*)/));
+            var action = _.last(actionName.match(/(\$[c|m]:)?(.*)/));
             var promise;
             if (_.startsWith(actionName, '$m')) {
                 promise = subject.$m(action, params);
