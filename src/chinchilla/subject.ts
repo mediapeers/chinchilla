@@ -3,6 +3,7 @@
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "association.ts" />
+/// <reference path = "utils.ts" />
 declare var _;
 
 module Chinchilla {
@@ -12,20 +13,23 @@ module Chinchilla {
     id: string;
     _context: Context;
 
+    static cache:Subject[] = [];
+    static cacheSize = 20;
+
     static detachFromSubject(objects: any) {
       var detach = function(object) {
         var copy = _.clone(object);
         delete copy['$subject'];
         return copy;
       }
-      
+
       if (_.isArray(objects)) {
         return _.map(objects, detach);
       }
       else if (_.isPlainObject(objects)) {
         return detach(objects);
       }
-      
+
       return objects;
     }
 
@@ -40,6 +44,33 @@ module Chinchilla {
       else {
         _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
       }
+
+      Subject.cache.push(this);
+      Subject.capCache();
+    }
+
+    static capCache() {
+      var sliced = Utils.sliceCache(Subject.cache, Subject.cacheSize);
+
+      _.each(sliced.remove, (subject) => {
+        subject.destroy();
+      });
+
+      Subject.cache = sliced.remain;
+    }
+
+    destroy() {
+      console.log('destroy', this);
+      _.each(this.objects, (object) => {
+        for (var key in object) {
+          delete object[key];
+        }
+      });
+
+      for (var key in this) {
+        delete this[key];
+      }
+      console.log('destroyed', this);
     }
 
     memberAction(name: string, inputParams?: any, options?: any): Promise<Context> {
@@ -146,7 +177,7 @@ module Chinchilla {
 
         var value = object[key];
 
-        if (key === '$associations') continue; 
+        if (key === '$associations') continue;
 
         if (_.isArray(value)) {
           var el = _.first(value);

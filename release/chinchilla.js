@@ -450,10 +450,30 @@ var Chinchilla;
     Chinchilla.Action = Action;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "../../typings/promise.d.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Utils = (function () {
+        function Utils() {
+        }
+        Utils.sliceCache = function (arr, size) {
+            if (arr.length <= size)
+                return { remove: [], remain: arr };
+            var remain = arr.slice(size * -1);
+            return {
+                remain: remain,
+                remove: _.difference(arr, remain)
+            };
+        };
+        return Utils;
+    }());
+    Chinchilla.Utils = Utils;
+})(Chinchilla || (Chinchilla = {}));
+/// <reference path = "../../typings/promise.d.ts" />
 /// <reference path = "subject.ts" />
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "context.ts" />
+/// <reference path = "utils.ts" />
 var Chinchilla;
 (function (Chinchilla) {
     var Association = (function () {
@@ -462,6 +482,8 @@ var Chinchilla;
             this.habtm = false;
             // this cache contains the association data for each of the subject's objects
             this.cache = {};
+            if (!Association.cache.order)
+                Association.cache.order = [];
             this.subject = subject;
             this.name = name;
             this.associationData = this.readAssociationData();
@@ -499,8 +521,17 @@ var Chinchilla;
             else {
                 instance = new Association(subject, name);
                 Association.cache[key] = instance;
+                Association.cache.order.push(key);
+                Association.capCache();
                 return instance;
             }
+        };
+        Association.capCache = function () {
+            var sliced = Chinchilla.Utils.sliceCache(Association.cache.order, Association.cacheSize);
+            _.each(sliced.remove, function (key) {
+                delete Association.cache[key];
+            });
+            Association.cache.order = sliced.remain;
         };
         Association.prototype.getDataFor = function (object) {
             var key = object && object['@id'];
@@ -608,6 +639,7 @@ var Chinchilla;
         };
         // this is a cache for all Association instances
         Association.cache = {};
+        Association.cacheSize = 10;
         return Association;
     }());
     Chinchilla.Association = Association;
@@ -617,6 +649,7 @@ var Chinchilla;
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "association.ts" />
+/// <reference path = "utils.ts" />
 var Chinchilla;
 (function (Chinchilla) {
     var Subject = (function () {
@@ -630,6 +663,8 @@ var Chinchilla;
             else {
                 _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
             }
+            Subject.cache.push(this);
+            Subject.capCache();
         }
         Subject.detachFromSubject = function (objects) {
             var detach = function (object) {
@@ -644,6 +679,25 @@ var Chinchilla;
                 return detach(objects);
             }
             return objects;
+        };
+        Subject.capCache = function () {
+            var sliced = Chinchilla.Utils.sliceCache(Subject.cache, Subject.cacheSize);
+            _.each(sliced.remove, function (subject) {
+                subject.destroy();
+            });
+            Subject.cache = sliced.remain;
+        };
+        Subject.prototype.destroy = function () {
+            console.log('destroy', this);
+            _.each(this.objects, function (object) {
+                for (var key in object) {
+                    delete object[key];
+                }
+            });
+            for (var key in this) {
+                delete this[key];
+            }
+            console.log('destroyed', this);
         };
         Subject.prototype.memberAction = function (name, inputParams, options) {
             var _this = this;
@@ -794,6 +848,8 @@ var Chinchilla;
                 });
             });
         };
+        Subject.cache = [];
+        Subject.cacheSize = 20;
         return Subject;
     }());
     Chinchilla.Subject = Subject;
