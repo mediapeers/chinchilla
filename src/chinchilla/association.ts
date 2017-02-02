@@ -3,7 +3,6 @@
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "context.ts" />
-/// <reference path = "utils.ts" />
 /// <reference path = "cache.ts" />
 declare var _;
 

@@ -452,25 +452,6 @@ var Chinchilla;
 /// <reference path = "../../typings/promise.d.ts" />
 var Chinchilla;
 (function (Chinchilla) {
-    var Utils = (function () {
-        function Utils() {
-        }
-        Utils.sliceCache = function (arr, size) {
-            if (arr.length <= size)
-                return { remove: [], remain: arr };
-            var remain = arr.slice(size * -1);
-            return {
-                remain: remain,
-                remove: _.difference(arr, remain)
-            };
-        };
-        return Utils;
-    }());
-    Chinchilla.Utils = Utils;
-})(Chinchilla || (Chinchilla = {}));
-/// <reference path = "../../typings/promise.d.ts" />
-var Chinchilla;
-(function (Chinchilla) {
     var Cache = (function () {
         function Cache() {
             this.cacheSize = 50;
@@ -523,7 +504,6 @@ var Chinchilla;
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "context.ts" />
-/// <reference path = "utils.ts" />
 /// <reference path = "cache.ts" />
 var Chinchilla;
 (function (Chinchilla) {
@@ -691,7 +671,6 @@ var Chinchilla;
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "association.ts" />
-/// <reference path = "utils.ts" />
 /// <reference path = "cache.ts" />
 var Chinchilla;
 (function (Chinchilla) {

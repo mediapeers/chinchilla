@@ -113,16 +113,6 @@ declare module Chinchilla {
 }
 declare var _: any;
 declare module Chinchilla {
-    interface SlicedCache {
-        remove: any[];
-        remain: any[];
-    }
-    class Utils {
-        static sliceCache(arr: any, size: any): SlicedCache;
-    }
-}
-declare var _: any;
-declare module Chinchilla {
     class Cache {
         private static instance;
         private cacheSize;
