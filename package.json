@@ -10,7 +10,7 @@
     "email": "goetzinger@mediapeers.com",
     "url": "https://github.com/mediapeers"
   },
-  "main": "./lib/chinchilla.js",
+  "main": "./chinchilla.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/mediapeers/chinchilla.git"

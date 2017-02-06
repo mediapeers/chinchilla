@@ -5,7 +5,19 @@
     "noImplicitAny": true,
     "outDir": "dist"
   },
+  "filesGlob": [
+    "src/chinchilla/*.ts"
+  ],
   "files": [
-    "src/chinchilla/session.ts"
-  ]
+    "src/chinchilla/action.ts",
+    "src/chinchilla/association.ts",
+    "src/chinchilla/config.ts",
+    "src/chinchilla/context.ts",
+    "src/chinchilla/extractor.ts",
+    "src/chinchilla/result.ts",
+    "src/chinchilla/subject.ts"
+  ],
+  "atom": {
+    "rewriteTsconfig": true
+  }
 }
