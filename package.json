@@ -11,6 +11,13 @@
     "url": "https://github.com/mediapeers"
   },
   "main": "./chinchilla.js",
+  "scripts": {
+    "dist": "npm run clean && npm run compile-for-browser && npm run compile-dependencies-for-browser",
+    "clean": "rm -rf ./dist",
+    "compile-for-browser": "webpack",
+    "compile-dependencies-for-browser": "browserify lib/browser-dependencies.js > dist/dependencies.js",
+    "test": ""
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mediapeers/chinchilla.git"
@@ -20,9 +27,11 @@
   },
   "dependencies": {
     "bluebird": "~3.0.5",
+    "js-cookie": "~2.0.4",
     "lodash": "~3.10.1",
     "superagent": "~1.4.0",
-    "js-cookie": "~2.0.4",
+    "ts-loader": "^2.0.0",
+    "typescript": "^2.1.5",
     "uri-templates": "~0.1.9"
   },
   "devDependencies": {

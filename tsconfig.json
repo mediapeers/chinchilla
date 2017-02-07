@@ -1,23 +1,22 @@
 {
+  "compileOnSave": false,
   "compilerOptions": {
     "declaration": true,
-    "target": "ES5",
-    "noImplicitAny": true,
-    "outDir": "dist"
+    "target": "es5",
+    "noImplicitAny": false
   },
-  "filesGlob": [
-    "src/chinchilla/*.ts"
-  ],
   "files": [
-    "src/chinchilla/action.ts",
-    "src/chinchilla/association.ts",
-    "src/chinchilla/config.ts",
-    "src/chinchilla/context.ts",
-    "src/chinchilla/extractor.ts",
-    "src/chinchilla/result.ts",
-    "src/chinchilla/subject.ts"
-  ],
-  "atom": {
-    "rewriteTsconfig": true
-  }
+    "lib/browser.ts",
+    "lib/chinchilla.ts",
+    "lib/chinchilla/action.ts",
+    "lib/chinchilla/association.ts",
+    "lib/chinchilla/config.ts",
+    "lib/chinchilla/context.ts",
+    "lib/chinchilla/extractor.ts",
+    "lib/chinchilla/result.ts",
+    "lib/chinchilla/subject.ts",
+    "typings/promise.d.ts",
+    "typings/tsd.d.ts",
+    "typings/uriTemplate.d.ts"
+  ]
 }
