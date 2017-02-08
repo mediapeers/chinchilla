@@ -27,7 +27,6 @@ export class Result {
               return x.id === node.parent_id
             })
             if (parent) {
-              node.parent = parent
               if (!parent.children) parent.children = []
               parent.children.push(node)
             }

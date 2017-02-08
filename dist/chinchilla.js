@@ -14363,7 +14363,9 @@ var Subject = (function () {
             Object.defineProperty(object, key, {
                 get: function () {
                     return _this.association(key).getDataFor(object);
-                }
+                },
+                set: function (parent) { object.parent = parent; },
+                configurable: key === 'parent'
             });
             Object.defineProperty(object, key + "Promise", {
                 get: function () {
@@ -20942,7 +20944,6 @@ var Result = (function () {
                             return x.id === node.parent_id;
                         });
                         if (parent) {
-                            node.parent = parent;
                             if (!parent.children)
                                 parent.children = [];
                             parent.children.push(node);
