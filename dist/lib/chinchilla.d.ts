@@ -7,4 +7,5 @@ export default class chch {
     static new(app: any, model: any, attrs?: {}): any;
     static contextUrl(app: any, model: any): string;
     static context(urlOrApp: any, model: any): Promise<Context>;
+    static unfurl: (app: any, model: any, actionName: any, params: any) => Promise<{}>;
 }

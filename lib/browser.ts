@@ -7,3 +7,4 @@ window['chch'].new = chch.new
 window['chch'].context = chch.context
 window['chch'].config = chch.config
 window['chch'].contextUrl = chch.contextUrl
+window['chch'].unfurl = chch.unfurl

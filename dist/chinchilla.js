@@ -14844,6 +14844,43 @@ var chch = (function () {
     return chch;
 }());
 chch.config = config_1.Config;
+// unfurl('pm, 'product', 'query', params) -> defaults to $c
+// unfurl('pm, 'product', '$c:query', params)
+// unfurl('pm, 'product', '$m:query_descendants', params)
+chch.unfurl = function (app, model, actionName, params) {
+    return new Promise(function (resolve, reject) {
+        var page = 1;
+        var result = { objects: [] };
+        var subject = new subject_1.Subject(app, model);
+        lodash_1.merge(params, { page: page });
+        var fetch = function () {
+            var action = lodash_1.last(actionName.match(/(\$[c|m]:)?(.*)/));
+            var promise;
+            if (lodash_1.startsWith(actionName, '$m')) {
+                promise = subject.$m(action, params);
+            }
+            else {
+                promise = subject.$c(action, params);
+            }
+            promise
+                .then(function (pageResult) {
+                page = page + 1;
+                lodash_1.merge(params, { page: page });
+                result.objects = result.objects.concat(pageResult.objects);
+                if ((page <= 100) && (page <= (pageResult.headers && pageResult.headers['x-total-pages'] || 0))) {
+                    fetch();
+                }
+                else {
+                    resolve(result);
+                }
+                return true;
+            }, function () {
+                reject(null);
+            });
+        };
+        fetch();
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = chch;
 
@@ -21046,6 +21083,7 @@ window['chch'].new = chinchilla_1.default.new;
 window['chch'].context = chinchilla_1.default.context;
 window['chch'].config = chinchilla_1.default.config;
 window['chch'].contextUrl = chinchilla_1.default.contextUrl;
+window['chch'].unfurl = chinchilla_1.default.unfurl;
 
 
 /***/ })
