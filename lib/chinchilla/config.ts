@@ -4,8 +4,6 @@ export class Config {
   static endpoints = {}
   static timestamp = Date.now() / 1000 | 0
   static domain: string
-  static sessionId: string
-  static sessionKey = 'chinchillaSessionId'
   static errorInterceptor: any
 
   // timestamp to be appended to every request
@@ -19,19 +17,48 @@ export class Config {
     Config.domain = domain
   }
 
-  static setSessionId(id: string): void {
-    Cookies.set(Config.sessionKey, id, { path: '/', domain: Config.domain, expires: 300})
-  }
-
   static setErrorInterceptor(fn) {
     Config.errorInterceptor = fn
   }
 
+  static setAffiliationId(id: string): void {
+    Config.setValue('affiliationId', id)
+  }
+
+  static getAffiliationId(): string {
+    return Config.getValue('affiliationId')
+  }
+
+  static clearAffiliationId(): void {
+    Config.clearValue('affiliationId')
+  }
+
+  static setSessionId(id: string): void {
+    Config.setValue('sessionId', id)
+  }
+
   static getSessionId(): string {
-    return Cookies.get(Config.sessionKey)
+    return Config.getValue('sessionId')
   }
 
   static clearSessionId(): void {
-    Cookies.remove(Config.sessionKey, { domain: Config.domain })
+    Config.clearValue('sessionId')
+  }
+
+  static getValue(name): string {
+    return Config[name] || Cookies.get(Config.cookieKey(name))
+  }
+
+  static setValue(name, value): void {
+    Config[name] = value
+    Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300})
+  }
+
+  static clearValue(name): void {
+    Cookies.remove(Config.cookieKey(name), { domain: Config.domain })
+  }
+
+  static cookieKey(name): string {
+    return `chinchilla.${name}`
   }
 }

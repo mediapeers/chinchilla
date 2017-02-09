@@ -88,22 +88,43 @@ class Config {
     static setCookieDomain(domain) {
         Config.domain = domain;
     }
-    static setSessionId(id) {
-        Cookies.set(Config.sessionKey, id, { path: '/', domain: Config.domain, expires: 300 });
-    }
     static setErrorInterceptor(fn) {
         Config.errorInterceptor = fn;
     }
+    static setAffiliationId(id) {
+        Config.setValue('affiliationId', id);
+    }
+    static getAffiliationId() {
+        return Config.getValue('affiliationId');
+    }
+    static clearAffiliationId() {
+        Config.clearValue('affiliationId');
+    }
+    static setSessionId(id) {
+        Config.setValue('sessionId', id);
+    }
     static getSessionId() {
-        return Cookies.get(Config.sessionKey);
+        return Config.getValue('sessionId');
     }
     static clearSessionId() {
-        Cookies.remove(Config.sessionKey, { domain: Config.domain });
+        Config.clearValue('sessionId');
+    }
+    static getValue(name) {
+        return Config[name] || Cookies.get(Config.cookieKey(name));
+    }
+    static setValue(name, value) {
+        Config[name] = value;
+        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300 });
+    }
+    static clearValue(name) {
+        Cookies.remove(Config.cookieKey(name), { domain: Config.domain });
+    }
+    static cookieKey(name) {
+        return `chinchilla.${name}`;
     }
 }
 Config.endpoints = {};
 Config.timestamp = Date.now() / 1000 | 0;
-Config.sessionKey = 'chinchillaSessionId';
 exports.Config = Config;
 
 
@@ -133,9 +154,13 @@ exports.ContextCollectionAction = ContextCollectionAction;
 class Context {
     constructor(contextUrl) {
         this.ready = new Promise((resolve, reject) => {
-            request
+            var req = request
                 .get(contextUrl)
-                .query({ t: config_1.Config.timestamp })
+                .query({ t: config_1.Config.timestamp });
+            if (config_1.Config.getAffiliationId()) {
+                req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+            }
+            req
                 .end((err, res) => {
                 this.data = res.body;
                 this.context = res.body && res.body['@context'] || {};
@@ -323,6 +348,10 @@ class Action {
             // add session by default
             if (!options || !(options.withoutSession === true)) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());
+            }
+            // add affiliation if configured
+            if (config_1.Config.getAffiliationId()) {
+                req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
             }
             // add custom headers
             if (options && (options.header || options.headers)) {

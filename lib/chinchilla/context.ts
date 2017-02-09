@@ -1,4 +1,4 @@
-import { each, first } from 'lodash'
+import { each, first, isEmpty } from 'lodash'
 import * as request from 'superagent'
 import { Config } from './config'
 
@@ -55,9 +55,15 @@ export class Context {
 
   constructor(contextUrl: string) {
     this.ready = new Promise((resolve, reject) => {
-      request
+      var req = request
         .get(contextUrl)
         .query({ t: Config.timestamp })
+
+      if (Config.getAffiliationId()) {
+        req = req.set('Affiliation-Id', Config.getAffiliationId())
+      }
+
+      req
         .end((err, res) => {
           this.data       = res.body
           this.context    = res.body && res.body['@context'] || {}
