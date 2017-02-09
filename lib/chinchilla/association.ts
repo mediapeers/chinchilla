@@ -1,5 +1,4 @@
 import { isArray, flatten, first, each, findKey, map } from 'lodash'
-import * as Promise from 'bluebird'
 import { Subject } from './subject'
 import { Context, ContextProperty } from './context'
 import { Action } from './action'
@@ -9,7 +8,7 @@ import { Extractor } from './extractor'
 export class Association {
   subject: Subject
   name: string
-  ready: Promise<Context>
+  ready: Promise<any>
   associationData: any
   habtm: boolean = false
   context: Context

@@ -41,7 +41,7 @@ export class Subject {
     }
   }
 
-  memberAction(name: string, inputParams?: any, options?: any): Promise<Context> {
+  memberAction(name: string, inputParams?: any, options?: any): Promise<any> {
     var promise
     return promise = this.context.ready.then((context) => {
       var contextAction = context.memberAction(name)
@@ -59,7 +59,7 @@ export class Subject {
     return this.memberAction.apply(this, args)
   }
 
-  collectionAction(name: string, inputParams: any, options?: any): Promise<Context> {
+  collectionAction(name: string, inputParams: any, options?: any): Promise<any> {
     return this.context.ready.then((context) => {
       var contextAction = context.collectionAction(name)
       var mergedParams  = merge({}, this.objectParams, inputParams)

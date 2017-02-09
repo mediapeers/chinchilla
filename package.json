@@ -1,6 +1,6 @@
 {
   "name": "chinchilla",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "Awesome module",
   "keywords": [],
   "homepage": "https://github.com/mediapeers/chinchilla",
@@ -10,26 +10,22 @@
     "email": "goetzinger@mediapeers.com",
     "url": "https://github.com/mediapeers"
   },
-  "main": "./chinchilla.js",
+  "main": "./dist/chinchilla.js",
   "scripts": {
-    "dist": "yarn run clean && yarn run compile-for-browser && yarn run compile-dependencies-for-browser",
-    "clean": "rm -rf ./dist",
-    "compile-for-browser": "webpack",
-    "compile-dependencies-for-browser": "browserify lib/browser-dependencies.js > dist/dependencies.js"
+    "dist": "yarn run clean && webpack",
+    "clean": "rm -rf ./dist"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/mediapeers/chinchilla.git"
   },
-  "typescript": {
-    "definition": "dist/lib/chinchilla.d.ts"
-  },
   "dependencies": {
-    "bluebird": "~3.0.5",
     "js-cookie": "~2.0.4",
     "lodash": "~3.10.1",
     "superagent": "~1.4.0",
-    "uri-templates": "~0.1.9"
+    "uri-templates": "~0.1.9",
+    "webpack": "^2.2.1",
+    "webpack-node-externals": "^1.5.4"
   },
   "devDependencies": {
     "browserify": "^12.0.1",

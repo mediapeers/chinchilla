@@ -1,8 +1,8 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "declaration": true,
-    "target": "es5",
+    "module": "commonjs",
+    "target": "es6",
     "noImplicitAny": false
   },
   "filesGlob": [
@@ -18,7 +18,6 @@
     "lib/chinchilla/context.ts",
     "lib/chinchilla/extractor.ts",
     "lib/chinchilla/result.ts",
-    "lib/chinchilla/subject.ts",
-    "dist/lib/chinchilla.d.ts"
+    "lib/chinchilla/subject.ts"
   ]
 }

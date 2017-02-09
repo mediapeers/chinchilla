@@ -1,7 +1,6 @@
 import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first } from 'lodash'
 import * as request from 'superagent'
 import * as UriTemplate from 'uri-templates'
-import * as Promise from 'bluebird'
 import { Config } from './config'
 import { Result, ErrorResult } from './result'
 import { Context, ContextAction } from './context'
