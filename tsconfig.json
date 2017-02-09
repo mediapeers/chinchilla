@@ -5,6 +5,10 @@
     "target": "es5",
     "noImplicitAny": false
   },
+  "filesGlob": [
+    "dist/**/*.ts",
+    "lib/**/*.ts"
+  ],
   "files": [
     "lib/browser.ts",
     "lib/chinchilla.ts",
@@ -15,8 +19,6 @@
     "lib/chinchilla/extractor.ts",
     "lib/chinchilla/result.ts",
     "lib/chinchilla/subject.ts",
-    "typings/promise.d.ts",
-    "typings/tsd.d.ts",
-    "typings/uriTemplate.d.ts"
+    "dist/lib/chinchilla.d.ts"
   ]
 }

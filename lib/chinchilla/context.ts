@@ -1,6 +1,7 @@
 import { each, first } from 'lodash'
 import * as request from 'superagent'
 import { Config } from './config'
+import * as Promise from 'bluebird'
 
 export class ContextAction {
   public resource: string
