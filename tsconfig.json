@@ -5,10 +5,6 @@
     "target": "es6",
     "noImplicitAny": false
   },
-  "filesGlob": [
-    "dist/**/*.ts",
-    "lib/**/*.ts"
-  ],
   "files": [
     "lib/browser.ts",
     "lib/chinchilla.ts",
