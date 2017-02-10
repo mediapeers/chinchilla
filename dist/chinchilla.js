@@ -78,7 +78,22 @@ module.exports = require("lodash");
 
 "use strict";
 
-const Cookies = __webpack_require__(11);
+const Kekse = __webpack_require__(11);
+class Cookies {
+    static get(...args) {
+        return (typeof window === undefined) ?
+            Kekse.get.apply(null, args) : null;
+    }
+    static set(...args) {
+        return (typeof window === undefined) ?
+            Kekse.set.apply(null, args) : null;
+    }
+    static expire(...args) {
+        return (typeof window === undefined) ?
+            Kekse.expire.apply(null, args) : null;
+    }
+}
+exports.Cookies = Cookies;
 class Config {
     // timestamp to be appended to every request
     // will be the same for a session lifetime
@@ -110,16 +125,10 @@ class Config {
         Config.clearValue('sessionId');
     }
     static getValue(name) {
-        if (Config[name])
-            return Config[name];
-        if (typeof document === undefined)
-            return;
-        return Cookies.get(Config.cookieKey(name));
+        return Config[name] || Cookies.get(Config.cookieKey(name));
     }
     static setValue(name, value) {
         Config[name] = value;
-        if (typeof document === undefined)
-            return;
         Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300 });
     }
     static clearValue(name) {

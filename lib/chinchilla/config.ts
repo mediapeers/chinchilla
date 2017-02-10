@@ -11,7 +11,7 @@ export class Cookies {
   }
   static expire(...args) {
     return (typeof window === undefined) ?
-      Kekse.set.apply(null, args) : null
+      Kekse.expire.apply(null, args) : null
   }
 }
 
