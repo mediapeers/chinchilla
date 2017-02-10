@@ -1,4 +1,19 @@
-import * as Cookies from 'js-cookie'
+import * as Kekse from 'cookies-js'
+
+export class Cookies {
+  static get(...args) {
+    return (typeof window === undefined) ?
+      Kekse.get.apply(null, args) : null
+  }
+  static set(...args) {
+    return (typeof window === undefined) ?
+      Kekse.set.apply(null, args) : null
+  }
+  static expire(...args) {
+    return (typeof window === undefined) ?
+      Kekse.set.apply(null, args) : null
+  }
+}
 
 export class Config {
   static endpoints = {}
@@ -55,7 +70,7 @@ export class Config {
   }
 
   static clearValue(name): void {
-    Cookies.remove(Config.cookieKey(name), { domain: Config.domain })
+    Cookies.expire(Config.cookieKey(name), { domain: Config.domain })
   }
 
   static cookieKey(name): string {

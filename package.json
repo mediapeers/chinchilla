@@ -20,7 +20,7 @@
     "url": "https://github.com/mediapeers/chinchilla.git"
   },
   "dependencies": {
-    "js-cookie": "~2.0.4",
+    "cookies-js": "^1.2.3",
     "lodash": "~3.10.1",
     "superagent": "~1.4.0",
     "uri-templates": "~0.1.9",

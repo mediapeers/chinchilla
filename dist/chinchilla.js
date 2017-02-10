@@ -110,14 +110,20 @@ class Config {
         Config.clearValue('sessionId');
     }
     static getValue(name) {
-        return Config[name] || Cookies.get(Config.cookieKey(name));
+        if (Config[name])
+            return Config[name];
+        if (typeof document === undefined)
+            return;
+        return Cookies.get(Config.cookieKey(name));
     }
     static setValue(name, value) {
         Config[name] = value;
+        if (typeof document === undefined)
+            return;
         Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300 });
     }
     static clearValue(name) {
-        Cookies.remove(Config.cookieKey(name), { domain: Config.domain });
+        Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
     }
     static cookieKey(name) {
         return `chinchilla.${name}`;
@@ -948,7 +954,7 @@ exports.ErrorResult = ErrorResult;
 /* 11 */
 /***/ (function(module, exports) {
 
-module.exports = require("js-cookie");
+module.exports = require("cookies-js");
 
 /***/ }),
 /* 12 */
