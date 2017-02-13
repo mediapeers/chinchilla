@@ -1,1 +1,0 @@
-defineFixture('foo', {});
