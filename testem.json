@@ -1,0 +1,17 @@
+{
+  "framework": "mocha+chai",
+
+  "before_tests": "gulp compile",
+
+  "src_files": [
+    "src/**/*.coffee",
+    "test/**/*.coffee"
+  ],
+
+  "serve_files": [
+    "lib/bower.js",
+    "lib/chinchilla.js",
+    "lib/fixtures.js",
+    "lib/chinchilla.spec.js"
+  ]
+}
