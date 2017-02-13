@@ -3,6 +3,7 @@
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "context.ts" />
+/// <reference path = "cache.ts" />
 declare var _;
 
 module Chinchilla {
@@ -18,11 +19,8 @@ module Chinchilla {
     // this cache contains the association data for each of the subject's objects
     cache: Object = {};
 
-    // this is a cache for all Association instances
-    static cache = {};
-
     constructor(subject: Subject, name: string) {
-      this.subject          = subject;      
+      this.subject          = subject;
       this.name             = name;
       this.associationData  = this.readAssociationData();
 
@@ -36,7 +34,7 @@ module Chinchilla {
         return Context.get(this.associationProperty.type).ready.then((associationContext) => {
           this.context = associationContext;
 
-          var contextAction = this.associationData.length > 1 || this.associationProperty.collection ? 
+          var contextAction = this.associationData.length > 1 || this.associationProperty.collection ?
             associationContext.collectionAction('get') :
             associationContext.memberAction('get');
 
@@ -57,17 +55,23 @@ module Chinchilla {
     // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
     // them loads their associations individually
     static get(subject: Subject, name: string) {
-      var key = `subject-${subject.id}-${name}`;
+      var key = `association-${subject.id}-${name}`;
 
       var instance;
-      if (instance = Association.cache[key]) {
+      if (instance = Cache.getInstance().get(key)) {
         return instance;
       }
       else {
-        instance                = new Association(subject, name);
-        Association.cache[key]  = instance;
+        instance = new Association(subject, name);
+        Cache.getInstance().add(key, instance);
 
         return instance;
+      }
+    }
+
+    destroy() {
+      for (var key in this) {
+        delete this[key];
       }
     }
 
@@ -90,9 +94,9 @@ module Chinchilla {
           // HAS AND BELONGS TO MANY
           var sorted = {};
           _.each(result.objects, (obj) => {
-            sorted[obj['@id']] = obj;  
+            sorted[obj['@id']] = obj;
           });
-          
+
 
           _.each(this.subject.objects, (obj) => {
             var key = obj['@id'];
@@ -105,10 +109,10 @@ module Chinchilla {
               var result = sorted[reference['@id']];
               if (!result) return true;
 
-              this.cache[key].push(result); 
+              this.cache[key].push(result);
             });
           });
-        } 
+        }
         else {
           // HAS MANY
           // find back reference association, -> association that points to same context the parent context does
@@ -126,7 +130,7 @@ module Chinchilla {
           if (!associationName) {
             associationName = _.findKey(this.context.properties, (value, key) => {
               return value && value.inverse_of && value.inverse_of === this.name;
-            });  
+            });
           }
 
           _.each(result.objects, (obj) => {
@@ -142,7 +146,7 @@ module Chinchilla {
         // HAS ONE / BELONGS TO
         var sorted = {};
         _.each(result.objects, (obj) => {
-          sorted[obj['@id']] = obj;  
+          sorted[obj['@id']] = obj;
         });
 
         _.each(this.subject.objects, (obj) => {
@@ -165,7 +169,7 @@ module Chinchilla {
         return Extractor.extractCollectionParams(this.context, this.associationData);
       }
       else {
-        return Extractor.extractMemberParams(this.context, this.associationData); 
+        return Extractor.extractMemberParams(this.context, this.associationData);
       }
     }
 

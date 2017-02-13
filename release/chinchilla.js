@@ -450,10 +450,61 @@ var Chinchilla;
     Chinchilla.Action = Action;
 })(Chinchilla || (Chinchilla = {}));
 /// <reference path = "../../typings/promise.d.ts" />
+var Chinchilla;
+(function (Chinchilla) {
+    var Cache = (function () {
+        function Cache() {
+            this.cacheSize = 50;
+            this.cache = {};
+            if (Cache.instance)
+                throw new Error("Error - use Cache.getInstance()");
+            this.cache.order = [];
+        }
+        Cache.getInstance = function () {
+            Cache.instance = Cache.instance || new Cache();
+            return Cache.instance;
+        };
+        Cache.generateKey = function (type) {
+            var hash = Math.random().toString(36).substr(2, 9);
+            return type + "-" + hash;
+        };
+        Cache.prototype.add = function (key, obj) {
+            this.cache[key] = obj;
+            this.cache.order.push(key);
+            this.capCache();
+        };
+        Cache.prototype.get = function (key) {
+            return this.cache[key];
+        };
+        Cache.prototype.capCache = function () {
+            var _this = this;
+            var sliced = Cache.sliceCache(this.cache.order, this.cacheSize);
+            _.each(sliced.remove, function (key) {
+                if (_.isFunction(_this.cache[key]['destroy']))
+                    _this.cache[key].destroy();
+                delete _this.cache[key];
+            });
+            this.cache.order = sliced.remain;
+        };
+        Cache.sliceCache = function (arr, size) {
+            if (arr.length <= size)
+                return { remove: [], remain: arr };
+            var remain = arr.slice(size * -1);
+            return {
+                remain: remain,
+                remove: _.difference(arr, remain)
+            };
+        };
+        return Cache;
+    }());
+    Chinchilla.Cache = Cache;
+})(Chinchilla || (Chinchilla = {}));
+/// <reference path = "../../typings/promise.d.ts" />
 /// <reference path = "subject.ts" />
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "context.ts" />
+/// <reference path = "cache.ts" />
 var Chinchilla;
 (function (Chinchilla) {
     var Association = (function () {
@@ -491,15 +542,20 @@ var Chinchilla;
         // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
         // them loads their associations individually
         Association.get = function (subject, name) {
-            var key = "subject-" + subject.id + "-" + name;
+            var key = "association-" + subject.id + "-" + name;
             var instance;
-            if (instance = Association.cache[key]) {
+            if (instance = Chinchilla.Cache.getInstance().get(key)) {
                 return instance;
             }
             else {
                 instance = new Association(subject, name);
-                Association.cache[key] = instance;
+                Chinchilla.Cache.getInstance().add(key, instance);
                 return instance;
+            }
+        };
+        Association.prototype.destroy = function () {
+            for (var key in this) {
+                delete this[key];
             }
         };
         Association.prototype.getDataFor = function (object) {
@@ -606,8 +662,6 @@ var Chinchilla;
                 return assocData(obj);
             });
         };
-        // this is a cache for all Association instances
-        Association.cache = {};
         return Association;
     }());
     Chinchilla.Association = Association;
@@ -617,12 +671,13 @@ var Chinchilla;
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "association.ts" />
+/// <reference path = "cache.ts" />
 var Chinchilla;
 (function (Chinchilla) {
     var Subject = (function () {
         function Subject(objectsOrApp, model) {
             // unique id for this instance (for cache key purpose)
-            this.id = Math.random().toString(36).substr(2, 9);
+            this.id = Chinchilla.Cache.generateKey('subject');
             // adds and initializes objects to this Subject
             if (_.isString(objectsOrApp)) {
                 this.contextUrl = Chinchilla.Config.endpoints[objectsOrApp] + "/context/" + model;
@@ -630,6 +685,7 @@ var Chinchilla;
             else {
                 _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
             }
+            Chinchilla.Cache.getInstance().add(this.id, this);
         }
         Subject.detachFromSubject = function (objects) {
             var detach = function (object) {
@@ -644,6 +700,16 @@ var Chinchilla;
                 return detach(objects);
             }
             return objects;
+        };
+        Subject.prototype.destroy = function () {
+            _.each(this.objects, function (object) {
+                for (var key in object) {
+                    delete object[key];
+                }
+            });
+            for (var key in this) {
+                delete this[key];
+            }
         };
         Subject.prototype.memberAction = function (name, inputParams, options) {
             var _this = this;
@@ -701,7 +767,7 @@ var Chinchilla;
         // chch('um', 'user').new(first_name: 'Peter')
         Subject.prototype.new = function (attrs) {
             if (attrs === void 0) { attrs = {}; }
-            this.subject = _.merge({ '@context': this.contextUrl, '$subject': this }, attrs);
+            this.subject = _.merge({ '@context': this.contextUrl, '$subject': this.id }, attrs);
             return this;
         };
         Object.defineProperty(Subject.prototype, "context", {
@@ -738,7 +804,7 @@ var Chinchilla;
             var _this = this;
             this.subject = [];
             _.each(objects, function (obj) {
-                obj.$subject = _this;
+                obj.$subject = _this.id;
                 _this.moveAssociationReferences(obj);
                 _this.initAssociationGetters(obj);
                 _this.subject.push(obj);
@@ -746,7 +812,7 @@ var Chinchilla;
             this.contextUrl = this.object['@context'];
         };
         Subject.prototype.addObject = function (object) {
-            object.$subject = this;
+            object.$subject = this.id;
             this.moveAssociationReferences(object);
             this.initAssociationGetters(object);
             this.contextUrl = object['@context'];

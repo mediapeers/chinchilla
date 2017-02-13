@@ -3,6 +3,7 @@
 /// <reference path = "action.ts" />
 /// <reference path = "extractor.ts" />
 /// <reference path = "association.ts" />
+/// <reference path = "cache.ts" />
 declare var _;
 
 module Chinchilla {
@@ -18,20 +19,20 @@ module Chinchilla {
         delete copy['$subject'];
         return copy;
       }
-      
+
       if (_.isArray(objects)) {
         return _.map(objects, detach);
       }
       else if (_.isPlainObject(objects)) {
         return detach(objects);
       }
-      
+
       return objects;
     }
 
     constructor(objectsOrApp: any, model?: string) {
       // unique id for this instance (for cache key purpose)
-      this.id = Math.random().toString(36).substr(2, 9);
+      this.id = Cache.generateKey('subject');
 
       // adds and initializes objects to this Subject
       if (_.isString(objectsOrApp)) {
@@ -39,6 +40,20 @@ module Chinchilla {
       }
       else {
         _.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
+      }
+
+      Cache.getInstance().add(this.id, this);
+    }
+
+    destroy() {
+      _.each(this.objects, (object) => {
+        for (var key in object) {
+          delete object[key];
+        }
+      });
+
+      for (var key in this) {
+        delete this[key];
       }
     }
 
@@ -93,7 +108,7 @@ module Chinchilla {
     // chch('um', 'user').new(first_name: 'Peter')
     new(attrs = {}) {
       this.subject = _.merge(
-        { '@context' : this.contextUrl, '$subject': this },
+        { '@context' : this.contextUrl, '$subject': this.id },
         attrs
       );
 
@@ -119,7 +134,7 @@ module Chinchilla {
     private addObjects(objects: any[]): void {
       this.subject = [];
       _.each(objects, (obj) => {
-        obj.$subject = this;
+        obj.$subject = this.id;
         this.moveAssociationReferences(obj);
         this.initAssociationGetters(obj);
         this.subject.push(obj);
@@ -129,7 +144,7 @@ module Chinchilla {
     }
 
     private addObject(object: any): void {
-      object.$subject = this;
+      object.$subject = this.id;
       this.moveAssociationReferences(object);
       this.initAssociationGetters(object);
 
@@ -146,7 +161,7 @@ module Chinchilla {
 
         var value = object[key];
 
-        if (key === '$associations') continue; 
+        if (key === '$associations') continue;
 
         if (_.isArray(value)) {
           var el = _.first(value);
