@@ -1,19 +1,11 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es6",
-    "noImplicitAny": false
+    "declaration": true,
+    "target": "ES5",
+    "noImplicitAny": true,
+    "outDir": "dist"
   },
   "files": [
-    "lib/browser.ts",
-    "lib/chinchilla.ts",
-    "lib/chinchilla/action.ts",
-    "lib/chinchilla/association.ts",
-    "lib/chinchilla/config.ts",
-    "lib/chinchilla/context.ts",
-    "lib/chinchilla/extractor.ts",
-    "lib/chinchilla/result.ts",
-    "lib/chinchilla/subject.ts"
+    "src/chinchilla/session.ts"
   ]
 }
