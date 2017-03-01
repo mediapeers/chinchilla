@@ -2,6 +2,7 @@ import { each, find, first, groupBy, isArray, isEmpty } from 'lodash'
 import { Subject } from './subject'
 
 export class Result {
+  type: string
   headers: any
   aggregations: any
   objects: any[] = []
@@ -9,9 +10,13 @@ export class Result {
 
   success(result): void {
     this.headers  = result.headers
-    if (result.body && result.body.aggregations) this.aggregations = result.body.aggregations
 
-    switch (result.body && result.body['@type']) {
+    if (result.body) {
+      this.type         = result.body['@type']
+      this.aggregations = result.body['aggregations']
+    }
+
+    switch (this.type) {
       case 'graph':
         var members = result.body['@graph']
         if (!members) return

@@ -888,9 +888,11 @@ class Result {
     }
     success(result) {
         this.headers = result.headers;
-        if (result.body && result.body.aggregations)
-            this.aggregations = result.body.aggregations;
-        switch (result.body && result.body['@type']) {
+        if (result.body) {
+            this.type = result.body['@type'];
+            this.aggregations = result.body['aggregations'];
+        }
+        switch (this.type) {
             case 'graph':
                 var members = result.body['@graph'];
                 if (!members)
