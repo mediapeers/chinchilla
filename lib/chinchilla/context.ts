@@ -1,6 +1,13 @@
 import { each, first, isEmpty } from 'lodash'
-import * as request from 'superagent'
+import * as superagent from 'superagent'
+import * as use from 'superagent-use'
+import * as logger from 'superagent-logger'
 import { Config } from './config'
+
+const request = use(superagent)
+
+if (typeof window === 'undefined')
+  request.use(logger({ outgoing: true }))
 
 export class ContextAction {
   public resource: string

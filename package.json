@@ -22,7 +22,9 @@
   "dependencies": {
     "cookies-js": "^1.2.3",
     "lodash": "~3.10.1",
-    "superagent": "~1.4.0",
+    "superagent": "^3.4.1",
+    "superagent-logger": "^1.1.0",
+    "superagent-use": "^0.1.0",
     "uri-templates": "~0.1.9",
     "webpack": "^2.2.1",
     "webpack-node-externals": "^1.5.4"

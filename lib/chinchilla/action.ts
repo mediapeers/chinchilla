@@ -1,10 +1,17 @@
-import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first } from 'lodash'
-import * as request from 'superagent'
+import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, isUndefined } from 'lodash'
+import * as superagent from 'superagent'
+import * as logger from 'superagent-logger'
+import * as use from 'superagent-use'
 import * as UriTemplate from 'uri-templates'
 import { Config } from './config'
 import { Result, ErrorResult } from './result'
 import { Context, ContextAction } from './context'
 import { Extractor } from './extractor'
+
+const request = use(superagent)
+
+if (typeof window === 'undefined')
+  request.use(logger({ outgoing: true }))
 
 export class Action {
   ready: Promise<Result>
@@ -53,6 +60,10 @@ export class Action {
           break
       }
 
+      // add logger if node.js
+      if (typeof window === 'undefined')
+        req = req.use(logger)
+      
       // add timestamp
       req = req.query({ t: Config.timestamp })
 
