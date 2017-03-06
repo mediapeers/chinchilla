@@ -6,14 +6,6 @@
     "noImplicitAny": false
   },
   "files": [
-    "lib/browser.ts",
-    "lib/chinchilla.ts",
-    "lib/chinchilla/action.ts",
-    "lib/chinchilla/association.ts",
-    "lib/chinchilla/config.ts",
-    "lib/chinchilla/context.ts",
-    "lib/chinchilla/extractor.ts",
-    "lib/chinchilla/result.ts",
-    "lib/chinchilla/subject.ts"
+    "src/chinchilla.ts"
   ]
 }
