@@ -1,9 +1,11 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "declaration": true,
     "module": "commonjs",
     "target": "es6",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "outDir": "dist"
   },
   "files": [
     "src/chinchilla.ts"

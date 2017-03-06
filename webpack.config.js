@@ -4,8 +4,8 @@ module.exports = {
   entry: './src/browser.ts',
   externals: [nodeExternals()],
   output: {
-    path: __dirname + '/dist',
-    filename: 'chinchilla.js'
+    path: __dirname + '/dist.pack',
+    filename: 'chinchilla.pack.js'
   },
   resolve : {
     extensions: ['.js', '.ts']
