@@ -1,5 +1,11 @@
 'use strict'
 
+import * as Promise from 'bluebird'
+import * as Cookies from 'cookies-js'
+
+window['Promise'] = Promise
+window['Cookies'] = Cookies
+
 import chch from './chinchilla'
 
 window['chch'] = chch.subject

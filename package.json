@@ -12,7 +12,9 @@
   },
   "main": "./dist/chinchilla.js",
   "scripts": {
-    "dist": "yarn run clean && webpack",
+    "dist": "yarn run clean && yarn run build-es6 && yarn run build-es5",
+    "build-es6": "tsc",
+    "build-es5": "webpack",
     "clean": "rm -rf ./dist"
   },
   "repository": {
@@ -28,7 +30,8 @@
     "webpack-node-externals": "^1.5.4"
   },
   "devDependencies": {
-    "browserify": "^12.0.1",
+    "@types/core-js": "^0.9.35",
+    "bluebird": "^3.5.0",
     "ts-loader": "^2.0.0",
     "typescript": "^2.1.5"
   },

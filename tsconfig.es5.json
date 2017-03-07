@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "declaration": false,
+    "target": "ES5",
+    "noImplicitAny": false,
+    "outDir": "tmp",
+    "types": ["core-js"]
+  },
+  "files": [
+    "src/es5.pack.ts"
+  ]
+}

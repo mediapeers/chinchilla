@@ -1,18 +1,15 @@
-var nodeExternals = require('webpack-node-externals')
-
 module.exports = {
-  entry: './src/browser.ts',
-  externals: [nodeExternals()],
+  entry: './src/es5.pack.ts',
   output: {
-    path: __dirname + '/dist.pack',
-    filename: 'chinchilla.pack.js'
+    path: __dirname + '/dist',
+    filename: 'chinchilla.es5.pack.js'
   },
   resolve : {
     extensions: ['.js', '.ts']
   },
   module: {
     loaders: [
-      { test: /\.tsx?$/, loader: 'ts-loader' }
+      { test: /\.tsx?$/, loader: 'ts-loader', options: { configFileName: 'tsconfig.es5.json' } }
     ]
   }
 }
