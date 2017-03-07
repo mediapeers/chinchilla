@@ -29,6 +29,7 @@ export declare class Context {
     id: string;
     properties: any;
     constants: any;
+    static clearCache(): void;
     static get(contextUrl: string): Context;
     constructor(contextUrl: string);
     property(name: string): ContextProperty;
