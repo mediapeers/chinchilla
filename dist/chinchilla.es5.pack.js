@@ -12432,6 +12432,7 @@
 "use strict";
 
 var Kekse = __webpack_require__(5);
+var context_1 = __webpack_require__(2);
 var Cookies = (function () {
     function Cookies() {
     }
@@ -12493,6 +12494,7 @@ var Config = (function () {
     };
     Config.clearSessionId = function () {
         Config.clearValue('sessionId');
+        context_1.Context.clearCache();
     };
     Config.getValue = function (name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));
@@ -12502,6 +12504,7 @@ var Config = (function () {
         Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300 });
     };
     Config.clearValue = function (name) {
+        Config[name] = undefined;
         Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
     };
     Config.cookieKey = function (name) {
@@ -12570,6 +12573,9 @@ var Context = (function () {
             if (config_1.Config.getAffiliationId()) {
                 req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
             }
+            if (config_1.Config.getSessionId()) {
+                req = req.set('Session-Id', config_1.Config.getSessionId());
+            }
             req
                 .end(function (err, res) {
                 _this.data = res.body;
@@ -12584,6 +12590,9 @@ var Context = (function () {
             });
         });
     }
+    Context.clearCache = function () {
+        Context.cache = {};
+    };
     Context.get = function (contextUrl) {
         var key = lodash_1.first(contextUrl.split('?'));
         var cached;

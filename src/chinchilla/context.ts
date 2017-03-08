@@ -41,6 +41,10 @@ export class Context {
   properties: any
   constants: any
 
+  static clearCache(): void {
+    Context.cache = {}
+  }
+
   static get(contextUrl: string): Context {
     var key = first(contextUrl.split('?'))
     var cached
@@ -61,6 +65,9 @@ export class Context {
 
       if (Config.getAffiliationId()) {
         req = req.set('Affiliation-Id', Config.getAffiliationId())
+      }
+      if (Config.getSessionId()) {
+        req = req.set('Session-Id', Config.getSessionId())
       }
 
       req

@@ -1,5 +1,6 @@
 "use strict";
 const Kekse = require("cookies-js");
+const context_1 = require("./context");
 class Cookies {
     static get(...args) {
         return (typeof window !== undefined) ?
@@ -44,6 +45,7 @@ class Config {
     }
     static clearSessionId() {
         Config.clearValue('sessionId');
+        context_1.Context.clearCache();
     }
     static getValue(name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));
@@ -53,6 +55,7 @@ class Config {
         Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300 });
     }
     static clearValue(name) {
+        Config[name] = undefined;
         Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
     }
     static cookieKey(name) {
