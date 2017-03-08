@@ -1,5 +1,7 @@
 import * as Kekse from 'cookies-js'
 
+import { Context } from './context'
+
 export class Cookies {
   static get(...args) {
     return (typeof window === undefined) ?
@@ -58,6 +60,7 @@ export class Config {
 
   static clearSessionId(): void {
     Config.clearValue('sessionId')
+    Context.clearCache()
   }
 
   static getValue(name): string {
@@ -70,6 +73,7 @@ export class Config {
   }
 
   static clearValue(name): void {
+    Config[name] = undefined
     Cookies.expire(Config.cookieKey(name), { domain: Config.domain })
   }
 

@@ -25,6 +25,9 @@ class Context {
             if (config_1.Config.getAffiliationId()) {
                 req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
             }
+            if (config_1.Config.getSessionId()) {
+                req = req.set('Session-Id', config_1.Config.getSessionId());
+            }
             req
                 .end((err, res) => {
                 this.data = res.body;
@@ -38,6 +41,9 @@ class Context {
                 resolve(this);
             });
         });
+    }
+    static clearCache() {
+        Context.cache = {};
     }
     static get(contextUrl) {
         var key = lodash_1.first(contextUrl.split('?'));
