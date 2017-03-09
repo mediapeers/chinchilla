@@ -22,14 +22,12 @@ export interface ContextProperty {
     validations?: any[];
 }
 export declare class Context {
-    static cache: {};
     ready: Promise<Context>;
     data: any;
     context: any;
     id: string;
     properties: any;
     constants: any;
-    static clearCache(): void;
     static get(contextUrl: string): Context;
     constructor(contextUrl: string);
     property(name: string): ContextProperty;

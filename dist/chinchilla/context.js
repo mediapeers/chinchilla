@@ -2,6 +2,7 @@
 const lodash_1 = require("lodash");
 const request = require("superagent");
 const config_1 = require("./config");
+const cache_1 = require("./cache");
 class ContextAction {
     constructor(values = {}) {
         lodash_1.each(values, (value, key) => {
@@ -17,6 +18,18 @@ class ContextCollectionAction extends ContextAction {
 }
 exports.ContextCollectionAction = ContextCollectionAction;
 class Context {
+    static get(contextUrl) {
+        let key = lodash_1.first(contextUrl.split('?'));
+        let cached;
+        if (cached = cache_1.Cache.get(key)) {
+            return cached;
+        }
+        else {
+            let context = new Context(contextUrl);
+            cache_1.Cache.add(key, context);
+            return context;
+        }
+    }
     constructor(contextUrl) {
         this.ready = new Promise((resolve, reject) => {
             var req = request
@@ -41,19 +54,6 @@ class Context {
                 resolve(this);
             });
         });
-    }
-    static clearCache() {
-        Context.cache = {};
-    }
-    static get(contextUrl) {
-        var key = lodash_1.first(contextUrl.split('?'));
-        var cached;
-        if (cached = Context.cache[key]) {
-            return cached;
-        }
-        else {
-            return Context.cache[key] = new Context(contextUrl);
-        }
     }
     property(name) {
         return this.properties[name];
@@ -82,5 +82,4 @@ class Context {
         return new ContextCollectionAction(action);
     }
 }
-Context.cache = {};
 exports.Context = Context;

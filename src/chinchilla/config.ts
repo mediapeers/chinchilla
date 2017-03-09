@@ -1,6 +1,6 @@
 import * as Kekse from 'cookies-js'
 
-import { Context } from './context'
+import { Cache } from './cache'
 
 export class Cookies {
   static get(...args) {
@@ -22,9 +22,7 @@ export class Config {
   static timestamp = Date.now() / 1000 | 0
   static domain: string
   static errorInterceptor: any
-
-  // timestamp to be appended to every request
-  // will be the same for a session lifetime
+  static cookieTimeout = 30*24*60*60 // 1 month
 
   static setEndpoint(name: string, url: string): void {
     Config.endpoints[name] = url
@@ -52,6 +50,7 @@ export class Config {
 
   static setSessionId(id: string): void {
     Config.setValue('sessionId', id)
+    Cache.clear()
   }
 
   static getSessionId(): string {
@@ -60,7 +59,7 @@ export class Config {
 
   static clearSessionId(): void {
     Config.clearValue('sessionId')
-    Context.clearCache()
+    Cache.clear()
   }
 
   static getValue(name): string {
@@ -69,7 +68,7 @@ export class Config {
 
   static setValue(name, value): void {
     Config[name] = value
-    Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300})
+    Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout})
   }
 
   static clearValue(name): void {

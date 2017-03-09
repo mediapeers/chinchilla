@@ -8,6 +8,7 @@ export declare class Config {
     static timestamp: number;
     static domain: string;
     static errorInterceptor: any;
+    static cookieTimeout: number;
     static setEndpoint(name: string, url: string): void;
     static setCookieDomain(domain: string): void;
     static setErrorInterceptor(fn: any): void;

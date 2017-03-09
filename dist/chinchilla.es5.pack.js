@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 20);
+/******/ 	return __webpack_require__(__webpack_require__.s = 21);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -12423,7 +12423,7 @@
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(19)(module), __webpack_require__(4)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20)(module), __webpack_require__(5)))
 
 /***/ }),
 /* 1 */
@@ -12431,8 +12431,60 @@
 
 "use strict";
 
-var Kekse = __webpack_require__(5);
-var context_1 = __webpack_require__(2);
+var lodash_1 = __webpack_require__(0);
+var Cache = (function () {
+    function Cache() {
+    }
+    Cache.generateKey = function (type) {
+        var hash = Math.random().toString(36).substr(2, 9);
+        return type + "-" + hash;
+    };
+    Cache.add = function (key, obj) {
+        Cache.cache[key] = obj;
+        Cache.cacheOrder.push(key);
+        Cache.capCache();
+    };
+    Cache.get = function (key) {
+        return Cache.cache[key];
+    };
+    Cache.clear = function () {
+        Cache.cache = {};
+        Cache.cacheOrder = [];
+    };
+    Cache.capCache = function () {
+        var sliced = Cache.sliceCache(Cache.cacheOrder, Cache.cacheSize);
+        lodash_1.each(sliced.remove, function (key) {
+            if (lodash_1.isFunction(Cache.cache[key]['destroy']))
+                Cache.cache[key].destroy();
+            delete Cache.cache[key];
+        });
+        Cache.cacheOrder = sliced.remain;
+    };
+    Cache.sliceCache = function (arr, size) {
+        if (arr.length <= size)
+            return { remove: [], remain: arr };
+        var remain = arr.slice(size * -1);
+        return {
+            remain: remain,
+            remove: lodash_1.difference(arr, remain)
+        };
+    };
+    return Cache;
+}());
+Cache.cacheSize = 250;
+Cache.cacheOrder = [];
+Cache.cache = {};
+exports.Cache = Cache;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var Kekse = __webpack_require__(6);
+var cache_1 = __webpack_require__(1);
 var Cookies = (function () {
     function Cookies() {
     }
@@ -12466,8 +12518,6 @@ exports.Cookies = Cookies;
 var Config = (function () {
     function Config() {
     }
-    // timestamp to be appended to every request
-    // will be the same for a session lifetime
     Config.setEndpoint = function (name, url) {
         Config.endpoints[name] = url;
     };
@@ -12488,20 +12538,21 @@ var Config = (function () {
     };
     Config.setSessionId = function (id) {
         Config.setValue('sessionId', id);
+        cache_1.Cache.clear();
     };
     Config.getSessionId = function () {
         return Config.getValue('sessionId');
     };
     Config.clearSessionId = function () {
         Config.clearValue('sessionId');
-        context_1.Context.clearCache();
+        cache_1.Cache.clear();
     };
     Config.getValue = function (name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));
     };
     Config.setValue = function (name, value) {
         Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300 });
+        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
     };
     Config.clearValue = function (name) {
         Config[name] = undefined;
@@ -12514,11 +12565,12 @@ var Config = (function () {
 }());
 Config.endpoints = {};
 Config.timestamp = Date.now() / 1000 | 0;
+Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
 exports.Config = Config;
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12534,8 +12586,9 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 var lodash_1 = __webpack_require__(0);
-var request = __webpack_require__(7);
-var config_1 = __webpack_require__(1);
+var request = __webpack_require__(8);
+var config_1 = __webpack_require__(2);
+var cache_1 = __webpack_require__(1);
 var ContextAction = (function () {
     function ContextAction(values) {
         if (values === void 0) { values = {}; }
@@ -12590,17 +12643,16 @@ var Context = (function () {
             });
         });
     }
-    Context.clearCache = function () {
-        Context.cache = {};
-    };
     Context.get = function (contextUrl) {
         var key = lodash_1.first(contextUrl.split('?'));
         var cached;
-        if (cached = Context.cache[key]) {
+        if (cached = cache_1.Cache.get(key)) {
             return cached;
         }
         else {
-            return Context.cache[key] = new Context(contextUrl);
+            var context = new Context(contextUrl);
+            cache_1.Cache.add(key, context);
+            return context;
         }
     };
     Context.prototype.property = function (name) {
@@ -12631,18 +12683,17 @@ var Context = (function () {
     };
     return Context;
 }());
-Context.cache = {};
 exports.Context = Context;
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var UriTemplate = __webpack_require__(10);
+var UriTemplate = __webpack_require__(11);
 var Extractor = (function () {
     function Extractor() {
     }
@@ -12724,7 +12775,7 @@ exports.Extractor = Extractor;
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports) {
 
 var g;
@@ -12751,7 +12802,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;/*
@@ -12929,7 +12980,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*
 })(typeof window === 'undefined' ? this : window);
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -13115,15 +13166,15 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
  * Module dependencies.
  */
 
-var Emitter = __webpack_require__(13);
-var reduce = __webpack_require__(14);
+var Emitter = __webpack_require__(14);
+var reduce = __webpack_require__(15);
 
 /**
  * Root reference for iframes.
@@ -14278,17 +14329,17 @@ module.exports = request;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var request = __webpack_require__(7);
-var UriTemplate = __webpack_require__(10);
-var config_1 = __webpack_require__(1);
-var result_1 = __webpack_require__(18);
-var extractor_1 = __webpack_require__(3);
+var request = __webpack_require__(8);
+var UriTemplate = __webpack_require__(11);
+var config_1 = __webpack_require__(2);
+var result_1 = __webpack_require__(19);
+var extractor_1 = __webpack_require__(4);
 var Action = (function () {
     function Action(contextAction, params, body, options) {
         if (params === void 0) { params = {}; }
@@ -14436,21 +14487,21 @@ exports.Action = Action;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var context_1 = __webpack_require__(2);
-var config_1 = __webpack_require__(1);
-var action_1 = __webpack_require__(8);
-var extractor_1 = __webpack_require__(3);
-var association_1 = __webpack_require__(17);
+var context_1 = __webpack_require__(3);
+var config_1 = __webpack_require__(2);
+var action_1 = __webpack_require__(9);
+var extractor_1 = __webpack_require__(4);
+var association_1 = __webpack_require__(18);
+var cache_1 = __webpack_require__(1);
 var Subject = (function () {
     function Subject(objectsOrApp, model) {
-        // unique id for this instance (for cache key purpose)
-        this.id = Math.random().toString(36).substr(2, 9);
+        this.id = cache_1.Cache.generateKey('subject');
         // adds and initializes objects to this Subject
         if (lodash_1.isString(objectsOrApp)) {
             this.contextUrl = config_1.Config.endpoints[objectsOrApp] + "/context/" + model;
@@ -14458,6 +14509,7 @@ var Subject = (function () {
         else {
             lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
         }
+        cache_1.Cache.add(this.id, this);
     }
     Subject.detachFromSubject = function (objects) {
         var detach = function (object) {
@@ -14529,7 +14581,7 @@ var Subject = (function () {
     // chch('um', 'user').new(first_name: 'Peter')
     Subject.prototype.new = function (attrs) {
         if (attrs === void 0) { attrs = {}; }
-        this.subject = lodash_1.merge({ '@context': this.contextUrl, '$subject': this }, attrs);
+        this.subject = lodash_1.merge({ '@context': this.contextUrl, '$subject': this.id }, attrs);
         return this;
     };
     Object.defineProperty(Subject.prototype, "context", {
@@ -14562,11 +14614,21 @@ var Subject = (function () {
         enumerable: true,
         configurable: true
     });
+    Subject.prototype.destroy = function () {
+        lodash_1.each(this.objects, function (object) {
+            for (var key in object) {
+                delete object[key];
+            }
+        });
+        for (var key in this) {
+            delete this[key];
+        }
+    };
     Subject.prototype.addObjects = function (objects) {
         var _this = this;
         this.subject = [];
         lodash_1.each(objects, function (obj) {
-            obj.$subject = _this;
+            obj.$subject = _this.id;
             _this.moveAssociationReferences(obj);
             _this.initAssociationGetters(obj);
             _this.subject.push(obj);
@@ -14574,7 +14636,7 @@ var Subject = (function () {
         this.contextUrl = this.object['@context'];
     };
     Subject.prototype.addObject = function (object) {
-        object.$subject = this;
+        object.$subject = this.id;
         this.moveAssociationReferences(object);
         this.initAssociationGetters(object);
         this.contextUrl = object['@context'];
@@ -14630,7 +14692,7 @@ exports.Subject = Subject;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
@@ -15058,7 +15120,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process, global, setImmediate) {/* @preserve
@@ -20680,49 +20742,46 @@ module.exports = ret;
 
 },{"./es5":13}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6), __webpack_require__(4), __webpack_require__(16).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7), __webpack_require__(5), __webpack_require__(17).setImmediate))
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var subject_1 = __webpack_require__(9);
-var config_1 = __webpack_require__(1);
-var context_1 = __webpack_require__(2);
-var chch = (function () {
-    function chch() {
+var subject_1 = __webpack_require__(10);
+var config_1 = __webpack_require__(2);
+var context_1 = __webpack_require__(3);
+var cache_1 = __webpack_require__(1);
+var chch = function (objectsOrApp, model) {
+    // detach from existing Subject first before creating a new one..
+    objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
+    return new subject_1.Subject(objectsOrApp, model);
+};
+chch['config'] = config_1.Config;
+chch['cache'] = cache_1.Cache;
+chch['new'] = function (app, model, attrs) {
+    if (attrs === void 0) { attrs = {}; }
+    return lodash_1.merge({ '@context': config_1.Config.endpoints[app] + "/context/" + model }, attrs);
+};
+chch['contextUrl'] = function (app, model) {
+    return config_1.Config.endpoints[app] + "/context/" + model;
+};
+chch['context'] = function (urlOrApp, model) {
+    if (!model) {
+        // assume first param is the context url
+        return context_1.Context.get(urlOrApp).ready;
     }
-    chch.subject = function (objectsOrApp, model) {
-        // detach from existing Subject first before creating a new one..
-        objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
-        return new subject_1.Subject(objectsOrApp, model);
-    };
-    chch.new = function (app, model, attrs) {
-        if (attrs === void 0) { attrs = {}; }
-        return lodash_1.merge({ '@context': config_1.Config.endpoints[app] + "/context/" + model }, attrs);
-    };
-    chch.contextUrl = function (app, model) {
-        return config_1.Config.endpoints[app] + "/context/" + model;
-    };
-    chch.context = function (urlOrApp, model) {
-        if (!model) {
-            // assume first param is the context url
-            return context_1.Context.get(urlOrApp).ready;
-        }
-        else {
-            return context_1.Context.get(config_1.Config.endpoints[urlOrApp] + "/context/" + model).ready;
-        }
-    };
-    return chch;
-}());
-chch.config = config_1.Config;
+    else {
+        return context_1.Context.get(config_1.Config.endpoints[urlOrApp] + "/context/" + model).ready;
+    }
+};
 // unfurl('pm, 'product', 'query', params) -> defaults to $c
 // unfurl('pm, 'product', '$c:query', params)
 // unfurl('pm, 'product', '$m:query_descendants', params)
-chch.unfurl = function (app, model, actionName, params) {
+chch['unfurl'] = function (app, model, actionName, params) {
     return new Promise(function (resolve, reject) {
         var page = 1;
         var result = { objects: [] };
@@ -20761,7 +20820,7 @@ exports.default = chch;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports) {
 
 
@@ -20931,7 +20990,7 @@ Emitter.prototype.hasListeners = function(event){
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports) {
 
 
@@ -20960,7 +21019,7 @@ module.exports = function(arr, fn, initial){
 };
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -21150,10 +21209,10 @@ module.exports = function(arr, fn, initial){
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4), __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5), __webpack_require__(7)))
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var apply = Function.prototype.apply;
@@ -21206,21 +21265,21 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(15);
+__webpack_require__(16);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var context_1 = __webpack_require__(2);
-var action_1 = __webpack_require__(8);
-var extractor_1 = __webpack_require__(3);
+var context_1 = __webpack_require__(3);
+var action_1 = __webpack_require__(9);
+var extractor_1 = __webpack_require__(4);
 var Association = (function () {
     function Association(subject, name) {
         var _this = this;
@@ -21379,7 +21438,7 @@ exports.Association = Association;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21395,7 +21454,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 var lodash_1 = __webpack_require__(0);
-var subject_1 = __webpack_require__(9);
+var subject_1 = __webpack_require__(10);
 var Result = (function () {
     function Result() {
         this.objects = [];
@@ -21485,7 +21544,7 @@ exports.ErrorResult = ErrorResult;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -21513,22 +21572,17 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var Promise = __webpack_require__(11);
-var Cookies = __webpack_require__(5);
+var Promise = __webpack_require__(12);
+var Cookies = __webpack_require__(6);
+var chinchilla_1 = __webpack_require__(13);
 window['Promise'] = Promise;
 window['Cookies'] = Cookies;
-var chinchilla_1 = __webpack_require__(12);
-window['chch'] = chinchilla_1.default.subject;
-window['chch'].new = chinchilla_1.default.new;
-window['chch'].context = chinchilla_1.default.context;
-window['chch'].config = chinchilla_1.default.config;
-window['chch'].contextUrl = chinchilla_1.default.contextUrl;
-window['chch'].unfurl = chinchilla_1.default.unfurl;
+window['chch'] = chinchilla_1.default;
 
 
 /***/ })

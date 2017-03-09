@@ -4,6 +4,7 @@ import { Config } from './config'
 import { Action } from './action'
 import { Extractor } from './extractor'
 import { Association } from './association'
+import { Cache } from './cache'
 
 export class Subject {
   subject: any // the object(s) we deal with
@@ -29,8 +30,7 @@ export class Subject {
   }
 
   constructor(objectsOrApp: any, model?: string) {
-    // unique id for this instance (for cache key purpose)
-    this.id = Math.random().toString(36).substr(2, 9)
+    this.id = Cache.generateKey('subject')
 
     // adds and initializes objects to this Subject
     if (isString(objectsOrApp)) {
@@ -39,6 +39,8 @@ export class Subject {
     else {
       isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp)
     }
+
+    Cache.add(this.id, this)
   }
 
   memberAction(name: string, inputParams?: any, options?: any): Promise<any> {
@@ -92,7 +94,7 @@ export class Subject {
   // chch('um', 'user').new(first_name: 'Peter')
   new(attrs = {}) {
     this.subject = merge(
-      { '@context' : this.contextUrl, '$subject': this },
+      { '@context' : this.contextUrl, '$subject': this.id },
       attrs
     )
 
@@ -115,10 +117,22 @@ export class Subject {
     return Extractor.extractMemberParams(this.context, this.objects)
   }
 
+  destroy() {
+    each(this.objects, (object) => {
+      for (var key in object) {
+        delete object[key];
+      }
+    });
+
+    for (var key in this) {
+      delete this[key];
+    }
+  }
+
   private addObjects(objects: any[]): void {
     this.subject = []
     each(objects, (obj) => {
-      obj.$subject = this
+      obj.$subject = this.id
       this.moveAssociationReferences(obj)
       this.initAssociationGetters(obj)
       this.subject.push(obj)
@@ -128,7 +142,7 @@ export class Subject {
   }
 
   private addObject(object: any): void {
-    object.$subject = this
+    object.$subject = this.id
     this.moveAssociationReferences(object)
     this.initAssociationGetters(object)
 
