@@ -12493,24 +12493,27 @@ var Cookies = (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        return (typeof window !== undefined) ?
-            Kekse.get.apply(null, args) : null;
+        if (typeof window === 'undefined')
+            return;
+        return Kekse.get.apply(null, args);
     };
     Cookies.set = function () {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        return (typeof window !== undefined) ?
-            Kekse.set.apply(null, args) : null;
+        if (typeof window === 'undefined')
+            return;
+        return Kekse.set.apply(null, args);
     };
     Cookies.expire = function () {
         var args = [];
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        return (typeof window !== undefined) ?
-            Kekse.expire.apply(null, args) : null;
+        if (typeof window === 'undefined')
+            return;
+        return Kekse.expire.apply(null, args);
     };
     return Cookies;
 }());

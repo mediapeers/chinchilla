@@ -4,16 +4,16 @@ import { Cache } from './cache'
 
 export class Cookies {
   static get(...args) {
-    return (typeof window !== undefined) ?
-      Kekse.get.apply(null, args) : null
+    if (typeof window === 'undefined') return
+    return Kekse.get.apply(null, args)
   }
   static set(...args) {
-    return (typeof window !== undefined) ?
-      Kekse.set.apply(null, args) : null
+    if (typeof window === 'undefined') return
+    return Kekse.set.apply(null, args)
   }
   static expire(...args) {
-    return (typeof window !== undefined) ?
-      Kekse.expire.apply(null, args) : null
+    if (typeof window === 'undefined') return
+    return Kekse.expire.apply(null, args)
   }
 }
 
