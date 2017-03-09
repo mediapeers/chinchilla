@@ -64,18 +64,3 @@ class Result {
     }
 }
 exports.Result = Result;
-class ErrorResult extends Error {
-    constructor(message) {
-        super(message);
-    }
-    error(result) {
-        this.headers = result.headers;
-        this.object = result.body;
-        this.statusCode = result.statusCode;
-        this.statusText = result.statusText;
-        this.url = result.req.url;
-        this.method = result.req.method;
-        return this;
-    }
-}
-exports.ErrorResult = ErrorResult;

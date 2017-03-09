@@ -14398,8 +14398,14 @@ var Action = (function () {
             }
             req.end(function (err, res) {
                 if (err) {
-                    var error = new result_1.ErrorResult(err.response ? err.response.text : 'No error details available.').error(res);
-                    error.stack = err.stack;
+                    var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
+                    error['headers'] = res.headers;
+                    error['object'] = res.body;
+                    error['statusCode'] = res.statusCode;
+                    error['statusText'] = res.statusText;
+                    error['url'] = res.req.url;
+                    error['method'] = res.req.method;
+                    error['stack'] = err.stack;
                     if (config_1.Config.errorInterceptor) {
                         // if error interceptor returns true, then abort (don't resolve nor reject)
                         if (config_1.Config.errorInterceptor(error))
@@ -21446,16 +21452,6 @@ exports.Association = Association;
 
 "use strict";
 
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(10);
 var Result = (function () {
@@ -21527,23 +21523,6 @@ var Result = (function () {
     return Result;
 }());
 exports.Result = Result;
-var ErrorResult = (function (_super) {
-    __extends(ErrorResult, _super);
-    function ErrorResult(message) {
-        return _super.call(this, message) || this;
-    }
-    ErrorResult.prototype.error = function (result) {
-        this.headers = result.headers;
-        this.object = result.body;
-        this.statusCode = result.statusCode;
-        this.statusText = result.statusText;
-        this.url = result.req.url;
-        this.method = result.req.method;
-        return this;
-    };
-    return ErrorResult;
-}(Error));
-exports.ErrorResult = ErrorResult;
 
 
 /***/ }),

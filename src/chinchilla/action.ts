@@ -1,8 +1,8 @@
-import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first } from 'lodash'
+import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get } from 'lodash'
 import * as request from 'superagent'
 import * as UriTemplate from 'uri-templates'
 import { Config } from './config'
-import { Result, ErrorResult } from './result'
+import { Result } from './result'
 import { Context, ContextAction } from './context'
 import { Extractor } from './extractor'
 
@@ -77,8 +77,14 @@ export class Action {
 
       req.end((err, res) => {
         if (err) {
-          var error = new ErrorResult(err.response ? err.response.text : 'No error details available.').error(res)
-          error.stack = err.stack
+          var error = new Error(get(res, 'body.description') || get(err, 'response.statusText') || 'No error details available')
+          error['headers']    = res.headers
+          error['object']     = res.body
+          error['statusCode'] = res.statusCode
+          error['statusText'] = res.statusText
+          error['url']        = res.req.url
+          error['method']     = res.req.method
+          error['stack']      = err.stack
 
           if (Config.errorInterceptor) {
             // if error interceptor returns true, then abort (don't resolve nor reject)

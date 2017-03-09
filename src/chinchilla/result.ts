@@ -71,27 +71,3 @@ export class Result {
     return first(this.objects)
   }
 }
-
-export class ErrorResult extends Error {
-  headers: any
-  object: any
-  stack: any
-  statusCode: number
-  statusText: string
-  url: string
-  method: string
-
-  constructor(message) {
-    super(message)
-  }
-
-  error(result) {
-    this.headers    = result.headers
-    this.object     = result.body
-    this.statusCode = result.statusCode
-    this.statusText = result.statusText
-    this.url        = result.req.url
-    this.method     = result.req.method
-    return this
-  }
-}

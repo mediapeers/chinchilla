@@ -58,8 +58,14 @@ class Action {
             }
             req.end((err, res) => {
                 if (err) {
-                    var error = new result_1.ErrorResult(err.response ? err.response.text : 'No error details available.').error(res);
-                    error.stack = err.stack;
+                    var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
+                    error['headers'] = res.headers;
+                    error['object'] = res.body;
+                    error['statusCode'] = res.statusCode;
+                    error['statusText'] = res.statusText;
+                    error['url'] = res.req.url;
+                    error['method'] = res.req.method;
+                    error['stack'] = err.stack;
                     if (config_1.Config.errorInterceptor) {
                         // if error interceptor returns true, then abort (don't resolve nor reject)
                         if (config_1.Config.errorInterceptor(error))

@@ -7,14 +7,3 @@ export declare class Result {
     success(result: any): void;
     readonly object: any;
 }
-export declare class ErrorResult extends Error {
-    headers: any;
-    object: any;
-    stack: any;
-    statusCode: number;
-    statusText: string;
-    url: string;
-    method: string;
-    constructor(message: any);
-    error(result: any): this;
-}
