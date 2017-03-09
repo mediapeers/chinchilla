@@ -1,6 +1,6 @@
 "use strict";
 const Kekse = require("cookies-js");
-const context_1 = require("./context");
+const cache_1 = require("./cache");
 class Cookies {
     static get(...args) {
         return (typeof window !== undefined) ?
@@ -17,8 +17,7 @@ class Cookies {
 }
 exports.Cookies = Cookies;
 class Config {
-    // timestamp to be appended to every request
-    // will be the same for a session lifetime
+    // 1 month
     static setEndpoint(name, url) {
         Config.endpoints[name] = url;
     }
@@ -39,20 +38,21 @@ class Config {
     }
     static setSessionId(id) {
         Config.setValue('sessionId', id);
+        cache_1.Cache.clear();
     }
     static getSessionId() {
         return Config.getValue('sessionId');
     }
     static clearSessionId() {
         Config.clearValue('sessionId');
-        context_1.Context.clearCache();
+        cache_1.Cache.clear();
     }
     static getValue(name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));
     }
     static setValue(name, value) {
         Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: 300 });
+        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
     }
     static clearValue(name) {
         Config[name] = undefined;
@@ -64,4 +64,5 @@ class Config {
 }
 Config.endpoints = {};
 Config.timestamp = Date.now() / 1000 | 0;
+Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
 exports.Config = Config;

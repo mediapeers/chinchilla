@@ -5,6 +5,7 @@ const config_1 = require("./config");
 const action_1 = require("./action");
 const extractor_1 = require("./extractor");
 const association_1 = require("./association");
+const cache_1 = require("./cache");
 class Subject {
     static detachFromSubject(objects) {
         var detach = function (object) {
@@ -21,8 +22,7 @@ class Subject {
         return objects;
     }
     constructor(objectsOrApp, model) {
-        // unique id for this instance (for cache key purpose)
-        this.id = Math.random().toString(36).substr(2, 9);
+        this.id = cache_1.Cache.generateKey('subject');
         // adds and initializes objects to this Subject
         if (lodash_1.isString(objectsOrApp)) {
             this.contextUrl = `${config_1.Config.endpoints[objectsOrApp]}/context/${model}`;
@@ -30,6 +30,7 @@ class Subject {
         else {
             lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
         }
+        cache_1.Cache.add(this.id, this);
     }
     memberAction(name, inputParams, options) {
         var promise;
@@ -72,7 +73,7 @@ class Subject {
     //
     // chch('um', 'user').new(first_name: 'Peter')
     new(attrs = {}) {
-        this.subject = lodash_1.merge({ '@context': this.contextUrl, '$subject': this }, attrs);
+        this.subject = lodash_1.merge({ '@context': this.contextUrl, '$subject': this.id }, attrs);
         return this;
     }
     get context() {
@@ -89,10 +90,20 @@ class Subject {
     get objectParams() {
         return extractor_1.Extractor.extractMemberParams(this.context, this.objects);
     }
+    destroy() {
+        lodash_1.each(this.objects, (object) => {
+            for (var key in object) {
+                delete object[key];
+            }
+        });
+        for (var key in this) {
+            delete this[key];
+        }
+    }
     addObjects(objects) {
         this.subject = [];
         lodash_1.each(objects, (obj) => {
-            obj.$subject = this;
+            obj.$subject = this.id;
             this.moveAssociationReferences(obj);
             this.initAssociationGetters(obj);
             this.subject.push(obj);
@@ -100,7 +111,7 @@ class Subject {
         this.contextUrl = this.object['@context'];
     }
     addObject(object) {
-        object.$subject = this;
+        object.$subject = this.id;
         this.moveAssociationReferences(object);
         this.initAssociationGetters(object);
         this.contextUrl = object['@context'];

@@ -1,6 +1,7 @@
 import { each, first, isEmpty } from 'lodash'
 import * as request from 'superagent'
 import { Config } from './config'
+import { Cache } from './cache'
 
 export class ContextAction {
   public resource: string
@@ -32,8 +33,6 @@ export interface ContextProperty {
 }
 
 export class Context {
-  static cache = {}
-
   ready: Promise<Context>
   data: any
   context: any
@@ -41,19 +40,17 @@ export class Context {
   properties: any
   constants: any
 
-  static clearCache(): void {
-    Context.cache = {}
-  }
-
   static get(contextUrl: string): Context {
-    var key = first(contextUrl.split('?'))
-    var cached
+    let key = first(contextUrl.split('?'))
+    let cached
 
-    if (cached = Context.cache[key]) {
+    if (cached = Cache.get(key)) {
       return cached
     }
     else {
-      return Context.cache[key] = new Context(contextUrl)
+      let context = new Context(contextUrl)
+      Cache.add(key, context)
+      return context
     }
   }
 
