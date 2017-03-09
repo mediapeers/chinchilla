@@ -12578,6 +12578,94 @@ exports.Config = Config;
 
 "use strict";
 
+var lodash_1 = __webpack_require__(0);
+var UriTemplate = __webpack_require__(11);
+var Extractor = (function () {
+    function Extractor() {
+    }
+    Extractor.extractMemberParams = function (context, obj) {
+        var action = context.memberAction('get');
+        return Extractor.extractParams(action, obj);
+    };
+    Extractor.extractCollectionParams = function (context, obj) {
+        var action = context.collectionAction('query');
+        return Extractor.extractParams(action, obj);
+    };
+    // expands given params to include variable mappings in addition
+    // for this input:
+    // { id: 4 }
+    // and this template:
+    // http//server/user/{user_id}
+    // with mapping
+    // { source: id, variable: user_id }
+    //
+    // the returned object would be:
+    // { id: 4, user_id: 4 }
+    Extractor.uriParams = function (action, params) {
+        if (params === void 0) { params = {}; }
+        var uriParams = lodash_1.clone(params);
+        lodash_1.each(action.mappings, function (mapping) {
+            if (!uriParams[mapping.variable])
+                uriParams[mapping.variable] = params[mapping.source];
+        });
+        return uriParams;
+    };
+    Extractor.extractParams = function (contextAction, obj) {
+        if (lodash_1.isEmpty(obj) || lodash_1.isEmpty(contextAction))
+            return {};
+        if (lodash_1.isArray(obj)) {
+            return Extractor.extractArrayValues(contextAction, obj);
+        }
+        else {
+            return Extractor.extractValues(contextAction, obj);
+        }
+    };
+    Extractor.extractValues = function (contextAction, object) {
+        var id = object && object['@id'];
+        if (!id)
+            return {};
+        var result = {};
+        var template = new UriTemplate(contextAction.template);
+        var values = template.fromUri(id);
+        if (lodash_1.isEmpty(values))
+            return {};
+        lodash_1.each(contextAction.mappings, function (mapping) {
+            var value = values[mapping.variable];
+            if (!value)
+                return;
+            result[mapping.source] = value;
+        });
+        return result;
+    };
+    Extractor.extractArrayValues = function (contextAction, objects) {
+        var values = lodash_1.map(objects, function (obj) {
+            return Extractor.extractValues(contextAction, obj);
+        });
+        values = lodash_1.compact(values);
+        var result = {};
+        lodash_1.each(contextAction.mappings, function (mapping) {
+            result[mapping.source] = [];
+            lodash_1.each(values, function (attrs) {
+                if (!attrs[mapping.source])
+                    return;
+                if (lodash_1.include(result[mapping.source], attrs[mapping.source]))
+                    return;
+                result[mapping.source].push(attrs[mapping.source]);
+            });
+        });
+        return result;
+    };
+    return Extractor;
+}());
+exports.Extractor = Extractor;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 var __extends = (this && this.__extends) || (function () {
     var extendStatics = Object.setPrototypeOf ||
         ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
@@ -12687,94 +12775,6 @@ var Context = (function () {
     return Context;
 }());
 exports.Context = Context;
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var lodash_1 = __webpack_require__(0);
-var UriTemplate = __webpack_require__(11);
-var Extractor = (function () {
-    function Extractor() {
-    }
-    Extractor.extractMemberParams = function (context, obj) {
-        var action = context.memberAction('get');
-        return Extractor.extractParams(action, obj);
-    };
-    Extractor.extractCollectionParams = function (context, obj) {
-        var action = context.collectionAction('query');
-        return Extractor.extractParams(action, obj);
-    };
-    // expands given params to include variable mappings in addition
-    // for this input:
-    // { id: 4 }
-    // and this template:
-    // http//server/user/{user_id}
-    // with mapping
-    // { source: id, variable: user_id }
-    //
-    // the returned object would be:
-    // { id: 4, user_id: 4 }
-    Extractor.uriParams = function (action, params) {
-        if (params === void 0) { params = {}; }
-        var uriParams = lodash_1.clone(params);
-        lodash_1.each(action.mappings, function (mapping) {
-            if (!uriParams[mapping.variable])
-                uriParams[mapping.variable] = params[mapping.source];
-        });
-        return uriParams;
-    };
-    Extractor.extractParams = function (contextAction, obj) {
-        if (lodash_1.isEmpty(obj) || lodash_1.isEmpty(contextAction))
-            return {};
-        if (lodash_1.isArray(obj)) {
-            return Extractor.extractArrayValues(contextAction, obj);
-        }
-        else {
-            return Extractor.extractValues(contextAction, obj);
-        }
-    };
-    Extractor.extractValues = function (contextAction, object) {
-        var id = object && object['@id'];
-        if (!id)
-            return {};
-        var result = {};
-        var template = new UriTemplate(contextAction.template);
-        var values = template.fromUri(id);
-        if (lodash_1.isEmpty(values))
-            return {};
-        lodash_1.each(contextAction.mappings, function (mapping) {
-            var value = values[mapping.variable];
-            if (!value)
-                return;
-            result[mapping.source] = value;
-        });
-        return result;
-    };
-    Extractor.extractArrayValues = function (contextAction, objects) {
-        var values = lodash_1.map(objects, function (obj) {
-            return Extractor.extractValues(contextAction, obj);
-        });
-        values = lodash_1.compact(values);
-        var result = {};
-        lodash_1.each(contextAction.mappings, function (mapping) {
-            result[mapping.source] = [];
-            lodash_1.each(values, function (attrs) {
-                if (!attrs[mapping.source])
-                    return;
-                if (lodash_1.include(result[mapping.source], attrs[mapping.source]))
-                    return;
-                result[mapping.source].push(attrs[mapping.source]);
-            });
-        });
-        return result;
-    };
-    return Extractor;
-}());
-exports.Extractor = Extractor;
 
 
 /***/ }),
@@ -14342,7 +14342,7 @@ var request = __webpack_require__(8);
 var UriTemplate = __webpack_require__(11);
 var config_1 = __webpack_require__(2);
 var result_1 = __webpack_require__(19);
-var extractor_1 = __webpack_require__(4);
+var extractor_1 = __webpack_require__(3);
 var Action = (function () {
     function Action(contextAction, params, body, options) {
         if (params === void 0) { params = {}; }
@@ -14502,10 +14502,10 @@ exports.Action = Action;
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var context_1 = __webpack_require__(3);
+var context_1 = __webpack_require__(4);
 var config_1 = __webpack_require__(2);
 var action_1 = __webpack_require__(9);
-var extractor_1 = __webpack_require__(4);
+var extractor_1 = __webpack_require__(3);
 var association_1 = __webpack_require__(18);
 var cache_1 = __webpack_require__(1);
 var Subject = (function () {
@@ -20762,8 +20762,9 @@ module.exports = ret;
 var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(10);
 var config_1 = __webpack_require__(2);
-var context_1 = __webpack_require__(3);
+var context_1 = __webpack_require__(4);
 var cache_1 = __webpack_require__(1);
+var extractor_1 = __webpack_require__(3);
 var chch = function (objectsOrApp, model) {
     // detach from existing Subject first before creating a new one..
     objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
@@ -20771,6 +20772,7 @@ var chch = function (objectsOrApp, model) {
 };
 chch['config'] = config_1.Config;
 chch['cache'] = cache_1.Cache;
+chch['extractor'] = extractor_1.Extractor;
 chch['new'] = function (app, model, attrs) {
     if (attrs === void 0) { attrs = {}; }
     return lodash_1.merge({ '@context': config_1.Config.endpoints[app] + "/context/" + model }, attrs);
@@ -21286,9 +21288,9 @@ exports.clearImmediate = clearImmediate;
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var context_1 = __webpack_require__(3);
+var context_1 = __webpack_require__(4);
 var action_1 = __webpack_require__(9);
-var extractor_1 = __webpack_require__(4);
+var extractor_1 = __webpack_require__(3);
 var Association = (function () {
     function Association(subject, name) {
         var _this = this;

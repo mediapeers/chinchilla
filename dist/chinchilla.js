@@ -4,6 +4,7 @@ const subject_1 = require("./chinchilla/subject");
 const config_1 = require("./chinchilla/config");
 const context_1 = require("./chinchilla/context");
 const cache_1 = require("./chinchilla/cache");
+const extractor_1 = require("./chinchilla/extractor");
 let chch = (objectsOrApp, model) => {
     // detach from existing Subject first before creating a new one..
     objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
@@ -11,6 +12,7 @@ let chch = (objectsOrApp, model) => {
 };
 chch['config'] = config_1.Config;
 chch['cache'] = cache_1.Cache;
+chch['extractor'] = extractor_1.Extractor;
 chch['new'] = (app, model, attrs = {}) => {
     return lodash_1.merge({ '@context': `${config_1.Config.endpoints[app]}/context/${model}` }, attrs);
 };

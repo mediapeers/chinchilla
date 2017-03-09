@@ -3,6 +3,7 @@ import { Subject } from './chinchilla/subject'
 import { Config } from './chinchilla/config'
 import { Context } from './chinchilla/context'
 import { Cache } from './chinchilla/cache'
+import { Extractor } from './chinchilla/extractor'
 
 let chch = (objectsOrApp, model?) => {
   // detach from existing Subject first before creating a new one..
@@ -11,8 +12,9 @@ let chch = (objectsOrApp, model?) => {
   return new Subject(objectsOrApp, model)
 }
 
-chch['config'] = Config
-chch['cache']  = Cache
+chch['config']    = Config
+chch['cache']     = Cache
+chch['extractor'] = Extractor
 
 chch['new'] = (app, model, attrs = {}) => {
   return merge(
