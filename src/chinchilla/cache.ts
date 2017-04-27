@@ -19,7 +19,10 @@ export class Cache {
   static add(key:string, obj:any):void {
     Cache.cache[key] = obj
     Cache.cacheOrder.push(key)
-    Cache.capCache()
+    // TODO: re-think cache strategy. people seem to hit the 250 limit already,
+    // also maybe caching should be done on a per session-id basis, since viscacha is calling
+    // chinchilla for different users
+    // Cache.capCache()
   }
 
   static get(key:string):any {
