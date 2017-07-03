@@ -50,7 +50,6 @@ export class Config {
 
   static setSessionId(id: string): void {
     Config.setValue('sessionId', id)
-    Cache.clear()
   }
 
   static getSessionId(): string {
@@ -59,7 +58,6 @@ export class Config {
 
   static clearSessionId(): void {
     Config.clearValue('sessionId')
-    Cache.clear()
   }
 
   static getValue(name): string {

@@ -1,17 +1,21 @@
 "use strict";
 const lodash_1 = require("lodash");
+const config_1 = require("./config");
 class Cache {
-    static generateKey(type) {
+    static generateRandomKey(type) {
         var hash = Math.random().toString(36).substr(2, 9);
         return `${type}-${hash}`;
+    }
+    static generateSessionKey(...parts) {
+        let session = config_1.Config.getSessionId() ? config_1.Config.getSessionId().substr(2, 9) : 'anonymous';
+        return parts.join('-').concat(`-${session}`);
     }
     static add(key, obj) {
         Cache.cache[key] = obj;
         Cache.cacheOrder.push(key);
-        // TODO: re-think cache strategy. people seem to hit the 250 limit already,
-        // also maybe caching should be done on a per session-id basis, since viscacha is calling
-        // chinchilla for different users
-        // Cache.capCache()
+        /* disabled for now
+        Cache.capCache()
+        */
     }
     static get(key) {
         return Cache.cache[key];

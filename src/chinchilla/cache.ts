@@ -11,18 +11,23 @@ export class Cache {
   private static cacheOrder = []
   private static cache      = {}
 
-  static generateKey(type:string):string {
+  static generateRandomKey(type:string):string {
     var hash = Math.random().toString(36).substr(2, 9)
     return `${type}-${hash}`
+  }
+
+  static generateSessionKey(...parts: string[]):string {
+    let session = Config.getSessionId() ? Config.getSessionId().substr(2, 9) : 'anonymous'
+    return parts.join('-').concat(`-${session}`)
   }
 
   static add(key:string, obj:any):void {
     Cache.cache[key] = obj
     Cache.cacheOrder.push(key)
-    // TODO: re-think cache strategy. people seem to hit the 250 limit already,
-    // also maybe caching should be done on a per session-id basis, since viscacha is calling
-    // chinchilla for different users
-    // Cache.capCache()
+
+    /* disabled for now
+    Cache.capCache()
+    */
   }
 
   static get(key:string):any {

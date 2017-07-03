@@ -12423,7 +12423,7 @@
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20)(module), __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(20)(module), __webpack_require__(7)))
 
 /***/ }),
 /* 1 */
@@ -12431,63 +12431,7 @@
 
 "use strict";
 
-var lodash_1 = __webpack_require__(0);
-var Cache = (function () {
-    function Cache() {
-    }
-    Cache.generateKey = function (type) {
-        var hash = Math.random().toString(36).substr(2, 9);
-        return type + "-" + hash;
-    };
-    Cache.add = function (key, obj) {
-        Cache.cache[key] = obj;
-        Cache.cacheOrder.push(key);
-        // TODO: re-think cache strategy. people seem to hit the 250 limit already,
-        // also maybe caching should be done on a per session-id basis, since viscacha is calling
-        // chinchilla for different users
-        // Cache.capCache()
-    };
-    Cache.get = function (key) {
-        return Cache.cache[key];
-    };
-    Cache.clear = function () {
-        Cache.cache = {};
-        Cache.cacheOrder = [];
-    };
-    Cache.capCache = function () {
-        var sliced = Cache.sliceCache(Cache.cacheOrder, Cache.cacheSize);
-        lodash_1.each(sliced.remove, function (key) {
-            if (lodash_1.isFunction(Cache.cache[key]['destroy']))
-                Cache.cache[key].destroy();
-            delete Cache.cache[key];
-        });
-        Cache.cacheOrder = sliced.remain;
-    };
-    Cache.sliceCache = function (arr, size) {
-        if (arr.length <= size)
-            return { remove: [], remain: arr };
-        var remain = arr.slice(size * -1);
-        return {
-            remain: remain,
-            remove: lodash_1.difference(arr, remain)
-        };
-    };
-    return Cache;
-}());
-Cache.cacheSize = 250;
-Cache.cacheOrder = [];
-Cache.cache = {};
-exports.Cache = Cache;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var Kekse = __webpack_require__(7);
-var cache_1 = __webpack_require__(1);
+var Kekse = __webpack_require__(8);
 var Cookies = (function () {
     function Cookies() {
     }
@@ -12544,14 +12488,12 @@ var Config = (function () {
     };
     Config.setSessionId = function (id) {
         Config.setValue('sessionId', id);
-        cache_1.Cache.clear();
     };
     Config.getSessionId = function () {
         return Config.getValue('sessionId');
     };
     Config.clearSessionId = function () {
         Config.clearValue('sessionId');
-        cache_1.Cache.clear();
     };
     Config.getValue = function (name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));
@@ -12576,7 +12518,7 @@ exports.Config = Config;
 
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -12664,943 +12606,7 @@ exports.Extractor = Extractor;
 
 
 /***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
-	if (true) {
-		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
-				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
-				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-	} else if (typeof module !== 'undefined' && module.exports){
-		module.exports = factory();
-	} else {
-		global.UriTemplate = factory();
-	}
-})(this, function () {
-	var uriTemplateGlobalModifiers = {
-		"+": true,
-		"#": true,
-		".": true,
-		"/": true,
-		";": true,
-		"?": true,
-		"&": true
-	};
-	var uriTemplateSuffices = {
-		"*": true
-	};
-
-	function notReallyPercentEncode(string) {
-		return encodeURI(string).replace(/%25[0-9][0-9]/g, function (doubleEncoded) {
-			return "%" + doubleEncoded.substring(3);
-		});
-	}
-
-	function uriTemplateSubstitution(spec) {
-		var modifier = "";
-		if (uriTemplateGlobalModifiers[spec.charAt(0)]) {
-			modifier = spec.charAt(0);
-			spec = spec.substring(1);
-		}
-		var separator = "";
-		var prefix = "";
-		var shouldEscape = true;
-		var showVariables = false;
-		var trimEmptyString = false;
-		if (modifier == '+') {
-			shouldEscape = false;
-		} else if (modifier == ".") {
-			prefix = ".";
-			separator = ".";
-		} else if (modifier == "/") {
-			prefix = "/";
-			separator = "/";
-		} else if (modifier == '#') {
-			prefix = "#";
-			shouldEscape = false;
-		} else if (modifier == ';') {
-			prefix = ";";
-			separator = ";",
-			showVariables = true;
-			trimEmptyString = true;
-		} else if (modifier == '?') {
-			prefix = "?";
-			separator = "&",
-			showVariables = true;
-		} else if (modifier == '&') {
-			prefix = "&";
-			separator = "&",
-			showVariables = true;
-		}
-
-		var varNames = [];
-		var varList = spec.split(",");
-		var varSpecs = [];
-		var varSpecMap = {};
-		for (var i = 0; i < varList.length; i++) {
-			var varName = varList[i];
-			var truncate = null;
-			if (varName.indexOf(":") != -1) {
-				var parts = varName.split(":");
-				varName = parts[0];
-				truncate = parseInt(parts[1]);
-			}
-			var suffices = {};
-			while (uriTemplateSuffices[varName.charAt(varName.length - 1)]) {
-				suffices[varName.charAt(varName.length - 1)] = true;
-				varName = varName.substring(0, varName.length - 1);
-			}
-			var varSpec = {
-				truncate: truncate,
-				name: varName,
-				suffices: suffices
-			};
-			varSpecs.push(varSpec);
-			varSpecMap[varName] = varSpec;
-			varNames.push(varName);
-		}
-		var subFunction = function (valueFunction) {
-			var result = "";
-			var startIndex = 0;
-			for (var i = 0; i < varSpecs.length; i++) {
-				var varSpec = varSpecs[i];
-				var value = valueFunction(varSpec.name);
-				if (value == null || (Array.isArray(value) && value.length == 0) || (typeof value == 'object' && Object.keys(value).length == 0)) {
-					startIndex++;
-					continue;
-				}
-				if (i == startIndex) {
-					result += prefix;
-				} else {
-					result += (separator || ",");
-				}
-				if (Array.isArray(value)) {
-					if (showVariables) {
-						result += varSpec.name + "=";
-					}
-					for (var j = 0; j < value.length; j++) {
-						if (j > 0) {
-							result += varSpec.suffices['*'] ? (separator || ",") : ",";
-							if (varSpec.suffices['*'] && showVariables) {
-								result += varSpec.name + "=";
-							}
-						}
-						result += shouldEscape ? encodeURIComponent(value[j]).replace(/!/g, "%21") : notReallyPercentEncode(value[j]);
-					}
-				} else if (typeof value == "object") {
-					if (showVariables && !varSpec.suffices['*']) {
-						result += varSpec.name + "=";
-					}
-					var first = true;
-					for (var key in value) {
-						if (!first) {
-							result += varSpec.suffices['*'] ? (separator || ",") : ",";
-						}
-						first = false;
-						result += shouldEscape ? encodeURIComponent(key).replace(/!/g, "%21") : notReallyPercentEncode(key);
-						result += varSpec.suffices['*'] ? '=' : ",";
-						result += shouldEscape ? encodeURIComponent(value[key]).replace(/!/g, "%21") : notReallyPercentEncode(value[key]);
-					}
-				} else {
-					if (showVariables) {
-						result += varSpec.name;
-						if (!trimEmptyString || value != "") {
-							result += "=";
-						}
-					}
-					if (varSpec.truncate != null) {
-						value = value.substring(0, varSpec.truncate);
-					}
-					result += shouldEscape ? encodeURIComponent(value).replace(/!/g, "%21"): notReallyPercentEncode(value);
-				}
-			}
-			return result;
-		};
-		var guessFunction = function (stringValue, resultObj) {
-			if (prefix) {
-				if (stringValue.substring(0, prefix.length) == prefix) {
-					stringValue = stringValue.substring(prefix.length);
-				} else {
-					return null;
-				}
-			}
-			if (varSpecs.length == 1 && varSpecs[0].suffices['*']) {
-				var varSpec = varSpecs[0];
-				var varName = varSpec.name;
-				var arrayValue = varSpec.suffices['*'] ? stringValue.split(separator || ",") : [stringValue];
-				var hasEquals = (shouldEscape && stringValue.indexOf('=') != -1);	// There's otherwise no way to distinguish between "{value*}" for arrays and objects
-				for (var i = 1; i < arrayValue.length; i++) {
-					var stringValue = arrayValue[i];
-					if (hasEquals && stringValue.indexOf('=') == -1) {
-						// Bit of a hack - if we're expecting "=" for key/value pairs, and values can't contain "=", then assume a value has been accidentally split
-						arrayValue[i - 1] += (separator || ",") + stringValue;
-						arrayValue.splice(i, 1);
-						i--;
-					}
-				}
-				for (var i = 0; i < arrayValue.length; i++) {
-					var stringValue = arrayValue[i];
-					if (shouldEscape && stringValue.indexOf('=') != -1) {
-						hasEquals = true;
-					}
-					var innerArrayValue = stringValue.split(",");
-					for (var j = 0; j < innerArrayValue.length; j++) {
-						if (shouldEscape) {
-							innerArrayValue[j] = decodeURIComponent(innerArrayValue[j]);
-						}
-					}
-					if (innerArrayValue.length == 1) {
-						arrayValue[i] = innerArrayValue[0];
-					} else {
-						arrayValue[i] = innerArrayValue;
-					}
-				}
-
-				if (showVariables || hasEquals) {
-					var objectValue = resultObj[varName] || {};
-					for (var j = 0; j < arrayValue.length; j++) {
-						var innerValue = stringValue;
-						if (showVariables && !innerValue) {
-							// The empty string isn't a valid variable, so if our value is zero-length we have nothing
-							continue;
-						}
-						if (typeof arrayValue[j] == "string") {
-							var stringValue = arrayValue[j];
-							var innerVarName = stringValue.split("=", 1)[0];
-							var stringValue = stringValue.substring(innerVarName.length + 1);
-							innerValue = stringValue;
-						} else {
-							var stringValue = arrayValue[j][0];
-							var innerVarName = stringValue.split("=", 1)[0];
-							var stringValue = stringValue.substring(innerVarName.length + 1);
-							arrayValue[j][0] = stringValue;
-							innerValue = arrayValue[j];
-						}
-						if (objectValue[innerVarName] !== undefined) {
-							if (Array.isArray(objectValue[innerVarName])) {
-								objectValue[innerVarName].push(innerValue);
-							} else {
-								objectValue[innerVarName] = [objectValue[innerVarName], innerValue];
-							}
-						} else {
-							objectValue[innerVarName] = innerValue;
-						}
-					}
-					if (Object.keys(objectValue).length == 1 && objectValue[varName] !== undefined) {
-						resultObj[varName] = objectValue[varName];
-					} else {
-						resultObj[varName] = objectValue;
-					}
-				} else {
-					if (resultObj[varName] !== undefined) {
-						if (Array.isArray(resultObj[varName])) {
-							resultObj[varName] = resultObj[varName].concat(arrayValue);
-						} else {
-							resultObj[varName] = [resultObj[varName]].concat(arrayValue);
-						}
-					} else {
-						if (arrayValue.length == 1 && !varSpec.suffices['*']) {
-							resultObj[varName] = arrayValue[0];
-						} else {
-							resultObj[varName] = arrayValue;
-						}
-					}
-				}
-			} else {
-				var arrayValue = (varSpecs.length == 1) ? [stringValue] : stringValue.split(separator || ",");
-				var specIndexMap = {};
-				for (var i = 0; i < arrayValue.length; i++) {
-					// Try from beginning
-					var firstStarred = 0;
-					for (; firstStarred < varSpecs.length - 1 && firstStarred < i; firstStarred++) {
-						if (varSpecs[firstStarred].suffices['*']) {
-							break;
-						}
-					}
-					if (firstStarred == i) {
-						// The first [i] of them have no "*" suffix
-						specIndexMap[i] = i;
-						continue;
-					} else {
-						// Try from the end
-						for (var lastStarred = varSpecs.length - 1; lastStarred > 0 && (varSpecs.length - lastStarred) < (arrayValue.length - i); lastStarred--) {
-							if (varSpecs[lastStarred].suffices['*']) {
-								break;
-							}
-						}
-						if ((varSpecs.length - lastStarred) == (arrayValue.length - i)) {
-							// The last [length - i] of them have no "*" suffix
-							specIndexMap[i] = lastStarred;
-							continue;
-						}
-					}
-					// Just give up and use the first one
-					specIndexMap[i] = firstStarred;
-				}
-				for (var i = 0; i < arrayValue.length; i++) {
-					var stringValue = arrayValue[i];
-					if (!stringValue && showVariables) {
-						// The empty string isn't a valid variable, so if our value is zero-length we have nothing
-						continue;
-					}
-					var innerArrayValue = stringValue.split(",");
-					var hasEquals = false;
-
-					if (showVariables) {
-						var stringValue = innerArrayValue[0]; // using innerArrayValue
-						var varName = stringValue.split("=", 1)[0];
-						var stringValue = stringValue.substring(varName.length + 1);
-						innerArrayValue[0] = stringValue;
-						var varSpec = varSpecMap[varName] || varSpecs[0];
-					} else {
-						var varSpec = varSpecs[specIndexMap[i]];
-						var varName = varSpec.name;
-					}
-
-					for (var j = 0; j < innerArrayValue.length; j++) {
-						if (shouldEscape) {
-							innerArrayValue[j] = decodeURIComponent(innerArrayValue[j]);
-						}
-					}
-
-					if ((showVariables || varSpec.suffices['*'])&& resultObj[varName] !== undefined) {
-						if (Array.isArray(resultObj[varName])) {
-							resultObj[varName] = resultObj[varName].concat(innerArrayValue);
-						} else {
-							resultObj[varName] = [resultObj[varName]].concat(innerArrayValue);
-						}
-					} else {
-						if (innerArrayValue.length == 1 && !varSpec.suffices['*']) {
-							resultObj[varName] = innerArrayValue[0];
-						} else {
-							resultObj[varName] = innerArrayValue;
-						}
-					}
-				}
-			}
-		};
-		subFunction.varNames = varNames;
-		return {
-			prefix: prefix,
-			substitution: subFunction,
-			unSubstitution: guessFunction
-		};
-	}
-
-	function UriTemplate(template) {
-		if (!(this instanceof UriTemplate)) {
-			return new UriTemplate(template);
-		}
-		var parts = template.split("{");
-		var textParts = [parts.shift()];
-		var prefixes = [];
-		var substitutions = [];
-		var unSubstitutions = [];
-		var varNames = [];
-		while (parts.length > 0) {
-			var part = parts.shift();
-			var spec = part.split("}")[0];
-			var remainder = part.substring(spec.length + 1);
-			var funcs = uriTemplateSubstitution(spec);
-			substitutions.push(funcs.substitution);
-			unSubstitutions.push(funcs.unSubstitution);
-			prefixes.push(funcs.prefix);
-			textParts.push(remainder);
-			varNames = varNames.concat(funcs.substitution.varNames);
-		}
-		this.fill = function (valueFunction) {
-			if (valueFunction && typeof valueFunction !== 'function') {
-				var value = valueFunction;
-				valueFunction = function (varName) {
-					return value[varName];
-				};
-			}
-
-			var result = textParts[0];
-			for (var i = 0; i < substitutions.length; i++) {
-				var substitution = substitutions[i];
-				result += substitution(valueFunction);
-				result += textParts[i + 1];
-			}
-			return result;
-		};
-		this.fromUri = function (substituted) {
-			var result = {};
-			for (var i = 0; i < textParts.length; i++) {
-				var part = textParts[i];
-				if (substituted.substring(0, part.length) !== part) {
-					return undefined;
-				}
-				substituted = substituted.substring(part.length);
-				if (i >= textParts.length - 1) {
-					if (substituted == "") {
-						break;
-					} else {
-						return undefined;
-					}
-				}
-				var nextPart = textParts[i + 1];
-				var offset = i;
-				while (true) {
-					if (offset == textParts.length - 2) {
-						var endPart = substituted.substring(substituted.length - nextPart.length);
-						if (endPart !== nextPart) {
-							return undefined;
-						}
-						var stringValue = substituted.substring(0, substituted.length - nextPart.length);
-						substituted = endPart;
-					} else if (nextPart) {
-						var nextPartPos = substituted.indexOf(nextPart);
-						var stringValue = substituted.substring(0, nextPartPos);
-						substituted = substituted.substring(nextPartPos);
-					} else if (prefixes[offset + 1]) {
-						var nextPartPos = substituted.indexOf(prefixes[offset + 1]);
-						if (nextPartPos === -1) nextPartPos = substituted.length;
-						var stringValue = substituted.substring(0, nextPartPos);
-						substituted = substituted.substring(nextPartPos);
-					} else if (textParts.length > offset + 2) {
-						// If the separator between this variable and the next is blank (with no prefix), continue onwards
-						offset++;
-						nextPart = textParts[offset + 1];
-						continue;
-					} else {
-						var stringValue = substituted;
-						substituted = "";
-					}
-					break;
-				}
-				unSubstitutions[i](stringValue, result);
-			}
-			return result;
-		}
-		this.varNames = varNames;
-		this.template = template;
-	}
-	UriTemplate.prototype = {
-		toString: function () {
-			return this.template;
-		},
-		fillFromObject: function (obj) {
-			return this.fill(obj);
-		}
-	};
-
-	return UriTemplate;
-});
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var lodash_1 = __webpack_require__(0);
-var request = __webpack_require__(9);
-var config_1 = __webpack_require__(2);
-var cache_1 = __webpack_require__(1);
-var ContextAction = (function () {
-    function ContextAction(values) {
-        if (values === void 0) { values = {}; }
-        var _this = this;
-        lodash_1.each(values, function (value, key) {
-            _this[key] = value;
-        });
-    }
-    return ContextAction;
-}());
-exports.ContextAction = ContextAction;
-var ContextMemberAction = (function (_super) {
-    __extends(ContextMemberAction, _super);
-    function ContextMemberAction() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return ContextMemberAction;
-}(ContextAction));
-exports.ContextMemberAction = ContextMemberAction;
-var ContextCollectionAction = (function (_super) {
-    __extends(ContextCollectionAction, _super);
-    function ContextCollectionAction() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return ContextCollectionAction;
-}(ContextAction));
-exports.ContextCollectionAction = ContextCollectionAction;
-var Context = (function () {
-    function Context(contextUrl) {
-        var _this = this;
-        this.ready = new Promise(function (resolve, reject) {
-            var req = request
-                .get(contextUrl)
-                .query({ t: config_1.Config.timestamp });
-            if (config_1.Config.getAffiliationId()) {
-                req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
-            }
-            if (config_1.Config.getSessionId()) {
-                req = req.set('Session-Id', config_1.Config.getSessionId());
-            }
-            req
-                .end(function (err, res) {
-                _this.data = res.body;
-                _this.context = res.body && res.body['@context'] || {};
-                _this.id = _this.context['@id'];
-                _this.properties = _this.context.properties || {};
-                _this.constants = _this.context.constants || {};
-                lodash_1.each(_this.properties, function (property, name) {
-                    property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
-                });
-                resolve(_this);
-            });
-        });
-    }
-    Context.get = function (contextUrl) {
-        var key = lodash_1.first(contextUrl.split('?'));
-        var cached;
-        if (cached = cache_1.Cache.get(key)) {
-            return cached;
-        }
-        else {
-            var context = new Context(contextUrl);
-            cache_1.Cache.add(key, context);
-            return context;
-        }
-    };
-    Context.prototype.property = function (name) {
-        return this.properties[name];
-    };
-    Context.prototype.constant = function (name) {
-        return this.constants[name];
-    };
-    Context.prototype.association = function (name) {
-        var property = this.property(name);
-        return property.isAssociation && property;
-    };
-    Context.prototype.memberAction = function (name) {
-        var action = this.context && this.context.member_actions && this.context.member_actions[name];
-        if (!action) {
-            console.log("requested non-existing member action " + name);
-            return;
-        }
-        return new ContextMemberAction(action);
-    };
-    Context.prototype.collectionAction = function (name) {
-        var action = this.context && this.context.collection_actions && this.context.collection_actions[name];
-        if (!action) {
-            console.log("requested non-existing collection action " + name);
-            return;
-        }
-        return new ContextCollectionAction(action);
-    };
-    return Context;
-}());
-exports.Context = Context;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_RESULT__;/*
- * Cookies.js - 1.2.3
- * https://github.com/ScottHamper/Cookies
- *
- * This is free and unencumbered software released into the public domain.
- */
-(function (global, undefined) {
-    'use strict';
-
-    var factory = function (window) {
-        if (typeof window.document !== 'object') {
-            throw new Error('Cookies.js requires a `window` with a `document` object');
-        }
-
-        var Cookies = function (key, value, options) {
-            return arguments.length === 1 ?
-                Cookies.get(key) : Cookies.set(key, value, options);
-        };
-
-        // Allows for setter injection in unit tests
-        Cookies._document = window.document;
-
-        // Used to ensure cookie keys do not collide with
-        // built-in `Object` properties
-        Cookies._cacheKeyPrefix = 'cookey.'; // Hurr hurr, :)
-        
-        Cookies._maxExpireDate = new Date('Fri, 31 Dec 9999 23:59:59 UTC');
-
-        Cookies.defaults = {
-            path: '/',
-            secure: false
-        };
-
-        Cookies.get = function (key) {
-            if (Cookies._cachedDocumentCookie !== Cookies._document.cookie) {
-                Cookies._renewCache();
-            }
-            
-            var value = Cookies._cache[Cookies._cacheKeyPrefix + key];
-
-            return value === undefined ? undefined : decodeURIComponent(value);
-        };
-
-        Cookies.set = function (key, value, options) {
-            options = Cookies._getExtendedOptions(options);
-            options.expires = Cookies._getExpiresDate(value === undefined ? -1 : options.expires);
-
-            Cookies._document.cookie = Cookies._generateCookieString(key, value, options);
-
-            return Cookies;
-        };
-
-        Cookies.expire = function (key, options) {
-            return Cookies.set(key, undefined, options);
-        };
-
-        Cookies._getExtendedOptions = function (options) {
-            return {
-                path: options && options.path || Cookies.defaults.path,
-                domain: options && options.domain || Cookies.defaults.domain,
-                expires: options && options.expires || Cookies.defaults.expires,
-                secure: options && options.secure !== undefined ?  options.secure : Cookies.defaults.secure
-            };
-        };
-
-        Cookies._isValidDate = function (date) {
-            return Object.prototype.toString.call(date) === '[object Date]' && !isNaN(date.getTime());
-        };
-
-        Cookies._getExpiresDate = function (expires, now) {
-            now = now || new Date();
-
-            if (typeof expires === 'number') {
-                expires = expires === Infinity ?
-                    Cookies._maxExpireDate : new Date(now.getTime() + expires * 1000);
-            } else if (typeof expires === 'string') {
-                expires = new Date(expires);
-            }
-
-            if (expires && !Cookies._isValidDate(expires)) {
-                throw new Error('`expires` parameter cannot be converted to a valid Date instance');
-            }
-
-            return expires;
-        };
-
-        Cookies._generateCookieString = function (key, value, options) {
-            key = key.replace(/[^#$&+\^`|]/g, encodeURIComponent);
-            key = key.replace(/\(/g, '%28').replace(/\)/g, '%29');
-            value = (value + '').replace(/[^!#$&-+\--:<-\[\]-~]/g, encodeURIComponent);
-            options = options || {};
-
-            var cookieString = key + '=' + value;
-            cookieString += options.path ? ';path=' + options.path : '';
-            cookieString += options.domain ? ';domain=' + options.domain : '';
-            cookieString += options.expires ? ';expires=' + options.expires.toUTCString() : '';
-            cookieString += options.secure ? ';secure' : '';
-
-            return cookieString;
-        };
-
-        Cookies._getCacheFromString = function (documentCookie) {
-            var cookieCache = {};
-            var cookiesArray = documentCookie ? documentCookie.split('; ') : [];
-
-            for (var i = 0; i < cookiesArray.length; i++) {
-                var cookieKvp = Cookies._getKeyValuePairFromCookieString(cookiesArray[i]);
-
-                if (cookieCache[Cookies._cacheKeyPrefix + cookieKvp.key] === undefined) {
-                    cookieCache[Cookies._cacheKeyPrefix + cookieKvp.key] = cookieKvp.value;
-                }
-            }
-
-            return cookieCache;
-        };
-
-        Cookies._getKeyValuePairFromCookieString = function (cookieString) {
-            // "=" is a valid character in a cookie value according to RFC6265, so cannot `split('=')`
-            var separatorIndex = cookieString.indexOf('=');
-
-            // IE omits the "=" when the cookie value is an empty string
-            separatorIndex = separatorIndex < 0 ? cookieString.length : separatorIndex;
-
-            var key = cookieString.substr(0, separatorIndex);
-            var decodedKey;
-            try {
-                decodedKey = decodeURIComponent(key);
-            } catch (e) {
-                if (console && typeof console.error === 'function') {
-                    console.error('Could not decode cookie with key "' + key + '"', e);
-                }
-            }
-            
-            return {
-                key: decodedKey,
-                value: cookieString.substr(separatorIndex + 1) // Defer decoding value until accessed
-            };
-        };
-
-        Cookies._renewCache = function () {
-            Cookies._cache = Cookies._getCacheFromString(Cookies._document.cookie);
-            Cookies._cachedDocumentCookie = Cookies._document.cookie;
-        };
-
-        Cookies._areEnabled = function () {
-            var testKey = 'cookies.js';
-            var areEnabled = Cookies.set(testKey, 1).get(testKey) === '1';
-            Cookies.expire(testKey);
-            return areEnabled;
-        };
-
-        Cookies.enabled = Cookies._areEnabled();
-
-        return Cookies;
-    };
-    var cookiesExport = (global && typeof global.document === 'object') ? factory(global) : factory;
-
-    // AMD support
-    if (true) {
-        !(__WEBPACK_AMD_DEFINE_RESULT__ = function () { return cookiesExport; }.call(exports, __webpack_require__, exports, module),
-				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-    // CommonJS/Node.js support
-    } else if (typeof exports === 'object') {
-        // Support Node.js specific `module.exports` (which can be a function)
-        if (typeof module === 'object' && typeof module.exports === 'object') {
-            exports = module.exports = cookiesExport;
-        }
-        // But always support CommonJS module 1.1.1 spec (`exports` cannot be a function)
-        exports.Cookies = cookiesExport;
-    } else {
-        global.Cookies = cookiesExport;
-    }
-})(typeof window === 'undefined' ? this : window);
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports) {
-
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-
-/***/ }),
-/* 9 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -14763,17 +13769,1016 @@ module.exports = request;
 
 
 /***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
+	if (true) {
+		!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
+				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+	} else if (typeof module !== 'undefined' && module.exports){
+		module.exports = factory();
+	} else {
+		global.UriTemplate = factory();
+	}
+})(this, function () {
+	var uriTemplateGlobalModifiers = {
+		"+": true,
+		"#": true,
+		".": true,
+		"/": true,
+		";": true,
+		"?": true,
+		"&": true
+	};
+	var uriTemplateSuffices = {
+		"*": true
+	};
+
+	function notReallyPercentEncode(string) {
+		return encodeURI(string).replace(/%25[0-9][0-9]/g, function (doubleEncoded) {
+			return "%" + doubleEncoded.substring(3);
+		});
+	}
+
+	function uriTemplateSubstitution(spec) {
+		var modifier = "";
+		if (uriTemplateGlobalModifiers[spec.charAt(0)]) {
+			modifier = spec.charAt(0);
+			spec = spec.substring(1);
+		}
+		var separator = "";
+		var prefix = "";
+		var shouldEscape = true;
+		var showVariables = false;
+		var trimEmptyString = false;
+		if (modifier == '+') {
+			shouldEscape = false;
+		} else if (modifier == ".") {
+			prefix = ".";
+			separator = ".";
+		} else if (modifier == "/") {
+			prefix = "/";
+			separator = "/";
+		} else if (modifier == '#') {
+			prefix = "#";
+			shouldEscape = false;
+		} else if (modifier == ';') {
+			prefix = ";";
+			separator = ";",
+			showVariables = true;
+			trimEmptyString = true;
+		} else if (modifier == '?') {
+			prefix = "?";
+			separator = "&",
+			showVariables = true;
+		} else if (modifier == '&') {
+			prefix = "&";
+			separator = "&",
+			showVariables = true;
+		}
+
+		var varNames = [];
+		var varList = spec.split(",");
+		var varSpecs = [];
+		var varSpecMap = {};
+		for (var i = 0; i < varList.length; i++) {
+			var varName = varList[i];
+			var truncate = null;
+			if (varName.indexOf(":") != -1) {
+				var parts = varName.split(":");
+				varName = parts[0];
+				truncate = parseInt(parts[1]);
+			}
+			var suffices = {};
+			while (uriTemplateSuffices[varName.charAt(varName.length - 1)]) {
+				suffices[varName.charAt(varName.length - 1)] = true;
+				varName = varName.substring(0, varName.length - 1);
+			}
+			var varSpec = {
+				truncate: truncate,
+				name: varName,
+				suffices: suffices
+			};
+			varSpecs.push(varSpec);
+			varSpecMap[varName] = varSpec;
+			varNames.push(varName);
+		}
+		var subFunction = function (valueFunction) {
+			var result = "";
+			var startIndex = 0;
+			for (var i = 0; i < varSpecs.length; i++) {
+				var varSpec = varSpecs[i];
+				var value = valueFunction(varSpec.name);
+				if (value == null || (Array.isArray(value) && value.length == 0) || (typeof value == 'object' && Object.keys(value).length == 0)) {
+					startIndex++;
+					continue;
+				}
+				if (i == startIndex) {
+					result += prefix;
+				} else {
+					result += (separator || ",");
+				}
+				if (Array.isArray(value)) {
+					if (showVariables) {
+						result += varSpec.name + "=";
+					}
+					for (var j = 0; j < value.length; j++) {
+						if (j > 0) {
+							result += varSpec.suffices['*'] ? (separator || ",") : ",";
+							if (varSpec.suffices['*'] && showVariables) {
+								result += varSpec.name + "=";
+							}
+						}
+						result += shouldEscape ? encodeURIComponent(value[j]).replace(/!/g, "%21") : notReallyPercentEncode(value[j]);
+					}
+				} else if (typeof value == "object") {
+					if (showVariables && !varSpec.suffices['*']) {
+						result += varSpec.name + "=";
+					}
+					var first = true;
+					for (var key in value) {
+						if (!first) {
+							result += varSpec.suffices['*'] ? (separator || ",") : ",";
+						}
+						first = false;
+						result += shouldEscape ? encodeURIComponent(key).replace(/!/g, "%21") : notReallyPercentEncode(key);
+						result += varSpec.suffices['*'] ? '=' : ",";
+						result += shouldEscape ? encodeURIComponent(value[key]).replace(/!/g, "%21") : notReallyPercentEncode(value[key]);
+					}
+				} else {
+					if (showVariables) {
+						result += varSpec.name;
+						if (!trimEmptyString || value != "") {
+							result += "=";
+						}
+					}
+					if (varSpec.truncate != null) {
+						value = value.substring(0, varSpec.truncate);
+					}
+					result += shouldEscape ? encodeURIComponent(value).replace(/!/g, "%21"): notReallyPercentEncode(value);
+				}
+			}
+			return result;
+		};
+		var guessFunction = function (stringValue, resultObj) {
+			if (prefix) {
+				if (stringValue.substring(0, prefix.length) == prefix) {
+					stringValue = stringValue.substring(prefix.length);
+				} else {
+					return null;
+				}
+			}
+			if (varSpecs.length == 1 && varSpecs[0].suffices['*']) {
+				var varSpec = varSpecs[0];
+				var varName = varSpec.name;
+				var arrayValue = varSpec.suffices['*'] ? stringValue.split(separator || ",") : [stringValue];
+				var hasEquals = (shouldEscape && stringValue.indexOf('=') != -1);	// There's otherwise no way to distinguish between "{value*}" for arrays and objects
+				for (var i = 1; i < arrayValue.length; i++) {
+					var stringValue = arrayValue[i];
+					if (hasEquals && stringValue.indexOf('=') == -1) {
+						// Bit of a hack - if we're expecting "=" for key/value pairs, and values can't contain "=", then assume a value has been accidentally split
+						arrayValue[i - 1] += (separator || ",") + stringValue;
+						arrayValue.splice(i, 1);
+						i--;
+					}
+				}
+				for (var i = 0; i < arrayValue.length; i++) {
+					var stringValue = arrayValue[i];
+					if (shouldEscape && stringValue.indexOf('=') != -1) {
+						hasEquals = true;
+					}
+					var innerArrayValue = stringValue.split(",");
+					for (var j = 0; j < innerArrayValue.length; j++) {
+						if (shouldEscape) {
+							innerArrayValue[j] = decodeURIComponent(innerArrayValue[j]);
+						}
+					}
+					if (innerArrayValue.length == 1) {
+						arrayValue[i] = innerArrayValue[0];
+					} else {
+						arrayValue[i] = innerArrayValue;
+					}
+				}
+
+				if (showVariables || hasEquals) {
+					var objectValue = resultObj[varName] || {};
+					for (var j = 0; j < arrayValue.length; j++) {
+						var innerValue = stringValue;
+						if (showVariables && !innerValue) {
+							// The empty string isn't a valid variable, so if our value is zero-length we have nothing
+							continue;
+						}
+						if (typeof arrayValue[j] == "string") {
+							var stringValue = arrayValue[j];
+							var innerVarName = stringValue.split("=", 1)[0];
+							var stringValue = stringValue.substring(innerVarName.length + 1);
+							innerValue = stringValue;
+						} else {
+							var stringValue = arrayValue[j][0];
+							var innerVarName = stringValue.split("=", 1)[0];
+							var stringValue = stringValue.substring(innerVarName.length + 1);
+							arrayValue[j][0] = stringValue;
+							innerValue = arrayValue[j];
+						}
+						if (objectValue[innerVarName] !== undefined) {
+							if (Array.isArray(objectValue[innerVarName])) {
+								objectValue[innerVarName].push(innerValue);
+							} else {
+								objectValue[innerVarName] = [objectValue[innerVarName], innerValue];
+							}
+						} else {
+							objectValue[innerVarName] = innerValue;
+						}
+					}
+					if (Object.keys(objectValue).length == 1 && objectValue[varName] !== undefined) {
+						resultObj[varName] = objectValue[varName];
+					} else {
+						resultObj[varName] = objectValue;
+					}
+				} else {
+					if (resultObj[varName] !== undefined) {
+						if (Array.isArray(resultObj[varName])) {
+							resultObj[varName] = resultObj[varName].concat(arrayValue);
+						} else {
+							resultObj[varName] = [resultObj[varName]].concat(arrayValue);
+						}
+					} else {
+						if (arrayValue.length == 1 && !varSpec.suffices['*']) {
+							resultObj[varName] = arrayValue[0];
+						} else {
+							resultObj[varName] = arrayValue;
+						}
+					}
+				}
+			} else {
+				var arrayValue = (varSpecs.length == 1) ? [stringValue] : stringValue.split(separator || ",");
+				var specIndexMap = {};
+				for (var i = 0; i < arrayValue.length; i++) {
+					// Try from beginning
+					var firstStarred = 0;
+					for (; firstStarred < varSpecs.length - 1 && firstStarred < i; firstStarred++) {
+						if (varSpecs[firstStarred].suffices['*']) {
+							break;
+						}
+					}
+					if (firstStarred == i) {
+						// The first [i] of them have no "*" suffix
+						specIndexMap[i] = i;
+						continue;
+					} else {
+						// Try from the end
+						for (var lastStarred = varSpecs.length - 1; lastStarred > 0 && (varSpecs.length - lastStarred) < (arrayValue.length - i); lastStarred--) {
+							if (varSpecs[lastStarred].suffices['*']) {
+								break;
+							}
+						}
+						if ((varSpecs.length - lastStarred) == (arrayValue.length - i)) {
+							// The last [length - i] of them have no "*" suffix
+							specIndexMap[i] = lastStarred;
+							continue;
+						}
+					}
+					// Just give up and use the first one
+					specIndexMap[i] = firstStarred;
+				}
+				for (var i = 0; i < arrayValue.length; i++) {
+					var stringValue = arrayValue[i];
+					if (!stringValue && showVariables) {
+						// The empty string isn't a valid variable, so if our value is zero-length we have nothing
+						continue;
+					}
+					var innerArrayValue = stringValue.split(",");
+					var hasEquals = false;
+
+					if (showVariables) {
+						var stringValue = innerArrayValue[0]; // using innerArrayValue
+						var varName = stringValue.split("=", 1)[0];
+						var stringValue = stringValue.substring(varName.length + 1);
+						innerArrayValue[0] = stringValue;
+						var varSpec = varSpecMap[varName] || varSpecs[0];
+					} else {
+						var varSpec = varSpecs[specIndexMap[i]];
+						var varName = varSpec.name;
+					}
+
+					for (var j = 0; j < innerArrayValue.length; j++) {
+						if (shouldEscape) {
+							innerArrayValue[j] = decodeURIComponent(innerArrayValue[j]);
+						}
+					}
+
+					if ((showVariables || varSpec.suffices['*'])&& resultObj[varName] !== undefined) {
+						if (Array.isArray(resultObj[varName])) {
+							resultObj[varName] = resultObj[varName].concat(innerArrayValue);
+						} else {
+							resultObj[varName] = [resultObj[varName]].concat(innerArrayValue);
+						}
+					} else {
+						if (innerArrayValue.length == 1 && !varSpec.suffices['*']) {
+							resultObj[varName] = innerArrayValue[0];
+						} else {
+							resultObj[varName] = innerArrayValue;
+						}
+					}
+				}
+			}
+		};
+		subFunction.varNames = varNames;
+		return {
+			prefix: prefix,
+			substitution: subFunction,
+			unSubstitution: guessFunction
+		};
+	}
+
+	function UriTemplate(template) {
+		if (!(this instanceof UriTemplate)) {
+			return new UriTemplate(template);
+		}
+		var parts = template.split("{");
+		var textParts = [parts.shift()];
+		var prefixes = [];
+		var substitutions = [];
+		var unSubstitutions = [];
+		var varNames = [];
+		while (parts.length > 0) {
+			var part = parts.shift();
+			var spec = part.split("}")[0];
+			var remainder = part.substring(spec.length + 1);
+			var funcs = uriTemplateSubstitution(spec);
+			substitutions.push(funcs.substitution);
+			unSubstitutions.push(funcs.unSubstitution);
+			prefixes.push(funcs.prefix);
+			textParts.push(remainder);
+			varNames = varNames.concat(funcs.substitution.varNames);
+		}
+		this.fill = function (valueFunction) {
+			if (valueFunction && typeof valueFunction !== 'function') {
+				var value = valueFunction;
+				valueFunction = function (varName) {
+					return value[varName];
+				};
+			}
+
+			var result = textParts[0];
+			for (var i = 0; i < substitutions.length; i++) {
+				var substitution = substitutions[i];
+				result += substitution(valueFunction);
+				result += textParts[i + 1];
+			}
+			return result;
+		};
+		this.fromUri = function (substituted) {
+			var result = {};
+			for (var i = 0; i < textParts.length; i++) {
+				var part = textParts[i];
+				if (substituted.substring(0, part.length) !== part) {
+					return undefined;
+				}
+				substituted = substituted.substring(part.length);
+				if (i >= textParts.length - 1) {
+					if (substituted == "") {
+						break;
+					} else {
+						return undefined;
+					}
+				}
+				var nextPart = textParts[i + 1];
+				var offset = i;
+				while (true) {
+					if (offset == textParts.length - 2) {
+						var endPart = substituted.substring(substituted.length - nextPart.length);
+						if (endPart !== nextPart) {
+							return undefined;
+						}
+						var stringValue = substituted.substring(0, substituted.length - nextPart.length);
+						substituted = endPart;
+					} else if (nextPart) {
+						var nextPartPos = substituted.indexOf(nextPart);
+						var stringValue = substituted.substring(0, nextPartPos);
+						substituted = substituted.substring(nextPartPos);
+					} else if (prefixes[offset + 1]) {
+						var nextPartPos = substituted.indexOf(prefixes[offset + 1]);
+						if (nextPartPos === -1) nextPartPos = substituted.length;
+						var stringValue = substituted.substring(0, nextPartPos);
+						substituted = substituted.substring(nextPartPos);
+					} else if (textParts.length > offset + 2) {
+						// If the separator between this variable and the next is blank (with no prefix), continue onwards
+						offset++;
+						nextPart = textParts[offset + 1];
+						continue;
+					} else {
+						var stringValue = substituted;
+						substituted = "";
+					}
+					break;
+				}
+				unSubstitutions[i](stringValue, result);
+			}
+			return result;
+		}
+		this.varNames = varNames;
+		this.template = template;
+	}
+	UriTemplate.prototype = {
+		toString: function () {
+			return this.template;
+		},
+		fillFromObject: function (obj) {
+			return this.fill(obj);
+		}
+	};
+
+	return UriTemplate;
+});
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var lodash_1 = __webpack_require__(0);
+var config_1 = __webpack_require__(1);
+var Cache = (function () {
+    function Cache() {
+    }
+    Cache.generateRandomKey = function (type) {
+        var hash = Math.random().toString(36).substr(2, 9);
+        return type + "-" + hash;
+    };
+    Cache.generateSessionKey = function () {
+        var parts = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            parts[_i] = arguments[_i];
+        }
+        var session = config_1.Config.getSessionId() ? config_1.Config.getSessionId().substr(2, 9) : 'anonymous';
+        return parts.join('-').concat("-" + session);
+    };
+    Cache.add = function (key, obj) {
+        Cache.cache[key] = obj;
+        Cache.cacheOrder.push(key);
+        /* disabled for now
+        Cache.capCache()
+        */
+    };
+    Cache.get = function (key) {
+        return Cache.cache[key];
+    };
+    Cache.clear = function () {
+        Cache.cache = {};
+        Cache.cacheOrder = [];
+    };
+    Cache.capCache = function () {
+        var sliced = Cache.sliceCache(Cache.cacheOrder, Cache.cacheSize);
+        lodash_1.each(sliced.remove, function (key) {
+            if (lodash_1.isFunction(Cache.cache[key]['destroy']))
+                Cache.cache[key].destroy();
+            delete Cache.cache[key];
+        });
+        Cache.cacheOrder = sliced.remain;
+    };
+    Cache.sliceCache = function (arr, size) {
+        if (arr.length <= size)
+            return { remove: [], remain: arr };
+        var remain = arr.slice(size * -1);
+        return {
+            remain: remain,
+            remove: lodash_1.difference(arr, remain)
+        };
+    };
+    return Cache;
+}());
+Cache.cacheSize = 250;
+Cache.cacheOrder = [];
+Cache.cache = {};
+exports.Cache = Cache;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+var lodash_1 = __webpack_require__(0);
+var request = __webpack_require__(3);
+var config_1 = __webpack_require__(1);
+var cache_1 = __webpack_require__(5);
+var ContextAction = (function () {
+    function ContextAction(values) {
+        if (values === void 0) { values = {}; }
+        var _this = this;
+        lodash_1.each(values, function (value, key) {
+            _this[key] = value;
+        });
+    }
+    return ContextAction;
+}());
+exports.ContextAction = ContextAction;
+var ContextMemberAction = (function (_super) {
+    __extends(ContextMemberAction, _super);
+    function ContextMemberAction() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return ContextMemberAction;
+}(ContextAction));
+exports.ContextMemberAction = ContextMemberAction;
+var ContextCollectionAction = (function (_super) {
+    __extends(ContextCollectionAction, _super);
+    function ContextCollectionAction() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    return ContextCollectionAction;
+}(ContextAction));
+exports.ContextCollectionAction = ContextCollectionAction;
+var Context = (function () {
+    function Context(contextUrl) {
+        var _this = this;
+        this.ready = new Promise(function (resolve, reject) {
+            var req = request
+                .get(contextUrl)
+                .query({ t: config_1.Config.timestamp });
+            if (config_1.Config.getAffiliationId()) {
+                req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+            }
+            if (config_1.Config.getSessionId()) {
+                req = req.set('Session-Id', config_1.Config.getSessionId());
+            }
+            req
+                .end(function (err, res) {
+                _this.data = res.body;
+                _this.context = res.body && res.body['@context'] || {};
+                _this.id = _this.context['@id'];
+                _this.properties = _this.context.properties || {};
+                _this.constants = _this.context.constants || {};
+                lodash_1.each(_this.properties, function (property, name) {
+                    property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
+                });
+                resolve(_this);
+            });
+        });
+    }
+    Context.get = function (contextUrl) {
+        var key = cache_1.Cache.generateSessionKey(lodash_1.first(contextUrl.split('?')));
+        var cached;
+        if (cached = cache_1.Cache.get(key)) {
+            return cached;
+        }
+        else {
+            var context = new Context(contextUrl);
+            cache_1.Cache.add(key, context);
+            return context;
+        }
+    };
+    Context.prototype.property = function (name) {
+        return this.properties[name];
+    };
+    Context.prototype.constant = function (name) {
+        return this.constants[name];
+    };
+    Context.prototype.association = function (name) {
+        var property = this.property(name);
+        return property.isAssociation && property;
+    };
+    Context.prototype.memberAction = function (name) {
+        var action = this.context && this.context.member_actions && this.context.member_actions[name];
+        if (!action) {
+            console.log("requested non-existing member action " + name);
+            return;
+        }
+        return new ContextMemberAction(action);
+    };
+    Context.prototype.collectionAction = function (name) {
+        var action = this.context && this.context.collection_actions && this.context.collection_actions[name];
+        if (!action) {
+            console.log("requested non-existing collection action " + name);
+            return;
+        }
+        return new ContextCollectionAction(action);
+    };
+    return Context;
+}());
+exports.Context = Context;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+var __WEBPACK_AMD_DEFINE_RESULT__;/*
+ * Cookies.js - 1.2.3
+ * https://github.com/ScottHamper/Cookies
+ *
+ * This is free and unencumbered software released into the public domain.
+ */
+(function (global, undefined) {
+    'use strict';
+
+    var factory = function (window) {
+        if (typeof window.document !== 'object') {
+            throw new Error('Cookies.js requires a `window` with a `document` object');
+        }
+
+        var Cookies = function (key, value, options) {
+            return arguments.length === 1 ?
+                Cookies.get(key) : Cookies.set(key, value, options);
+        };
+
+        // Allows for setter injection in unit tests
+        Cookies._document = window.document;
+
+        // Used to ensure cookie keys do not collide with
+        // built-in `Object` properties
+        Cookies._cacheKeyPrefix = 'cookey.'; // Hurr hurr, :)
+        
+        Cookies._maxExpireDate = new Date('Fri, 31 Dec 9999 23:59:59 UTC');
+
+        Cookies.defaults = {
+            path: '/',
+            secure: false
+        };
+
+        Cookies.get = function (key) {
+            if (Cookies._cachedDocumentCookie !== Cookies._document.cookie) {
+                Cookies._renewCache();
+            }
+            
+            var value = Cookies._cache[Cookies._cacheKeyPrefix + key];
+
+            return value === undefined ? undefined : decodeURIComponent(value);
+        };
+
+        Cookies.set = function (key, value, options) {
+            options = Cookies._getExtendedOptions(options);
+            options.expires = Cookies._getExpiresDate(value === undefined ? -1 : options.expires);
+
+            Cookies._document.cookie = Cookies._generateCookieString(key, value, options);
+
+            return Cookies;
+        };
+
+        Cookies.expire = function (key, options) {
+            return Cookies.set(key, undefined, options);
+        };
+
+        Cookies._getExtendedOptions = function (options) {
+            return {
+                path: options && options.path || Cookies.defaults.path,
+                domain: options && options.domain || Cookies.defaults.domain,
+                expires: options && options.expires || Cookies.defaults.expires,
+                secure: options && options.secure !== undefined ?  options.secure : Cookies.defaults.secure
+            };
+        };
+
+        Cookies._isValidDate = function (date) {
+            return Object.prototype.toString.call(date) === '[object Date]' && !isNaN(date.getTime());
+        };
+
+        Cookies._getExpiresDate = function (expires, now) {
+            now = now || new Date();
+
+            if (typeof expires === 'number') {
+                expires = expires === Infinity ?
+                    Cookies._maxExpireDate : new Date(now.getTime() + expires * 1000);
+            } else if (typeof expires === 'string') {
+                expires = new Date(expires);
+            }
+
+            if (expires && !Cookies._isValidDate(expires)) {
+                throw new Error('`expires` parameter cannot be converted to a valid Date instance');
+            }
+
+            return expires;
+        };
+
+        Cookies._generateCookieString = function (key, value, options) {
+            key = key.replace(/[^#$&+\^`|]/g, encodeURIComponent);
+            key = key.replace(/\(/g, '%28').replace(/\)/g, '%29');
+            value = (value + '').replace(/[^!#$&-+\--:<-\[\]-~]/g, encodeURIComponent);
+            options = options || {};
+
+            var cookieString = key + '=' + value;
+            cookieString += options.path ? ';path=' + options.path : '';
+            cookieString += options.domain ? ';domain=' + options.domain : '';
+            cookieString += options.expires ? ';expires=' + options.expires.toUTCString() : '';
+            cookieString += options.secure ? ';secure' : '';
+
+            return cookieString;
+        };
+
+        Cookies._getCacheFromString = function (documentCookie) {
+            var cookieCache = {};
+            var cookiesArray = documentCookie ? documentCookie.split('; ') : [];
+
+            for (var i = 0; i < cookiesArray.length; i++) {
+                var cookieKvp = Cookies._getKeyValuePairFromCookieString(cookiesArray[i]);
+
+                if (cookieCache[Cookies._cacheKeyPrefix + cookieKvp.key] === undefined) {
+                    cookieCache[Cookies._cacheKeyPrefix + cookieKvp.key] = cookieKvp.value;
+                }
+            }
+
+            return cookieCache;
+        };
+
+        Cookies._getKeyValuePairFromCookieString = function (cookieString) {
+            // "=" is a valid character in a cookie value according to RFC6265, so cannot `split('=')`
+            var separatorIndex = cookieString.indexOf('=');
+
+            // IE omits the "=" when the cookie value is an empty string
+            separatorIndex = separatorIndex < 0 ? cookieString.length : separatorIndex;
+
+            var key = cookieString.substr(0, separatorIndex);
+            var decodedKey;
+            try {
+                decodedKey = decodeURIComponent(key);
+            } catch (e) {
+                if (console && typeof console.error === 'function') {
+                    console.error('Could not decode cookie with key "' + key + '"', e);
+                }
+            }
+            
+            return {
+                key: decodedKey,
+                value: cookieString.substr(separatorIndex + 1) // Defer decoding value until accessed
+            };
+        };
+
+        Cookies._renewCache = function () {
+            Cookies._cache = Cookies._getCacheFromString(Cookies._document.cookie);
+            Cookies._cachedDocumentCookie = Cookies._document.cookie;
+        };
+
+        Cookies._areEnabled = function () {
+            var testKey = 'cookies.js';
+            var areEnabled = Cookies.set(testKey, 1).get(testKey) === '1';
+            Cookies.expire(testKey);
+            return areEnabled;
+        };
+
+        Cookies.enabled = Cookies._areEnabled();
+
+        return Cookies;
+    };
+    var cookiesExport = (global && typeof global.document === 'object') ? factory(global) : factory;
+
+    // AMD support
+    if (true) {
+        !(__WEBPACK_AMD_DEFINE_RESULT__ = function () { return cookiesExport; }.call(exports, __webpack_require__, exports, module),
+				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+    // CommonJS/Node.js support
+    } else if (typeof exports === 'object') {
+        // Support Node.js specific `module.exports` (which can be a function)
+        if (typeof module === 'object' && typeof module.exports === 'object') {
+            exports = module.exports = cookiesExport;
+        }
+        // But always support CommonJS module 1.1.1 spec (`exports` cannot be a function)
+        exports.Cookies = cookiesExport;
+    } else {
+        global.Cookies = cookiesExport;
+    }
+})(typeof window === 'undefined' ? this : window);
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var request = __webpack_require__(9);
+var request = __webpack_require__(3);
 var UriTemplate = __webpack_require__(4);
-var config_1 = __webpack_require__(2);
+var config_1 = __webpack_require__(1);
 var result_1 = __webpack_require__(19);
-var extractor_1 = __webpack_require__(3);
+var extractor_1 = __webpack_require__(2);
 var Action = (function () {
     function Action(contextAction, params, body, options) {
         if (params === void 0) { params = {}; }
@@ -14933,15 +14938,15 @@ exports.Action = Action;
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var context_1 = __webpack_require__(5);
-var config_1 = __webpack_require__(2);
+var context_1 = __webpack_require__(6);
+var config_1 = __webpack_require__(1);
 var action_1 = __webpack_require__(10);
-var extractor_1 = __webpack_require__(3);
+var extractor_1 = __webpack_require__(2);
 var association_1 = __webpack_require__(18);
-var cache_1 = __webpack_require__(1);
+var cache_1 = __webpack_require__(5);
 var Subject = (function () {
     function Subject(objectsOrApp, model) {
-        this.id = cache_1.Cache.generateKey('subject');
+        this.id = cache_1.Cache.generateRandomKey('subject');
         // adds and initializes objects to this Subject
         if (lodash_1.isString(objectsOrApp)) {
             this.contextUrl = config_1.Config.endpoints[objectsOrApp] + "/context/" + model;
@@ -14949,7 +14954,9 @@ var Subject = (function () {
         else {
             lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
         }
-        cache_1.Cache.add(this.id, this);
+        /* disabled for now
+        Cache.add(this.id, this)
+        */
     }
     Subject.detachFromSubject = function (objects) {
         var detach = function (object) {
@@ -20754,7 +20761,7 @@ module.exports = ret;
 
 },{"./es5":13}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(6), __webpack_require__(17).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9), __webpack_require__(7), __webpack_require__(17).setImmediate))
 
 /***/ }),
 /* 13 */
@@ -20764,10 +20771,10 @@ module.exports = ret;
 
 var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(11);
-var config_1 = __webpack_require__(2);
-var context_1 = __webpack_require__(5);
-var cache_1 = __webpack_require__(1);
-var extractor_1 = __webpack_require__(3);
+var config_1 = __webpack_require__(1);
+var context_1 = __webpack_require__(6);
+var cache_1 = __webpack_require__(5);
+var extractor_1 = __webpack_require__(2);
 var chch = function (objectsOrApp, model) {
     // detach from existing Subject first before creating a new one..
     objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
@@ -21223,7 +21230,7 @@ module.exports = function(arr, fn, initial){
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6), __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(7), __webpack_require__(9)))
 
 /***/ }),
 /* 17 */
@@ -21291,9 +21298,9 @@ exports.clearImmediate = clearImmediate;
 "use strict";
 
 var lodash_1 = __webpack_require__(0);
-var context_1 = __webpack_require__(5);
+var context_1 = __webpack_require__(6);
 var action_1 = __webpack_require__(10);
-var extractor_1 = __webpack_require__(3);
+var extractor_1 = __webpack_require__(2);
 var Association = (function () {
     function Association(subject, name) {
         var _this = this;
@@ -21565,12 +21572,14 @@ module.exports = function(module) {
 "use strict";
 
 var Promise = __webpack_require__(12);
-var Cookies = __webpack_require__(7);
+var Cookies = __webpack_require__(8);
 var UriTemplate = __webpack_require__(4);
+var request = __webpack_require__(3);
 var chinchilla_1 = __webpack_require__(13);
 window['Promise'] = Promise;
 window['Cookies'] = Cookies;
 window['UriTemplate'] = UriTemplate;
+window['request'] = request;
 window['chch'] = chinchilla_1.default;
 
 
