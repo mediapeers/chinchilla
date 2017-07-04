@@ -19,7 +19,7 @@ class ContextCollectionAction extends ContextAction {
 exports.ContextCollectionAction = ContextCollectionAction;
 class Context {
     static get(contextUrl) {
-        let key = lodash_1.first(contextUrl.split('?'));
+        let key = cache_1.Cache.generateSessionKey(lodash_1.first(contextUrl.split('?')));
         let cached;
         if (cached = cache_1.Cache.get(key)) {
             return cached;

@@ -22,7 +22,7 @@ class Subject {
         return objects;
     }
     constructor(objectsOrApp, model) {
-        this.id = cache_1.Cache.generateKey('subject');
+        this.id = cache_1.Cache.generateRandomKey('subject');
         // adds and initializes objects to this Subject
         if (lodash_1.isString(objectsOrApp)) {
             this.contextUrl = `${config_1.Config.endpoints[objectsOrApp]}/context/${model}`;
@@ -30,7 +30,9 @@ class Subject {
         else {
             lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
         }
-        cache_1.Cache.add(this.id, this);
+        /* disabled for now
+        Cache.add(this.id, this)
+        */
     }
     memberAction(name, inputParams, options) {
         var promise;

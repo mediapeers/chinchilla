@@ -1,6 +1,5 @@
 "use strict";
 const Kekse = require("cookies-js");
-const cache_1 = require("./cache");
 class Cookies {
     static get(...args) {
         if (typeof window === 'undefined')
@@ -41,14 +40,12 @@ class Config {
     }
     static setSessionId(id) {
         Config.setValue('sessionId', id);
-        cache_1.Cache.clear();
     }
     static getSessionId() {
         return Config.getValue('sessionId');
     }
     static clearSessionId() {
         Config.clearValue('sessionId');
-        cache_1.Cache.clear();
     }
     static getValue(name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));

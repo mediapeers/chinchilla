@@ -41,7 +41,7 @@ export class Context {
   constants: any
 
   static get(contextUrl: string): Context {
-    let key = first(contextUrl.split('?'))
+    let key = Cache.generateSessionKey(first(contextUrl.split('?')))
     let cached
 
     if (cached = Cache.get(key)) {
