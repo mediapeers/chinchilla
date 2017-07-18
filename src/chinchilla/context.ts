@@ -69,6 +69,8 @@ export class Context {
 
       req
         .end((err, res) => {
+          if (err) return reject(err)
+
           this.data       = res.body
           this.context    = res.body && res.body['@context'] || {}
           this.id         = this.context['@id']
