@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const config_1 = require("./config");
 class Cache {

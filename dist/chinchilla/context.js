@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const request = require("superagent");
 const config_1 = require("./config");
@@ -43,6 +44,8 @@ class Context {
             }
             req
                 .end((err, res) => {
+                if (err)
+                    return reject(err);
                 this.data = res.body;
                 this.context = res.body && res.body['@context'] || {};
                 this.id = this.context['@id'];

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const request = require("superagent");
 const UriTemplate = require("uri-templates");
@@ -107,6 +108,7 @@ class Action {
         var cleaned = {};
         lodash_1.each(object, (value, key) => {
             if (/^\$/.test(key) || key === 'errors' || key === 'isPristine' || lodash_1.isFunction(value)) {
+                // skip
             }
             else if (lodash_1.isArray(value)) {
                 if (lodash_1.isPlainObject(value[0])) {
