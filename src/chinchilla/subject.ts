@@ -187,9 +187,7 @@ export class Subject {
       Object.defineProperty(object, key, {
         get: () => {
           return this.association(key).getDataFor(object)
-        },
-        set: (parent) => { object.parent = parent },
-        configurable: key === 'parent'
+        }
       })
       Object.defineProperty(object, `${key}Promise`, {
         get: () => {
