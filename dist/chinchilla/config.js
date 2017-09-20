@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const Kekse = require("cookies-js");
 class Cookies {
     static get(...args) {

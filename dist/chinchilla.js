@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const subject_1 = require("./chinchilla/subject");
 const config_1 = require("./chinchilla/config");
@@ -66,4 +65,5 @@ chch['unfurl'] = (app, model, actionName, params) => {
         fetch();
     });
 };
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = chch;

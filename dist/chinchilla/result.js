@@ -1,5 +1,4 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const subject_1 = require("./subject");
 class Result {
@@ -12,6 +11,10 @@ class Result {
         if (result.body) {
             this.type = result.body['@type'];
             this.aggregations = result.body['aggregations'];
+            lodash_1.each(result.body, (value, key) => {
+                if (lodash_1.startsWith(key, "@"))
+                    this[key] = value;
+            });
         }
         switch (this.type) {
             case 'graph':

@@ -14321,10 +14321,8 @@ var Context = (function () {
             }
             req
                 .end(function (err, res) {
-                if (err) {
-                    console.log(err);
+                if (err)
                     return reject(err);
-                }
                 _this.data = res.body;
                 _this.context = res.body && res.body['@context'] || {};
                 _this.id = _this.context['@id'];
@@ -15126,9 +15124,7 @@ var Subject = (function () {
             Object.defineProperty(object, key, {
                 get: function () {
                     return _this.association(key).getDataFor(object);
-                },
-                set: function (parent) { object.parent = parent; },
-                configurable: key === 'parent'
+                }
             });
             Object.defineProperty(object, key + "Promise", {
                 get: function () {
@@ -21148,6 +21144,10 @@ var Result = (function () {
         if (result.body) {
             this.type = result.body['@type'];
             this.aggregations = result.body['aggregations'];
+            lodash_1.each(result.body, function (value, key) {
+                if (lodash_1.startsWith(key, "@"))
+                    _this[key] = value;
+            });
         }
         switch (this.type) {
             case 'graph':
