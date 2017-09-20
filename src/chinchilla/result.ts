@@ -1,4 +1,4 @@
-import { each, find, first, groupBy, isArray, isEmpty } from 'lodash'
+import { each, find, first, groupBy, isArray, isEmpty, startsWith } from 'lodash'
 import { Subject } from './subject'
 
 export class Result {
@@ -14,6 +14,10 @@ export class Result {
     if (result.body) {
       this.type         = result.body['@type']
       this.aggregations = result.body['aggregations']
+
+      each(result.body, (value, key) => {
+        if (startsWith(key, "@")) this[key] = value
+      })
     }
 
     switch (this.type) {
