@@ -2,11 +2,14 @@ import { each, find, first, groupBy, isArray, isEmpty, startsWith } from 'lodash
 import { Subject } from './subject'
 
 export class Result {
+  static paginationProps = ['@total_count', '@total_pages', '@current_page']
+
   type: string
   headers: any
   aggregations: any
+  body: any
   objects: any[] = []
-  objects_raw: any[] = []
+  pagination: any
 
   success(result): void {
     this.headers  = result.headers
@@ -14,18 +17,13 @@ export class Result {
     if (result.body) {
       this.type         = result.body['@type']
       this.aggregations = result.body['aggregations']
-
-      each(result.body, (value, key) => {
-        if (startsWith(key, "@")) this[key] = value
-      })
+      this.body         = result.body
     }
 
     switch (this.type) {
       case 'graph':
         var members = result.body['@graph']
         if (!members) return
-
-        this.objects_raw = members
 
         new Subject(members)
 
@@ -50,6 +48,13 @@ export class Result {
 
       case 'collection':
       case 'search_collection':
+        this.pagination = {}
+
+        each(Result.paginationProps, (prop) => {
+          if (result.body[prop]) {
+            this.pagination[prop.substr(1)] = result.body[prop]
+          }
+        })
         each(result.body.members, (member) => {
           this.objects.push(member)
         })

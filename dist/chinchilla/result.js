@@ -4,24 +4,19 @@ const subject_1 = require("./subject");
 class Result {
     constructor() {
         this.objects = [];
-        this.objects_raw = [];
     }
     success(result) {
         this.headers = result.headers;
         if (result.body) {
             this.type = result.body['@type'];
             this.aggregations = result.body['aggregations'];
-            lodash_1.each(result.body, (value, key) => {
-                if (lodash_1.startsWith(key, "@"))
-                    this[key] = value;
-            });
+            this.body = result.body;
         }
         switch (this.type) {
             case 'graph':
                 var members = result.body['@graph'];
                 if (!members)
                     return;
-                this.objects_raw = members;
                 new subject_1.Subject(members);
                 lodash_1.each(members, (node) => {
                     if (node.parent_id) {
@@ -44,6 +39,12 @@ class Result {
                 break;
             case 'collection':
             case 'search_collection':
+                this.pagination = {};
+                lodash_1.each(Result.paginationProps, (prop) => {
+                    if (result.body[prop]) {
+                        this.pagination[prop.substr(1)] = result.body[prop];
+                    }
+                });
                 lodash_1.each(result.body.members, (member) => {
                     this.objects.push(member);
                 });
@@ -67,4 +68,5 @@ class Result {
         return lodash_1.first(this.objects);
     }
 }
+Result.paginationProps = ['@total_count', '@total_pages', '@current_page'];
 exports.Result = Result;

@@ -21136,7 +21136,6 @@ var subject_1 = __webpack_require__(11);
 var Result = (function () {
     function Result() {
         this.objects = [];
-        this.objects_raw = [];
     }
     Result.prototype.success = function (result) {
         var _this = this;
@@ -21144,17 +21143,13 @@ var Result = (function () {
         if (result.body) {
             this.type = result.body['@type'];
             this.aggregations = result.body['aggregations'];
-            lodash_1.each(result.body, function (value, key) {
-                if (lodash_1.startsWith(key, "@"))
-                    _this[key] = value;
-            });
+            this.body = result.body;
         }
         switch (this.type) {
             case 'graph':
                 var members = result.body['@graph'];
                 if (!members)
                     return;
-                this.objects_raw = members;
                 new subject_1.Subject(members);
                 lodash_1.each(members, function (node) {
                     if (node.parent_id) {
@@ -21177,6 +21172,12 @@ var Result = (function () {
                 break;
             case 'collection':
             case 'search_collection':
+                this.pagination = {};
+                lodash_1.each(Result.paginationProps, function (prop) {
+                    if (result.body[prop]) {
+                        _this.pagination[prop.substr(1)] = result.body[prop];
+                    }
+                });
                 lodash_1.each(result.body.members, function (member) {
                     _this.objects.push(member);
                 });
@@ -21205,6 +21206,7 @@ var Result = (function () {
     });
     return Result;
 }());
+Result.paginationProps = ['@total_count', '@total_pages', '@current_page'];
 exports.Result = Result;
 
 
