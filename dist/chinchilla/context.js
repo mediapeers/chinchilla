@@ -20,30 +20,18 @@ class ContextCollectionAction extends ContextAction {
 }
 exports.ContextCollectionAction = ContextCollectionAction;
 class Context {
-    constructor(dataPromise) {
-        this.ready = dataPromise.then((data) => {
-            this.data = data;
-            lodash_1.each(this.properties, function (property, name) {
-                property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
-            });
-            return this;
-        });
-    }
     static get(contextUrl) {
         let key = lodash_1.first(contextUrl.split('?'));
         let cachedContext;
         if (cachedContext = cache_1.Cache.runtime.get(key)) {
-            console.log('context: got from runtime cache', key);
             return cachedContext;
         }
         let dataPromise;
         let cachedData;
         if (!tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.get(key))) {
-            console.log('context: got from storage cache', key);
             dataPromise = Promise.resolve(cachedData);
         }
         else {
-            console.log('context: fetch', key);
             dataPromise = new Promise((resolve, reject) => {
                 var req = tools_1.Tools.req
                     .get(contextUrl);
@@ -69,6 +57,15 @@ class Context {
         cachedContext = new Context(dataPromise);
         cache_1.Cache.runtime.set(key, cachedContext);
         return cachedContext;
+    }
+    constructor(dataPromise) {
+        this.ready = dataPromise.then((data) => {
+            this.data = data;
+            lodash_1.each(this.properties, function (property, name) {
+                property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
+            });
+            return this;
+        });
     }
     get context() {
         return this.data && this.data['@context'] || {};
@@ -109,5 +106,4 @@ class Context {
         return new ContextCollectionAction(action);
     }
 }
-Context.cache = {}; // promise cache
 exports.Context = Context;

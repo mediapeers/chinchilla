@@ -23,7 +23,6 @@ export interface ContextProperty {
     validations?: any[];
 }
 export declare class Context {
-    static cache: {};
     ready: Promise<Context>;
     data: any;
     static get(contextUrl: string): any;

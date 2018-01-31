@@ -22691,17 +22691,14 @@ var Context = /** @class */ (function () {
         var key = lodash_1.first(contextUrl.split('?'));
         var cachedContext;
         if (cachedContext = cache_1.Cache.runtime.get(key)) {
-            console.log('context: got from runtime cache', key);
             return cachedContext;
         }
         var dataPromise;
         var cachedData;
         if (!tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.get(key))) {
-            console.log('context: got from storage cache', key);
             dataPromise = Promise.resolve(cachedData);
         }
         else {
-            console.log('context: fetch', key);
             dataPromise = new Promise(function (resolve, reject) {
                 var req = tools_1.Tools.req
                     .get(contextUrl);
@@ -22782,7 +22779,6 @@ var Context = /** @class */ (function () {
         }
         return new ContextCollectionAction(action);
     };
-    Context.cache = {}; // promise cache
     return Context;
 }());
 exports.Context = Context;
