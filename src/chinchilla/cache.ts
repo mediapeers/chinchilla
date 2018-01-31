@@ -1,5 +1,4 @@
 import { each } from 'lodash'
-import { createLocalStorage } from 'localstorage-ponyfill'
 import { Config } from './config'
 import { Tools } from './tools'
 
@@ -70,7 +69,7 @@ export class RuntimeCache extends BaseCache {
 export class StorageCache extends BaseCache {
   constructor() {
     super()
-    this.storage = createLocalStorage()
+    this.storage = window.localStorage
   }
 
   setValue(extkey: string, val: any) {
@@ -95,7 +94,7 @@ export class Cache {
   private static _runtime
 
   static clear() {
-    Cache.storage.clear()
+    if (!Tools.isNode) Cache.storage.clear()
     Cache.runtime.clear()
   }
 

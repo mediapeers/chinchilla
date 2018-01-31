@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const localstorage_ponyfill_1 = require("localstorage-ponyfill");
 const config_1 = require("./config");
+const tools_1 = require("./tools");
 class BaseCache {
     set(key, val, expires = 60) {
         const payload = {
@@ -52,7 +52,7 @@ exports.RuntimeCache = RuntimeCache;
 class StorageCache extends BaseCache {
     constructor() {
         super();
-        this.storage = localstorage_ponyfill_1.createLocalStorage();
+        this.storage = window.localStorage;
     }
     setValue(extkey, val) {
         this.storage.setItem(extkey, JSON.stringify(val));
@@ -70,7 +70,8 @@ class StorageCache extends BaseCache {
 exports.StorageCache = StorageCache;
 class Cache {
     static clear() {
-        Cache.storage.clear();
+        if (!tools_1.Tools.isNode)
+            Cache.storage.clear();
         Cache.runtime.clear();
     }
     static random(prefix = 'unknown') {
