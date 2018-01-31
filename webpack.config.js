@@ -7,6 +7,9 @@ module.exports = {
   resolve : {
     extensions: ['.js', '.ts']
   },
+  node: {
+    fs: 'empty'
+  },
   module: {
     loaders: [
       { test: /\.tsx?$/, loader: 'ts-loader', options: { configFileName: 'tsconfig.es5.json' } }

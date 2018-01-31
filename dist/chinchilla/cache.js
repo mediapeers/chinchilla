@@ -1,49 +1,91 @@
 "use strict";
-const lodash_1 = require("lodash");
+Object.defineProperty(exports, "__esModule", { value: true });
+const localstorage_ponyfill_1 = require("localstorage-ponyfill");
 const config_1 = require("./config");
-class Cache {
-    static generateRandomKey(type) {
-        var hash = Math.random().toString(36).substr(2, 9);
-        return `${type}-${hash}`;
-    }
-    static generateSessionKey(...parts) {
-        let session = config_1.Config.getSessionId() ? config_1.Config.getSessionId().substr(2, 9) : 'anonymous';
-        return parts.join('-').concat(`-${session}`);
-    }
-    static add(key, obj) {
-        Cache.cache[key] = obj;
-        Cache.cacheOrder.push(key);
-        /* disabled for now
-        Cache.capCache()
-        */
-    }
-    static get(key) {
-        return Cache.cache[key];
-    }
-    static clear() {
-        Cache.cache = {};
-        Cache.cacheOrder = [];
-    }
-    static capCache() {
-        var sliced = Cache.sliceCache(Cache.cacheOrder, Cache.cacheSize);
-        lodash_1.each(sliced.remove, (key) => {
-            if (lodash_1.isFunction(Cache.cache[key]['destroy']))
-                Cache.cache[key].destroy();
-            delete Cache.cache[key];
-        });
-        Cache.cacheOrder = sliced.remain;
-    }
-    static sliceCache(arr, size) {
-        if (arr.length <= size)
-            return { remove: [], remain: arr };
-        var remain = arr.slice(size * -1);
-        return {
-            remain: remain,
-            remove: lodash_1.difference(arr, remain)
+class BaseCache {
+    set(key, val, expires = 60) {
+        const payload = {
+            expires: this.minutesFromNow(expires),
+            value: val
         };
+        this.setValue(this.extkey(key), payload);
+    }
+    get(key) {
+        const extkey = this.extkey(key);
+        const payload = this.getValue(extkey);
+        if (payload) {
+            if (Date.now() > payload.expires) {
+                this.removeValue(extkey);
+                return null;
+            }
+            return payload.value;
+        }
+        return null;
+    }
+    extkey(suffix) {
+        return `${config_1.Config.getCacheKey()}-${suffix}`;
+    }
+    minutesFromNow(min) {
+        return Date.now() + min * 60000;
     }
 }
-Cache.cacheSize = 250;
-Cache.cacheOrder = [];
-Cache.cache = {};
+exports.BaseCache = BaseCache;
+class RuntimeCache extends BaseCache {
+    constructor() {
+        super();
+        this.storage = {};
+    }
+    setValue(extkey, val) {
+        this.storage[extkey] = val;
+    }
+    getValue(extkey) {
+        return this.storage[extkey];
+    }
+    removeValue(extkey) {
+        delete this.storage[extkey];
+    }
+    clear() {
+        this.storage = {};
+    }
+}
+exports.RuntimeCache = RuntimeCache;
+class StorageCache extends BaseCache {
+    constructor() {
+        super();
+        this.storage = localstorage_ponyfill_1.createLocalStorage();
+    }
+    setValue(extkey, val) {
+        this.storage.setItem(extkey, JSON.stringify(val));
+    }
+    getValue(extkey) {
+        return JSON.parse(this.storage.getItem(extkey) || null);
+    }
+    removeValue(extkey) {
+        this.storage.removeItem(extkey);
+    }
+    clear() {
+        this.storage.clear();
+    }
+}
+exports.StorageCache = StorageCache;
+class Cache {
+    static clear() {
+        Cache.storage.clear();
+        Cache.runtime.clear();
+    }
+    static random(prefix = 'unknown') {
+        const hash = Math.random().toString(36).substr(2, 9);
+        return `${prefix}-${hash}`;
+    }
+    static get storage() {
+        if (Cache._storage)
+            return Cache._storage;
+        return Cache._storage = new StorageCache();
+    }
+    static get runtime() {
+        if (Cache._runtime)
+            return Cache._runtime;
+        return Cache._runtime = new RuntimeCache();
+    }
+}
 exports.Cache = Cache;

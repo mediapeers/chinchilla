@@ -23,17 +23,20 @@
   },
   "dependencies": {
     "cookies-js": "^1.2.3",
+    "global": "^4.3.2",
+    "localstorage-ponyfill": "^1.0.1",
     "lodash": "~3.10.1",
-    "superagent": "~1.4.0",
+    "superagent": "~3.8.2",
     "uri-templates": "~0.1.9",
     "webpack": "^2.2.1",
     "webpack-node-externals": "^1.5.4"
   },
   "devDependencies": {
-    "@types/core-js": "^0.9.35",
+    "@types/node": "^9.4.0",
+    "superdebug": "^2.0.0",
     "bluebird": "^3.5.0",
     "ts-loader": "^2.0.0",
-    "typescript": "^2.1.5"
+    "typescript": "^2.5.3"
   },
   "license": "MIT"
 }

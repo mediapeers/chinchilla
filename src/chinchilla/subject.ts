@@ -30,7 +30,7 @@ export class Subject {
   }
 
   constructor(objectsOrApp: any, model?: string) {
-    this.id = Cache.generateRandomKey('subject')
+    this.id = Cache.random('subject')
 
     // adds and initializes objects to this Subject
     if (isString(objectsOrApp)) {
@@ -39,10 +39,6 @@ export class Subject {
     else {
       isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp)
     }
-
-    /* disabled for now
-    Cache.add(this.id, this)
-    */
   }
 
   memberAction(name: string, inputParams?: any, options?: any): Promise<any> {

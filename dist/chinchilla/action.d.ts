@@ -1,4 +1,5 @@
 import * as UriTemplate from 'uri-templates';
+import * as Promise from 'bluebird';
 import { Result } from './result';
 import { ContextAction } from './context';
 export declare class Action {

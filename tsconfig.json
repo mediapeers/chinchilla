@@ -6,7 +6,7 @@
     "target": "es6",
     "noImplicitAny": false,
     "outDir": "dist",
-    "types": []
+    "types": ["node"]
   },
   "files": [
     "src/chinchilla.ts"
