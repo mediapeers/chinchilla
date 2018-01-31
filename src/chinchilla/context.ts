@@ -34,7 +34,6 @@ export interface ContextProperty {
 }
 
 export class Context {
-  static cache = {} // promise cache
   ready: Promise<Context>
   data: any
 
