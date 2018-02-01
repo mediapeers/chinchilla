@@ -53,6 +53,8 @@ export class Action {
           req = Tools.req.del(uri)
           break
       }
+      // add timestamp
+      req = req.query({ t: Config.timestamp })
 
       // add session by default
       if (!options || !(options.withoutSession === true)) {

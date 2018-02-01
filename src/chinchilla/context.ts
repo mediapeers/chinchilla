@@ -54,6 +54,7 @@ export class Context {
       dataPromise = new Promise((resolve, reject) => {
         var req = Tools.req
           .get(contextUrl)
+          .query({ t: Config.timestamp })
 
         if (Config.getAffiliationId()) {
           req = req.set('Affiliation-Id', Config.getAffiliationId())

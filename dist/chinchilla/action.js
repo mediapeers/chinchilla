@@ -39,6 +39,8 @@ class Action {
                     req = tools_1.Tools.req.del(uri);
                     break;
             }
+            // add timestamp
+            req = req.query({ t: config_1.Config.timestamp });
             // add session by default
             if (!options || !(options.withoutSession === true)) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());

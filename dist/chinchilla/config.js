@@ -74,4 +74,5 @@ class Config {
 }
 Config.endpoints = {};
 Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
+Config.timestamp = Date.now() / 1000 | 0;
 exports.Config = Config;

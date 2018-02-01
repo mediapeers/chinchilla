@@ -21,6 +21,7 @@ export class Config {
   static domain: string
   static errorInterceptor: any
   static cookieTimeout = 30*24*60*60 // 1 month
+  static timestamp = Date.now() / 1000 | 0
 
   static setEndpoint(name: string, url: string): void {
     Config.endpoints[name] = url

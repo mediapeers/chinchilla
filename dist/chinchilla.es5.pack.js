@@ -12522,6 +12522,7 @@ var Config = /** @class */ (function () {
     };
     Config.endpoints = {};
     Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
+    Config.timestamp = Date.now() / 1000 | 0;
     return Config;
 }());
 exports.Config = Config;
@@ -18915,7 +18916,8 @@ var Context = /** @class */ (function () {
         else {
             dataPromise = new Promise(function (resolve, reject) {
                 var req = tools_1.Tools.req
-                    .get(contextUrl);
+                    .get(contextUrl)
+                    .query({ t: config_1.Config.timestamp });
                 if (config_1.Config.getAffiliationId()) {
                     req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
                 }
@@ -20385,6 +20387,8 @@ var Action = /** @class */ (function () {
                     req = tools_1.Tools.req.del(uri);
                     break;
             }
+            // add timestamp
+            req = req.query({ t: config_1.Config.timestamp });
             // add session by default
             if (!options || !(options.withoutSession === true)) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());

@@ -34,7 +34,8 @@ class Context {
         else {
             dataPromise = new Promise((resolve, reject) => {
                 var req = tools_1.Tools.req
-                    .get(contextUrl);
+                    .get(contextUrl)
+                    .query({ t: config_1.Config.timestamp });
                 if (config_1.Config.getAffiliationId()) {
                     req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
                 }
