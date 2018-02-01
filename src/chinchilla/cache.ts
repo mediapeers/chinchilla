@@ -1,63 +1,115 @@
-import { each, isFunction, difference } from 'lodash'
+import { each } from 'lodash'
 import { Config } from './config'
+import { Tools } from './tools'
 
-interface SlicedCache {
-    remove: any[],
-    remain: any[]
+export abstract class BaseCache {
+  protected storage
+
+  abstract getValue(extkey: string)
+  abstract setValue(extkey: string, val: any)
+  abstract removeValue(extkey: string)
+  abstract clear()
+
+  set(key: string, val: any, expires: number = 60) {
+    const payload = {
+      expires: this.minutesFromNow(expires),
+      value: val
+    }
+    this.setValue(this.extkey(key), payload)
+  }
+
+  get(key: string) {
+    const extkey = this.extkey(key)
+    const payload = this.getValue(extkey)
+
+    if (payload) {
+      if (Date.now() > payload.expires) {
+        this.removeValue(extkey)
+        return null
+      }
+
+      return payload.value
+    }
+
+    return null
+  }
+
+  extkey(suffix:string) {
+    return `${Config.getCacheKey()}-${suffix}`
+  }
+
+  minutesFromNow(min:number) {
+    return Date.now() + min*60000
+  }
+}
+
+export class RuntimeCache extends BaseCache {
+  constructor() {
+    super()
+    this.storage = {}
+  }
+
+  setValue(extkey: string, val: any) {
+    this.storage[extkey] = val
+  }
+
+  getValue(extkey: string) {
+    return this.storage[extkey]
+  }
+
+  removeValue(extkey: string) {
+    delete this.storage[extkey]
+  }
+
+  clear() {
+    this.storage = {}
+  }
+}
+
+export class StorageCache extends BaseCache {
+  constructor() {
+    super()
+    this.storage = window.localStorage
+  }
+
+  setValue(extkey: string, val: any) {
+    this.storage.setItem(extkey, JSON.stringify(val))
+  }
+
+  getValue(extkey: string) {
+    return JSON.parse(this.storage.getItem(extkey) || null)
+  }
+
+  removeValue(extkey: string) {
+    this.storage.removeItem(extkey)
+  }
+
+  clear() {
+    this.storage.clear()
+  }
 }
 
 export class Cache {
-  private static cacheSize  = 250
-  private static cacheOrder = []
-  private static cache      = {}
+  private static _storage
+  private static _runtime
 
-  static generateRandomKey(type:string):string {
-    var hash = Math.random().toString(36).substr(2, 9)
-    return `${type}-${hash}`
+  static clear() {
+    if (!Tools.isNode) Cache.storage.clear()
+    Cache.runtime.clear()
   }
 
-  static generateSessionKey(...parts: string[]):string {
-    let session = Config.getSessionId() ? Config.getSessionId().substr(2, 9) : 'anonymous'
-    return parts.join('-').concat(`-${session}`)
+  static random(prefix:string = 'unknown') {
+    const hash = Math.random().toString(36).substr(2, 9)
+    return `${prefix}-${hash}`
   }
 
-  static add(key:string, obj:any):void {
-    Cache.cache[key] = obj
-    Cache.cacheOrder.push(key)
-
-    /* disabled for now
-    Cache.capCache()
-    */
+  static get storage() {
+    if (Cache._storage) return Cache._storage
+    return Cache._storage = new StorageCache()
   }
 
-  static get(key:string):any {
-    return Cache.cache[key]
-  }
-
-  static clear():void {
-    Cache.cache = {}
-    Cache.cacheOrder = []
-  }
-
-  private static capCache():void {
-    var sliced = Cache.sliceCache(Cache.cacheOrder, Cache.cacheSize)
-
-    each(sliced.remove, (key) => {
-      if (isFunction(Cache.cache[key]['destroy'])) Cache.cache[key].destroy()
-      delete Cache.cache[key]
-    })
-
-    Cache.cacheOrder = sliced.remain
-  }
-
-  private static sliceCache(arr, size):SlicedCache {
-    if (arr.length <= size) return { remove: [], remain: arr}
-
-    var remain = arr.slice(size * -1)
-
-    return {
-      remain: remain,
-      remove: difference(arr, remain)
-    }
+  static get runtime() {
+    if (Cache._runtime) return Cache._runtime
+    return Cache._runtime = new RuntimeCache()
   }
 }

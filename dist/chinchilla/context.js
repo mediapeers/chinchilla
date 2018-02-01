@@ -1,8 +1,10 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
-const request = require("superagent");
+const Promise = require("bluebird");
 const config_1 = require("./config");
 const cache_1 = require("./cache");
+const tools_1 = require("./tools");
 class ContextAction {
     constructor(values = {}) {
         lodash_1.each(values, (value, key) => {
@@ -19,43 +21,63 @@ class ContextCollectionAction extends ContextAction {
 exports.ContextCollectionAction = ContextCollectionAction;
 class Context {
     static get(contextUrl) {
-        let key = cache_1.Cache.generateSessionKey(lodash_1.first(contextUrl.split('?')));
-        let cached;
-        if (cached = cache_1.Cache.get(key)) {
-            return cached;
+        let key = lodash_1.first(contextUrl.split('?'));
+        let cachedContext;
+        if (cachedContext = cache_1.Cache.runtime.get(key)) {
+            return cachedContext;
+        }
+        let dataPromise;
+        let cachedData;
+        if (!tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.get(key))) {
+            dataPromise = Promise.resolve(cachedData);
         }
         else {
-            let context = new Context(contextUrl);
-            cache_1.Cache.add(key, context);
-            return context;
-        }
-    }
-    constructor(contextUrl) {
-        this.ready = new Promise((resolve, reject) => {
-            var req = request
-                .get(contextUrl)
-                .query({ t: config_1.Config.timestamp });
-            if (config_1.Config.getAffiliationId()) {
-                req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
-            }
-            if (config_1.Config.getSessionId()) {
-                req = req.set('Session-Id', config_1.Config.getSessionId());
-            }
-            req
-                .end((err, res) => {
-                if (err)
-                    return reject(err);
-                this.data = res.body;
-                this.context = res.body && res.body['@context'] || {};
-                this.id = this.context['@id'];
-                this.properties = this.context.properties || {};
-                this.constants = this.context.constants || {};
-                lodash_1.each(this.properties, function (property, name) {
-                    property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
+            dataPromise = new Promise((resolve, reject) => {
+                var req = tools_1.Tools.req
+                    .get(contextUrl);
+                if (config_1.Config.getAffiliationId()) {
+                    req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+                }
+                if (config_1.Config.getSessionId()) {
+                    req = req.set('Session-Id', config_1.Config.getSessionId());
+                }
+                req
+                    .end((err, res) => {
+                    if (err)
+                        return reject(err);
+                    return resolve(res.body);
                 });
-                resolve(this);
             });
+        }
+        if (!tools_1.Tools.isNode) {
+            dataPromise.then((data) => {
+                return cache_1.Cache.storage.set(key, data);
+            });
+        }
+        cachedContext = new Context(dataPromise);
+        cache_1.Cache.runtime.set(key, cachedContext);
+        return cachedContext;
+    }
+    constructor(dataPromise) {
+        this.ready = dataPromise.then((data) => {
+            this.data = data;
+            lodash_1.each(this.properties, function (property, name) {
+                property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
+            });
+            return this;
         });
+    }
+    get context() {
+        return this.data && this.data['@context'] || {};
+    }
+    get id() {
+        return this.context['@id'];
+    }
+    get properties() {
+        return this.context.properties || {};
+    }
+    get constants() {
+        return this.context.constants || {};
     }
     property(name) {
         return this.properties[name];

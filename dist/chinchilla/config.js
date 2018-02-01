@@ -1,25 +1,26 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const Kekse = require("cookies-js");
+const tools_1 = require("./tools");
 class Cookies {
     static get(...args) {
-        if (typeof window === 'undefined')
+        if (tools_1.Tools.isNode)
             return;
         return Kekse.get.apply(null, args);
     }
     static set(...args) {
-        if (typeof window === 'undefined')
+        if (tools_1.Tools.isNode)
             return;
         return Kekse.set.apply(null, args);
     }
     static expire(...args) {
-        if (typeof window === 'undefined')
+        if (tools_1.Tools.isNode)
             return;
         return Kekse.expire.apply(null, args);
     }
 }
 exports.Cookies = Cookies;
 class Config {
-    // 1 month
     static setEndpoint(name, url) {
         Config.endpoints[name] = url;
     }
@@ -47,6 +48,15 @@ class Config {
     static clearSessionId() {
         Config.clearValue('sessionId');
     }
+    static setCacheKey(key) {
+        Config.setValue('cacheKey', key);
+    }
+    static getCacheKey() {
+        return Config.getValue('cacheKey') || 'anonymous';
+    }
+    static clearCacheKey() {
+        Config.clearValue('cacheKey');
+    }
     static getValue(name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));
     }
@@ -63,6 +73,5 @@ class Config {
     }
 }
 Config.endpoints = {};
-Config.timestamp = Date.now() / 1000 | 0;
 Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
 exports.Config = Config;

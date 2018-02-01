@@ -5,7 +5,6 @@ export declare class Cookies {
 }
 export declare class Config {
     static endpoints: {};
-    static timestamp: number;
     static domain: string;
     static errorInterceptor: any;
     static cookieTimeout: number;
@@ -18,6 +17,9 @@ export declare class Config {
     static setSessionId(id: string): void;
     static getSessionId(): string;
     static clearSessionId(): void;
+    static setCacheKey(key: string): void;
+    static getCacheKey(): string;
+    static clearCacheKey(): void;
     static getValue(name: any): string;
     static setValue(name: any, value: any): void;
     static clearValue(name: any): void;

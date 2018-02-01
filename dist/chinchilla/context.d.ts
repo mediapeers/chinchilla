@@ -1,3 +1,4 @@
+import * as Promise from 'bluebird';
 export declare class ContextAction {
     resource: string;
     response: string;
@@ -24,12 +25,12 @@ export interface ContextProperty {
 export declare class Context {
     ready: Promise<Context>;
     data: any;
-    context: any;
-    id: string;
-    properties: any;
-    constants: any;
-    static get(contextUrl: string): Context;
-    constructor(contextUrl: string);
+    static get(contextUrl: string): any;
+    constructor(dataPromise: any);
+    readonly context: any;
+    readonly id: any;
+    readonly properties: any;
+    readonly constants: any;
     property(name: string): ContextProperty;
     constant(name: string): any;
     association(name: string): ContextProperty;

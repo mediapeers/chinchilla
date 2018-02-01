@@ -1,7 +1,8 @@
 import { each, first, isEmpty } from 'lodash'
-import * as request from 'superagent'
+import * as Promise from 'bluebird'
 import { Config } from './config'
 import { Cache } from './cache'
+import { Tools } from './tools'
 
 export class ContextAction {
   public resource: string
@@ -35,55 +36,77 @@ export interface ContextProperty {
 export class Context {
   ready: Promise<Context>
   data: any
-  context: any
-  id: string
-  properties: any
-  constants: any
 
-  static get(contextUrl: string): Context {
-    let key = Cache.generateSessionKey(first(contextUrl.split('?')))
-    let cached
+  static get(contextUrl: string) {
+    let key = first(contextUrl.split('?'))
 
-    if (cached = Cache.get(key)) {
-      return cached
+    let cachedContext
+    if (cachedContext = Cache.runtime.get(key)){
+      return cachedContext
+    }
+
+    let dataPromise
+    let cachedData
+    if (!Tools.isNode && (cachedData = Cache.storage.get(key))) {
+      dataPromise = Promise.resolve(cachedData)
     }
     else {
-      let context = new Context(contextUrl)
-      Cache.add(key, context)
-      return context
+      dataPromise = new Promise((resolve, reject) => {
+        var req = Tools.req
+          .get(contextUrl)
+
+        if (Config.getAffiliationId()) {
+          req = req.set('Affiliation-Id', Config.getAffiliationId())
+        }
+        if (Config.getSessionId()) {
+          req = req.set('Session-Id', Config.getSessionId())
+        }
+
+        req
+          .end((err, res) => {
+            if (err) return reject(err)
+            return resolve(res.body)
+          })
+      })
     }
+
+    if (!Tools.isNode) {
+      dataPromise.then((data) => {
+        return Cache.storage.set(key, data)
+      })
+    }
+
+    cachedContext = new Context(dataPromise)
+    Cache.runtime.set(key, cachedContext)
+    return cachedContext
   }
 
-  constructor(contextUrl: string) {
-    this.ready = new Promise((resolve, reject) => {
-      var req = request
-        .get(contextUrl)
-        .query({ t: Config.timestamp })
+  constructor(dataPromise) {
+    this.ready = dataPromise.then((data) => {
+      this.data = data
 
-      if (Config.getAffiliationId()) {
-        req = req.set('Affiliation-Id', Config.getAffiliationId())
-      }
-      if (Config.getSessionId()) {
-        req = req.set('Session-Id', Config.getSessionId())
-      }
+      each(this.properties, function(property, name) {
+        property.isAssociation = property.type && /^(http|https)\:/.test(property.type)
+      })
 
-      req
-        .end((err, res) => {
-          if (err) return reject(err)
-
-          this.data       = res.body
-          this.context    = res.body && res.body['@context'] || {}
-          this.id         = this.context['@id']
-          this.properties = this.context.properties || {}
-          this.constants  = this.context.constants || {}
-
-          each(this.properties, function(property, name) {
-            property.isAssociation = property.type && /^(http|https)\:/.test(property.type)
-          })
-
-          resolve(this)
-        })
+      return this
     })
+  }
+
+  get context() {
+    return this.data && this.data['@context'] || {}
+  }
+
+  get id() {
+    return this.context['@id']
+  }
+
+  get properties() {
+    return this.context.properties || {}
+  }
+
+  get constants() {
+    return this.context.constants || {}
   }
 
   property(name: string): ContextProperty {

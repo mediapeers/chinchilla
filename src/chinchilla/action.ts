@@ -1,10 +1,11 @@
 import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get } from 'lodash'
-import * as request from 'superagent'
 import * as UriTemplate from 'uri-templates'
+import * as Promise from 'bluebird'
 import { Config } from './config'
 import { Result } from './result'
 import { Context, ContextAction } from './context'
 import { Extractor } from './extractor'
+import { Tools } from './tools'
 
 export class Action {
   ready: Promise<Result>
@@ -30,31 +31,28 @@ export class Action {
       var req
       switch (contextAction.method) {
         case 'GET':
-          req = request.get(uri)
+          req = Tools.req.get(uri)
           break
 
         case 'POST':
-          req = request.post(uri)
+          req = Tools.req.post(uri)
             .send(this.body)
           break
 
         case 'PUT':
-          req = request.put(uri)
+          req = Tools.req.put(uri)
             .send(this.body)
           break
 
         case 'PATCH':
-          req = request.patch(uri)
+          req = Tools.req.patch(uri)
             .send(this.body)
           break
 
         case 'DELETE':
-          req = request.del(uri)
+          req = Tools.req.del(uri)
           break
       }
-
-      // add timestamp
-      req = req.query({ t: Config.timestamp })
 
       // add session by default
       if (!options || !(options.withoutSession === true)) {

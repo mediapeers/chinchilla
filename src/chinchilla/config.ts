@@ -1,25 +1,23 @@
 import * as Kekse from 'cookies-js'
-
-import { Cache } from './cache'
+import { Tools } from './tools'
 
 export class Cookies {
   static get(...args) {
-    if (typeof window === 'undefined') return
+    if (Tools.isNode) return
     return Kekse.get.apply(null, args)
   }
   static set(...args) {
-    if (typeof window === 'undefined') return
+    if (Tools.isNode) return
     return Kekse.set.apply(null, args)
   }
   static expire(...args) {
-    if (typeof window === 'undefined') return
+    if (Tools.isNode) return
     return Kekse.expire.apply(null, args)
   }
 }
 
 export class Config {
   static endpoints = {}
-  static timestamp = Date.now() / 1000 | 0
   static domain: string
   static errorInterceptor: any
   static cookieTimeout = 30*24*60*60 // 1 month
@@ -58,6 +56,18 @@ export class Config {
 
   static clearSessionId(): void {
     Config.clearValue('sessionId')
+  }
+
+  static setCacheKey(key: string): void {
+    Config.setValue('cacheKey', key)
+  }
+
+  static getCacheKey(): string {
+    return Config.getValue('cacheKey') || 'anonymous'
+  }
+
+  static clearCacheKey(): void {
+    Config.clearValue('cacheKey')
   }
 
   static getValue(name): string {

@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const context_1 = require("./context");
 const config_1 = require("./config");
@@ -22,7 +23,7 @@ class Subject {
         return objects;
     }
     constructor(objectsOrApp, model) {
-        this.id = cache_1.Cache.generateRandomKey('subject');
+        this.id = cache_1.Cache.random('subject');
         // adds and initializes objects to this Subject
         if (lodash_1.isString(objectsOrApp)) {
             this.contextUrl = `${config_1.Config.endpoints[objectsOrApp]}/context/${model}`;
@@ -30,9 +31,6 @@ class Subject {
         else {
             lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
         }
-        /* disabled for now
-        Cache.add(this.id, this)
-        */
     }
     memberAction(name, inputParams, options) {
         var promise;

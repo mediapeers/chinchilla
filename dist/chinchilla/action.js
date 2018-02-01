@@ -1,10 +1,12 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
-const request = require("superagent");
 const UriTemplate = require("uri-templates");
+const Promise = require("bluebird");
 const config_1 = require("./config");
 const result_1 = require("./result");
 const extractor_1 = require("./extractor");
+const tools_1 = require("./tools");
 class Action {
     constructor(contextAction, params = {}, body, options) {
         this.result = new result_1.Result();
@@ -19,26 +21,24 @@ class Action {
             var req;
             switch (contextAction.method) {
                 case 'GET':
-                    req = request.get(uri);
+                    req = tools_1.Tools.req.get(uri);
                     break;
                 case 'POST':
-                    req = request.post(uri)
+                    req = tools_1.Tools.req.post(uri)
                         .send(this.body);
                     break;
                 case 'PUT':
-                    req = request.put(uri)
+                    req = tools_1.Tools.req.put(uri)
                         .send(this.body);
                     break;
                 case 'PATCH':
-                    req = request.patch(uri)
+                    req = tools_1.Tools.req.patch(uri)
                         .send(this.body);
                     break;
                 case 'DELETE':
-                    req = request.del(uri);
+                    req = tools_1.Tools.req.del(uri);
                     break;
             }
-            // add timestamp
-            req = req.query({ t: config_1.Config.timestamp });
             // add session by default
             if (!options || !(options.withoutSession === true)) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());
@@ -107,6 +107,7 @@ class Action {
         var cleaned = {};
         lodash_1.each(object, (value, key) => {
             if (/^\$/.test(key) || key === 'errors' || key === 'isPristine' || lodash_1.isFunction(value)) {
+                // skip
             }
             else if (lodash_1.isArray(value)) {
                 if (lodash_1.isPlainObject(value[0])) {

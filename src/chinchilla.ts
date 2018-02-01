@@ -1,3 +1,4 @@
+import * as Promise from 'bluebird'
 import { merge, last, startsWith } from 'lodash'
 import { Subject } from './chinchilla/subject'
 import { Config } from './chinchilla/config'
