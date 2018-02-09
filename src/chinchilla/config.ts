@@ -1,4 +1,5 @@
 import * as Kekse from 'cookies-js'
+import { each } from 'lodash'
 import { Tools } from './tools'
 
 export class Cookies {
@@ -22,6 +23,10 @@ export class Config {
   static errorInterceptor: any
   static cookieTimeout = 30*24*60*60 // 1 month
   static timestamp = Date.now() / 1000 | 0
+  static getAffiliationId: Function
+  static getRoleId: Function
+  static getSessionId: Function
+  static getCacheKey: Function
 
   static setEndpoint(name: string, url: string): void {
     Config.endpoints[name] = url
@@ -35,57 +40,54 @@ export class Config {
     Config.errorInterceptor = fn
   }
 
-  static setAffiliationId(id: string): void {
-    Config.setValue('affiliationId', id)
-  }
-
-  static getAffiliationId(): string {
-    return Config.getValue('affiliationId')
-  }
-
-  static clearAffiliationId(): void {
-    Config.clearValue('affiliationId')
-  }
-
-  static setSessionId(id: string): void {
-    Config.setValue('sessionId', id)
-  }
-
-  static getSessionId(): string {
-    return Config.getValue('sessionId')
-  }
-
-  static clearSessionId(): void {
-    Config.clearValue('sessionId')
-  }
-
-  static setCacheKey(key: string): void {
-    Config.setValue('cacheKey', key)
-  }
-
-  static getCacheKey(): string {
-    return Config.getValue('cacheKey') || 'anonymous'
-  }
-
-  static clearCacheKey(): void {
-    Config.clearValue('cacheKey')
-  }
-
   static getValue(name): string {
     return Config[name] || Cookies.get(Config.cookieKey(name))
+  }
+
+  static updateCacheKey(): void {
+    let affiliationId, roleId, sessionId, cacheKey
+
+    if ( (affiliationId = Config.getValue('affiliationId')) && (roleId = Config.getValue('roleId')) ) {
+      cacheKey = `${affiliationId}-${roleId}`
+    } else if (sessionId = Config.getValue('sessionId')) {
+      cacheKey = sessionId
+    } else {
+      cacheKey = 'anonymous'
+    }
+    Config.setValue('cacheKey', cacheKey)
   }
 
   static setValue(name, value): void {
     Config[name] = value
     Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout})
+
+    if (name !== 'cacheKey') Config.updateCacheKey()
   }
 
   static clearValue(name): void {
     Config[name] = undefined
     Cookies.expire(Config.cookieKey(name), { domain: Config.domain })
+
+    if (name !== 'cacheKey') Config.updateCacheKey()
   }
 
   static cookieKey(name): string {
     return `chinchilla.${name}`
   }
 }
+
+each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], (prop) => {
+  const tail = prop.charAt(0).toUpperCase() + prop.slice(1)
+
+  Config[`get${tail}`] = () => {
+    return Config.getValue(prop)
+  }
+
+  Config[`set${tail}`] = (value) => {
+    Config.setValue(prop, value)
+  }
+
+  Config[`clear${tail}`] = () => {
+    Config.clearValue(prop)
+  }
+})

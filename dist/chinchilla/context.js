@@ -36,11 +36,14 @@ class Context {
                 var req = tools_1.Tools.req
                     .get(contextUrl)
                     .query({ t: config_1.Config.timestamp });
+                if (config_1.Config.getSessionId()) {
+                    req = req.set('Session-Id', config_1.Config.getSessionId());
+                }
                 if (config_1.Config.getAffiliationId()) {
                     req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
                 }
-                if (config_1.Config.getSessionId()) {
-                    req = req.set('Session-Id', config_1.Config.getSessionId());
+                if (config_1.Config.getRoleId()) {
+                    req = req.set('Role-Id', config_1.Config.getRoleId());
                 }
                 req
                     .end((err, res) => {

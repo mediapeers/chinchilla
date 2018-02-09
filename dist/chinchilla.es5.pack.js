@@ -12433,6 +12433,7 @@
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var Kekse = __webpack_require__(9);
+var lodash_1 = __webpack_require__(0);
 var tools_1 = __webpack_require__(4);
 var Cookies = /** @class */ (function () {
     function Cookies() {
@@ -12479,43 +12480,33 @@ var Config = /** @class */ (function () {
     Config.setErrorInterceptor = function (fn) {
         Config.errorInterceptor = fn;
     };
-    Config.setAffiliationId = function (id) {
-        Config.setValue('affiliationId', id);
-    };
-    Config.getAffiliationId = function () {
-        return Config.getValue('affiliationId');
-    };
-    Config.clearAffiliationId = function () {
-        Config.clearValue('affiliationId');
-    };
-    Config.setSessionId = function (id) {
-        Config.setValue('sessionId', id);
-    };
-    Config.getSessionId = function () {
-        return Config.getValue('sessionId');
-    };
-    Config.clearSessionId = function () {
-        Config.clearValue('sessionId');
-    };
-    Config.setCacheKey = function (key) {
-        Config.setValue('cacheKey', key);
-    };
-    Config.getCacheKey = function () {
-        return Config.getValue('cacheKey') || 'anonymous';
-    };
-    Config.clearCacheKey = function () {
-        Config.clearValue('cacheKey');
-    };
     Config.getValue = function (name) {
         return Config[name] || Cookies.get(Config.cookieKey(name));
+    };
+    Config.updateCacheKey = function () {
+        var affiliationId, roleId, sessionId, cacheKey;
+        if ((affiliationId = Config.getValue('affiliationId')) && (roleId = Config.getValue('roleId'))) {
+            cacheKey = affiliationId + "-" + roleId;
+        }
+        else if (sessionId = Config.getValue('sessionId')) {
+            cacheKey = sessionId;
+        }
+        else {
+            cacheKey = 'anonymous';
+        }
+        Config.setValue('cacheKey', cacheKey);
     };
     Config.setValue = function (name, value) {
         Config[name] = value;
         Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
+        if (name !== 'cacheKey')
+            Config.updateCacheKey();
     };
     Config.clearValue = function (name) {
         Config[name] = undefined;
         Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
+        if (name !== 'cacheKey')
+            Config.updateCacheKey();
     };
     Config.cookieKey = function (name) {
         return "chinchilla." + name;
@@ -12526,6 +12517,18 @@ var Config = /** @class */ (function () {
     return Config;
 }());
 exports.Config = Config;
+lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], function (prop) {
+    var tail = prop.charAt(0).toUpperCase() + prop.slice(1);
+    Config["get" + tail] = function () {
+        return Config.getValue(prop);
+    };
+    Config["set" + tail] = function (value) {
+        Config.setValue(prop, value);
+    };
+    Config["clear" + tail] = function () {
+        Config.clearValue(prop);
+    };
+});
 
 
 /***/ }),
@@ -18918,11 +18921,14 @@ var Context = /** @class */ (function () {
                 var req = tools_1.Tools.req
                     .get(contextUrl)
                     .query({ t: config_1.Config.timestamp });
+                if (config_1.Config.getSessionId()) {
+                    req = req.set('Session-Id', config_1.Config.getSessionId());
+                }
                 if (config_1.Config.getAffiliationId()) {
                     req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
                 }
-                if (config_1.Config.getSessionId()) {
-                    req = req.set('Session-Id', config_1.Config.getSessionId());
+                if (config_1.Config.getRoleId()) {
+                    req = req.set('Role-Id', config_1.Config.getRoleId());
                 }
                 req
                     .end(function (err, res) {
@@ -20393,9 +20399,11 @@ var Action = /** @class */ (function () {
             if (!options || !(options.withoutSession === true)) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());
             }
-            // add affiliation if configured
             if (config_1.Config.getAffiliationId()) {
                 req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+            }
+            if (config_1.Config.getRoleId()) {
+                req = req.set('Role-Id', config_1.Config.getRoleId());
             }
             // add custom headers
             if (options && (options.header || options.headers)) {

@@ -45,9 +45,11 @@ class Action {
             if (!options || !(options.withoutSession === true)) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());
             }
-            // add affiliation if configured
             if (config_1.Config.getAffiliationId()) {
                 req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+            }
+            if (config_1.Config.getRoleId()) {
+                req = req.set('Role-Id', config_1.Config.getRoleId());
             }
             // add custom headers
             if (options && (options.header || options.headers)) {

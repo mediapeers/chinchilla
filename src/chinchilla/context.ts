@@ -56,11 +56,14 @@ export class Context {
           .get(contextUrl)
           .query({ t: Config.timestamp })
 
+        if (Config.getSessionId()) {
+          req = req.set('Session-Id', Config.getSessionId())
+        }
         if (Config.getAffiliationId()) {
           req = req.set('Affiliation-Id', Config.getAffiliationId())
         }
-        if (Config.getSessionId()) {
-          req = req.set('Session-Id', Config.getSessionId())
+        if (Config.getRoleId()) {
+          req = req.set('Role-Id', Config.getRoleId())
         }
 
         req
