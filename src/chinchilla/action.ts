@@ -60,9 +60,11 @@ export class Action {
       if (!options || !(options.withoutSession === true)) {
         req = req.set('Session-Id', Config.getSessionId())
       }
-      // add affiliation if configured
       if (Config.getAffiliationId()) {
         req = req.set('Affiliation-Id', Config.getAffiliationId())
+      }
+      if (Config.getRoleId()) {
+        req = req.set('Role-Id', Config.getRoleId())
       }
 
       // add custom headers
