@@ -6,7 +6,7 @@ class Result {
     constructor() {
         this.objects = [];
     }
-    success(result) {
+    success(result, raw = false) {
         this.headers = result.headers;
         if (result.body) {
             this.type = result.body['@type'];
@@ -49,6 +49,8 @@ class Result {
                 lodash_1.each(result.body.members, (member) => {
                     this.objects.push(member);
                 });
+                if (raw)
+                    break;
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
                 lodash_1.each(byContext, (objects, context) => {
@@ -61,7 +63,8 @@ class Result {
                 if (lodash_1.isEmpty(result.body))
                     break;
                 this.objects.push(result.body);
-                new subject_1.Subject(this.object);
+                if (!raw)
+                    new subject_1.Subject(this.object);
                 break;
         }
     }

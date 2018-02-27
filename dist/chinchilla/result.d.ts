@@ -6,6 +6,6 @@ export declare class Result {
     body: any;
     objects: any[];
     pagination: any;
-    success(result: any): void;
+    success(result: any, raw?: boolean): void;
     readonly object: any;
 }

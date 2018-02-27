@@ -20431,7 +20431,8 @@ var Action = /** @class */ (function () {
                     }
                     return reject(error);
                 }
-                _this.result.success(res);
+                var rawResult = (_this.options && _this.options.raw_result) || false;
+                _this.result.success(res, rawResult);
                 resolve(_this.result);
             });
         });
@@ -22343,8 +22344,9 @@ var Result = /** @class */ (function () {
     function Result() {
         this.objects = [];
     }
-    Result.prototype.success = function (result) {
+    Result.prototype.success = function (result, raw) {
         var _this = this;
+        if (raw === void 0) { raw = false; }
         this.headers = result.headers;
         if (result.body) {
             this.type = result.body['@type'];
@@ -22387,6 +22389,8 @@ var Result = /** @class */ (function () {
                 lodash_1.each(result.body.members, function (member) {
                     _this.objects.push(member);
                 });
+                if (raw)
+                    break;
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
                 lodash_1.each(byContext, function (objects, context) {
@@ -22399,7 +22403,8 @@ var Result = /** @class */ (function () {
                 if (lodash_1.isEmpty(result.body))
                     break;
                 this.objects.push(result.body);
-                new subject_1.Subject(this.object);
+                if (!raw)
+                    new subject_1.Subject(this.object);
                 break;
         }
     };

@@ -96,7 +96,8 @@ export class Action {
           return reject(error)
         }
 
-        this.result.success(res)
+        const rawResult = (this.options && this.options.raw_result) || false
+        this.result.success(res, rawResult)
         resolve(this.result)
       })
     })
