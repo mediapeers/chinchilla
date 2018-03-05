@@ -11,7 +11,7 @@ export class Result {
   objects: any[] = []
   pagination: any
 
-  success(result): void {
+  success(result, raw = false): void {
     this.headers  = result.headers
 
     if (result.body) {
@@ -59,6 +59,7 @@ export class Result {
           this.objects.push(member)
         })
 
+        if (raw) break
         var byContext = groupBy(this.objects, '@context')
 
         // creates new Subject for each group ob objects that share the same @context
@@ -71,7 +72,7 @@ export class Result {
         if (isArray(result.body)) throw new Error("Unexpectedly got an array")
         if (isEmpty(result.body)) break
         this.objects.push(result.body)
-        new Subject(this.object)
+        if (!raw) new Subject(this.object)
         break
     }
   }
