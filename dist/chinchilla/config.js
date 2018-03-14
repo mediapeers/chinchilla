@@ -32,7 +32,7 @@ class Config {
         Config.errorInterceptor = fn;
     }
     static getValue(name) {
-        return Config[name] || Cookies.get(Config.cookieKey(name));
+        return Config[name] || Config.cookiesImpl.get(Config.cookieKey(name));
     }
     static updateCacheKey() {
         let affiliationId, roleId, sessionId, cacheKey;
@@ -49,13 +49,13 @@ class Config {
     }
     static setValue(name, value) {
         Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
+        Config.cookiesImpl.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
     }
     static clearValue(name) {
         Config[name] = undefined;
-        Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
+        Config.cookiesImpl.expire(Config.cookieKey(name), { domain: Config.domain });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
     }
@@ -66,6 +66,7 @@ class Config {
 Config.endpoints = {};
 Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
 Config.timestamp = Date.now() / 1000 | 0;
+Config.cookiesImpl = Cookies;
 exports.Config = Config;
 lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], (prop) => {
     const tail = prop.charAt(0).toUpperCase() + prop.slice(1);

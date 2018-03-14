@@ -27,6 +27,7 @@ export class Config {
   static getRoleId: Function
   static getSessionId: Function
   static getCacheKey: Function
+  static cookiesImpl = Cookies
 
   static setEndpoint(name: string, url: string): void {
     Config.endpoints[name] = url
@@ -41,7 +42,7 @@ export class Config {
   }
 
   static getValue(name): string {
-    return Config[name] || Cookies.get(Config.cookieKey(name))
+    return Config[name] || Config.cookiesImpl.get(Config.cookieKey(name))
   }
 
   static updateCacheKey(): void {
@@ -59,14 +60,14 @@ export class Config {
 
   static setValue(name, value): void {
     Config[name] = value
-    Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout})
+    Config.cookiesImpl.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout})
 
     if (name !== 'cacheKey') Config.updateCacheKey()
   }
 
   static clearValue(name): void {
     Config[name] = undefined
-    Cookies.expire(Config.cookieKey(name), { domain: Config.domain })
+    Config.cookiesImpl.expire(Config.cookieKey(name), { domain: Config.domain })
 
     if (name !== 'cacheKey') Config.updateCacheKey()
   }

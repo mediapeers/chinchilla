@@ -12481,7 +12481,7 @@ var Config = /** @class */ (function () {
         Config.errorInterceptor = fn;
     };
     Config.getValue = function (name) {
-        return Config[name] || Cookies.get(Config.cookieKey(name));
+        return Config[name] || Config.cookiesImpl.get(Config.cookieKey(name));
     };
     Config.updateCacheKey = function () {
         var affiliationId, roleId, sessionId, cacheKey;
@@ -12498,13 +12498,13 @@ var Config = /** @class */ (function () {
     };
     Config.setValue = function (name, value) {
         Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
+        Config.cookiesImpl.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
     };
     Config.clearValue = function (name) {
         Config[name] = undefined;
-        Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
+        Config.cookiesImpl.expire(Config.cookieKey(name), { domain: Config.domain });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
     };
@@ -12514,6 +12514,7 @@ var Config = /** @class */ (function () {
     Config.endpoints = {};
     Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
     Config.timestamp = Date.now() / 1000 | 0;
+    Config.cookiesImpl = Cookies;
     return Config;
 }());
 exports.Config = Config;

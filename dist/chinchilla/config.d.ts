@@ -13,6 +13,7 @@ export declare class Config {
     static getRoleId: Function;
     static getSessionId: Function;
     static getCacheKey: Function;
+    static cookiesImpl: typeof Cookies;
     static setEndpoint(name: string, url: string): void;
     static setCookieDomain(domain: string): void;
     static setErrorInterceptor(fn: any): void;
