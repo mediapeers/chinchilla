@@ -5,22 +5,22 @@ const lodash_1 = require("lodash");
 const tools_1 = require("./tools");
 class Cookies {
     static get(...args) {
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.get.apply(null, args);
     }
     static set(...args) {
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.set.apply(null, args);
     }
     static expire(...args) {
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.expire.apply(null, args);
     }
 }
 exports.Cookies = Cookies;
+class NoCookies {
+    static get(...args) { }
+    static set(...args) { }
+    static expire(...args) { }
+}
+exports.NoCookies = NoCookies;
 class Config {
     static setEndpoint(name, url) {
         Config.endpoints[name] = url;
@@ -66,7 +66,7 @@ class Config {
 Config.endpoints = {};
 Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
 Config.timestamp = Date.now() / 1000 | 0;
-Config.cookiesImpl = Cookies;
+Config.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
 exports.Config = Config;
 lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], (prop) => {
     const tail = prop.charAt(0).toUpperCase() + prop.slice(1);

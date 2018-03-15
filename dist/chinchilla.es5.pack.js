@@ -12443,8 +12443,6 @@ var Cookies = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.get.apply(null, args);
     };
     Cookies.set = function () {
@@ -12452,8 +12450,6 @@ var Cookies = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.set.apply(null, args);
     };
     Cookies.expire = function () {
@@ -12461,13 +12457,35 @@ var Cookies = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.expire.apply(null, args);
     };
     return Cookies;
 }());
 exports.Cookies = Cookies;
+var NoCookies = /** @class */ (function () {
+    function NoCookies() {
+    }
+    NoCookies.get = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+    };
+    NoCookies.set = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+    };
+    NoCookies.expire = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+    };
+    return NoCookies;
+}());
+exports.NoCookies = NoCookies;
 var Config = /** @class */ (function () {
     function Config() {
     }
@@ -12514,7 +12532,7 @@ var Config = /** @class */ (function () {
     Config.endpoints = {};
     Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
     Config.timestamp = Date.now() / 1000 | 0;
-    Config.cookiesImpl = Cookies;
+    Config.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
     return Config;
 }());
 exports.Config = Config;
@@ -18810,12 +18828,43 @@ var StorageCache = /** @class */ (function (_super) {
     return StorageCache;
 }(BaseCache));
 exports.StorageCache = StorageCache;
+var NoCache = /** @class */ (function (_super) {
+    __extends(NoCache, _super);
+    function NoCache() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NoCache.prototype.setValue = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+    };
+    NoCache.prototype.removeValue = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+    };
+    NoCache.prototype.clear = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+    };
+    NoCache.prototype.getValue = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+    };
+    return NoCache;
+}(BaseCache));
+exports.NoCache = NoCache;
 var Cache = /** @class */ (function () {
     function Cache() {
     }
     Cache.clear = function () {
-        if (!tools_1.Tools.isNode)
-            Cache.storage.clear();
+        Cache.storage.clear();
         Cache.runtime.clear();
     };
     Cache.random = function (prefix) {
@@ -18827,7 +18876,7 @@ var Cache = /** @class */ (function () {
         get: function () {
             if (Cache._storage)
                 return Cache._storage;
-            return Cache._storage = new StorageCache();
+            return Cache._storage = new Cache.storageCacheImpl();
         },
         enumerable: true,
         configurable: true
@@ -18841,6 +18890,7 @@ var Cache = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
+    Cache.storageCacheImpl = tools_1.Tools.isNode ? NoCache : StorageCache;
     return Cache;
 }());
 exports.Cache = Cache;
@@ -18914,7 +18964,7 @@ var Context = /** @class */ (function () {
         }
         var dataPromise;
         var cachedData;
-        if (!tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.get(key))) {
+        if (cachedData = cache_1.Cache.storage.get(key)) {
             dataPromise = Promise.resolve(cachedData);
         }
         else {
@@ -18939,11 +18989,9 @@ var Context = /** @class */ (function () {
                 });
             });
         }
-        if (!tools_1.Tools.isNode) {
-            dataPromise.then(function (data) {
-                return cache_1.Cache.storage.set(key, data);
-            });
-        }
+        dataPromise.then(function (data) {
+            return cache_1.Cache.storage.set(key, data);
+        });
         cachedContext = new Context(dataPromise);
         cache_1.Cache.runtime.set(key, cachedContext);
         return cachedContext;
@@ -20730,8 +20778,10 @@ var Promise = __webpack_require__(2);
 var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(14);
 var config_1 = __webpack_require__(1);
+exports.NoCookies = config_1.NoCookies;
 var context_1 = __webpack_require__(7);
 var cache_1 = __webpack_require__(6);
+exports.NoCache = cache_1.NoCache;
 var extractor_1 = __webpack_require__(3);
 var chch = function (objectsOrApp, model) {
     // detach from existing Subject first before creating a new one..

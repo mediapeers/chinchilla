@@ -4,8 +4,10 @@ const Promise = require("bluebird");
 const lodash_1 = require("lodash");
 const subject_1 = require("./chinchilla/subject");
 const config_1 = require("./chinchilla/config");
+exports.NoCookies = config_1.NoCookies;
 const context_1 = require("./chinchilla/context");
 const cache_1 = require("./chinchilla/cache");
+exports.NoCache = cache_1.NoCache;
 const extractor_1 = require("./chinchilla/extractor");
 let chch = (objectsOrApp, model) => {
     // detach from existing Subject first before creating a new one..

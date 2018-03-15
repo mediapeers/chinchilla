@@ -47,7 +47,7 @@ export class Context {
 
     let dataPromise
     let cachedData
-    if (!Tools.isNode && (cachedData = Cache.storage.get(key))) {
+    if (cachedData = Cache.storage.get(key)) {
       dataPromise = Promise.resolve(cachedData)
     }
     else {
@@ -74,11 +74,9 @@ export class Context {
       })
     }
 
-    if (!Tools.isNode) {
-      dataPromise.then((data) => {
-        return Cache.storage.set(key, data)
-      })
-    }
+    dataPromise.then((data) => {
+      return Cache.storage.set(key, data)
+    })
 
     cachedContext = new Context(dataPromise)
     Cache.runtime.set(key, cachedContext)

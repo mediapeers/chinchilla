@@ -28,7 +28,7 @@ class Context {
         }
         let dataPromise;
         let cachedData;
-        if (!tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.get(key))) {
+        if (cachedData = cache_1.Cache.storage.get(key)) {
             dataPromise = Promise.resolve(cachedData);
         }
         else {
@@ -53,11 +53,9 @@ class Context {
                 });
             });
         }
-        if (!tools_1.Tools.isNode) {
-            dataPromise.then((data) => {
-                return cache_1.Cache.storage.set(key, data);
-            });
-        }
+        dataPromise.then((data) => {
+            return cache_1.Cache.storage.set(key, data);
+        });
         cachedContext = new Context(dataPromise);
         cache_1.Cache.runtime.set(key, cachedContext);
         return cachedContext;

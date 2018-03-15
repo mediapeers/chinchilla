@@ -23,7 +23,14 @@ export declare class StorageCache extends BaseCache {
     removeValue(extkey: string): void;
     clear(): void;
 }
+export declare class NoCache extends BaseCache {
+    setValue(...args: any[]): void;
+    removeValue(...args: any[]): void;
+    clear(...args: any[]): void;
+    getValue(...args: any[]): void;
+}
 export declare class Cache {
+    static storageCacheImpl: typeof StorageCache;
     private static _storage;
     private static _runtime;
     static clear(): void;

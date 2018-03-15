@@ -1,9 +1,9 @@
 import * as Promise from 'bluebird'
 import { merge, last, startsWith } from 'lodash'
 import { Subject } from './chinchilla/subject'
-import { Config } from './chinchilla/config'
+import { Config, NoCookies } from './chinchilla/config'
 import { Context } from './chinchilla/context'
-import { Cache } from './chinchilla/cache'
+import { Cache, NoCache } from './chinchilla/cache'
 import { Extractor } from './chinchilla/extractor'
 
 let chch = (objectsOrApp, model?) => {
@@ -79,4 +79,5 @@ chch['unfurl'] = (app, model, actionName, params) => {
   })
 }
 
+export { NoCache, NoCookies }
 export default chch

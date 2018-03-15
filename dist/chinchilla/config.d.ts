@@ -3,6 +3,11 @@ export declare class Cookies {
     static set(...args: any[]): any;
     static expire(...args: any[]): any;
 }
+export declare class NoCookies {
+    static get(...args: any[]): void;
+    static set(...args: any[]): void;
+    static expire(...args: any[]): void;
+}
 export declare class Config {
     static endpoints: {};
     static domain: string;

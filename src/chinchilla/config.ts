@@ -4,17 +4,20 @@ import { Tools } from './tools'
 
 export class Cookies {
   static get(...args) {
-    if (Tools.isNode) return
     return Kekse.get.apply(null, args)
   }
   static set(...args) {
-    if (Tools.isNode) return
     return Kekse.set.apply(null, args)
   }
   static expire(...args) {
-    if (Tools.isNode) return
     return Kekse.expire.apply(null, args)
   }
+}
+
+export class NoCookies {
+  static get(...args) {}
+  static set(...args) {}
+  static expire(...args) {}
 }
 
 export class Config {
@@ -27,7 +30,7 @@ export class Config {
   static getRoleId: Function
   static getSessionId: Function
   static getCacheKey: Function
-  static cookiesImpl = Cookies
+  static cookiesImpl = Tools.isNode ? NoCookies : Cookies
 
   static setEndpoint(name: string, url: string): void {
     Config.endpoints[name] = url

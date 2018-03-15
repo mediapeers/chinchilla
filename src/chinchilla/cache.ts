@@ -89,12 +89,20 @@ export class StorageCache extends BaseCache {
   }
 }
 
+export class NoCache extends BaseCache {
+  setValue(...args) {}
+  removeValue(...args) {}
+  clear(...args) {}
+  getValue(...args) {}
+}
+
 export class Cache {
+  public static storageCacheImpl = Tools.isNode ? NoCache : StorageCache
   private static _storage
   private static _runtime
 
   static clear() {
-    if (!Tools.isNode) Cache.storage.clear()
+    Cache.storage.clear()
     Cache.runtime.clear()
   }
 
@@ -105,7 +113,7 @@ export class Cache {
 
   static get storage() {
     if (Cache._storage) return Cache._storage
-    return Cache._storage = new StorageCache()
+    return Cache._storage = new Cache.storageCacheImpl()
   }
 
   static get runtime() {
