@@ -6,24 +6,27 @@ const lodash_1 = require("lodash");
 const tools_1 = require("./tools");
 class Cookies {
     static get(...args) {
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.get.apply(null, args);
     }
     static set(...args) {
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.set.apply(null, args);
     }
     static expire(...args) {
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.expire.apply(null, args);
     }
 }
 exports.Cookies = Cookies;
+<<<<<<< HEAD
 const configNames = ['affiliationId', 'roleId', 'sessionId', 'flavours'];
 const settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor'];
+=======
+class NoCookies {
+    static get(...args) { }
+    static set(...args) { }
+    static expire(...args) { }
+}
+exports.NoCookies = NoCookies;
+>>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
 class Config {
     static getInstance() {
         if (!Config.instance)
@@ -134,4 +137,11 @@ class Config {
         return value ? qs.parse(value) : {};
     }
 }
+<<<<<<< HEAD
+=======
+Config.endpoints = {};
+Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
+Config.timestamp = Date.now() / 1000 | 0;
+Config.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
+>>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
 exports.Config = Config;

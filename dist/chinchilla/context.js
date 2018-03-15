@@ -28,7 +28,11 @@ class Context {
         }
         let dataPromise;
         let cachedData;
+<<<<<<< HEAD
         if (!config.settings.devMode && !tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.fetch(config.getCacheKey(key)))) {
+=======
+        if (cachedData = cache_1.Cache.storage.get(key)) {
+>>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
             dataPromise = Promise.resolve(cachedData);
         }
         else {
@@ -58,6 +62,7 @@ class Context {
                 });
             });
         }
+<<<<<<< HEAD
         cachedContext = new Context(dataPromise);
         // when running a node web server, for multiple simultaneous requests of the same context
         // one could fail (e.g. with a 419). for this reason we cache only after a successful result
@@ -75,6 +80,13 @@ class Context {
             }
             cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
         }
+=======
+        dataPromise.then((data) => {
+            return cache_1.Cache.storage.set(key, data);
+        });
+        cachedContext = new Context(dataPromise);
+        cache_1.Cache.runtime.set(key, cachedContext);
+>>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
         return cachedContext;
     }
     constructor(dataPromise) {

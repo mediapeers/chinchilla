@@ -1,4 +1,5 @@
 import { Subject } from './chinchilla/subject';
+<<<<<<< HEAD
 import { Config, Cookies } from './chinchilla/config';
 import { Cache } from './chinchilla/cache';
 import { Extractor } from './chinchilla/extractor';
@@ -19,4 +20,10 @@ declare const chch: ((one: any, two?: string | Config, three?: Config) => Subjec
     context: (urlOrApp: any, model?: string, config?: Config) => any;
     unfurl: (app: any, model: any, actionName: any, params: any) => any;
 };
+=======
+import { NoCookies } from './chinchilla/config';
+import { NoCache } from './chinchilla/cache';
+declare let chch: (objectsOrApp: any, model?: any) => Subject;
+export { NoCache, NoCookies };
+>>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
 export default chch;

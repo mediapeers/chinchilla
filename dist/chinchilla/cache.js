@@ -124,10 +124,16 @@ class StorageCache extends BaseCache {
     }
 }
 exports.StorageCache = StorageCache;
+class NoCache extends BaseCache {
+    setValue(...args) { }
+    removeValue(...args) { }
+    clear(...args) { }
+    getValue(...args) { }
+}
+exports.NoCache = NoCache;
 class Cache {
     static clear() {
-        if (!tools_1.Tools.isNode)
-            Cache.storage.clear();
+        Cache.storage.clear();
         Cache.runtime.clear();
     }
     static random(prefix = 'unknown') {
@@ -137,7 +143,7 @@ class Cache {
     static get storage() {
         if (Cache._storage)
             return Cache._storage;
-        return Cache._storage = new StorageCache();
+        return Cache._storage = new Cache.storageCacheImpl();
     }
     static get runtime() {
         if (Cache._runtime)
@@ -145,4 +151,5 @@ class Cache {
         return Cache._runtime = new RuntimeCache();
     }
 }
+Cache.storageCacheImpl = tools_1.Tools.isNode ? NoCache : StorageCache;
 exports.Cache = Cache;

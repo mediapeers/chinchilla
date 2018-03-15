@@ -5,17 +5,20 @@ import { Tools } from './tools'
 
 export class Cookies {
   static get(...args) {
-    if (Tools.isNode) return
     return Kekse.get.apply(null, args)
   }
   static set(...args) {
-    if (Tools.isNode) return
     return Kekse.set.apply(null, args)
   }
   static expire(...args) {
-    if (Tools.isNode) return
     return Kekse.expire.apply(null, args)
   }
+}
+
+export class NoCookies {
+  static get(..._args) {}
+  static set(..._args) {}
+  static expire(..._args) {}
 }
 
 const configNames  = ['affiliationId', 'roleId', 'sessionId', 'flavours']
@@ -44,6 +47,7 @@ export class Config {
   setFlavours: Function
   clearFlavours: Function
   settings: Settings
+  cookiesImpl = Tools.isNode ? NoCookies : Cookies
 
   static instance: Config
 
@@ -110,7 +114,7 @@ export class Config {
   }
 
   getValue(name): string {
-    return this.settings[name] || Cookies.get(this.cookieKey(name))
+    return this.settings[name] || this.cookiesImpl.get(this.cookieKey(name))
   }
 
   updateCacheKey(): void {
@@ -132,7 +136,7 @@ export class Config {
 
   setValue(name, value): void {
     this.settings[name] = value
-    Cookies.set(this.cookieKey(name), value, {
+    this.cookiesImpl.set(this.cookieKey(name), value, {
       path: '/',
       domain: this.settings.domain,
       expires: this.settings.cookieTimeout,
@@ -144,7 +148,7 @@ export class Config {
 
   clearValue(name): void {
     this.settings[name] = undefined
-    Cookies.expire(this.cookieKey(name), { domain: this.settings.domain })
+    this.cookiesImpl.expire(this.cookieKey(name), { domain: this.settings.domain })
 
     if (name !== 'cacheKey') this.updateCacheKey()
   }

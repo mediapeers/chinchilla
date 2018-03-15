@@ -3,6 +3,7 @@ export declare class Cookies {
     static set(...args: any[]): any;
     static expire(...args: any[]): any;
 }
+<<<<<<< HEAD
 export interface Settings {
     endpoints: any;
     cookieTimeout: number;
@@ -10,6 +11,12 @@ export interface Settings {
     domain?: string;
     devMode?: boolean;
     errorInterceptor?: Function;
+=======
+export declare class NoCookies {
+    static get(...args: any[]): void;
+    static set(...args: any[]): void;
+    static expire(...args: any[]): void;
+>>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
 }
 export declare class Config {
     getAffiliationId: Function;
