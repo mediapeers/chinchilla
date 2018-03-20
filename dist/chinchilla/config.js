@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const Kekse = require("cookies-js");
+const qs = require("querystringify");
 const lodash_1 = require("lodash");
 const tools_1 = require("./tools");
 class Cookies {
@@ -62,12 +63,23 @@ class Config {
     static cookieKey(name) {
         return `chinchilla.${name}`;
     }
+    static setFlavour(name, value) {
+        let flavours = Config.activeFlavours;
+        flavours[name] = value;
+        Config.setFlavours(qs.stringify(flavours));
+        return flavours;
+    }
+    // returns current flavours key/values
+    static get activeFlavours() {
+        const value = Config.getFlavours();
+        return value ? qs.parse(value) : {};
+    }
 }
 Config.endpoints = {};
 Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
 Config.timestamp = Date.now() / 1000 | 0;
 exports.Config = Config;
-lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], (prop) => {
+lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'], (prop) => {
     const tail = prop.charAt(0).toUpperCase() + prop.slice(1);
     Config[`get${tail}`] = () => {
         return Config.getValue(prop);

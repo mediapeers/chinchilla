@@ -1,4 +1,5 @@
 import * as Kekse from 'cookies-js'
+import * as qs from 'querystringify'
 import { each } from 'lodash'
 import { Tools } from './tools'
 
@@ -27,6 +28,8 @@ export class Config {
   static getRoleId: Function
   static getSessionId: Function
   static getCacheKey: Function
+  static setFlavours: Function
+  static getFlavours: Function
 
   static setEndpoint(name: string, url: string): void {
     Config.endpoints[name] = url
@@ -74,9 +77,23 @@ export class Config {
   static cookieKey(name): string {
     return `chinchilla.${name}`
   }
+
+  static setFlavour(name, value) {
+    let flavours   = Config.activeFlavours
+    flavours[name] = value
+
+    Config.setFlavours(qs.stringify(flavours))
+    return flavours
+  }
+
+  // returns current flavours key/values
+  static get activeFlavours() {
+    const value = Config.getFlavours()
+    return value ? qs.parse(value) : {}
+  }
 }
 
-each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], (prop) => {
+each(['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'], (prop) => {
   const tail = prop.charAt(0).toUpperCase() + prop.slice(1)
 
   Config[`get${tail}`] = () => {
