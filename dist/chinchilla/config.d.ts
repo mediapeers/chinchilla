@@ -13,6 +13,8 @@ export declare class Config {
     static getRoleId: Function;
     static getSessionId: Function;
     static getCacheKey: Function;
+    static setFlavours: Function;
+    static getFlavours: Function;
     static setEndpoint(name: string, url: string): void;
     static setCookieDomain(domain: string): void;
     static setErrorInterceptor(fn: any): void;
@@ -21,4 +23,6 @@ export declare class Config {
     static setValue(name: any, value: any): void;
     static clearValue(name: any): void;
     static cookieKey(name: any): string;
+    static setFlavour(name: any, value: any): any;
+    static readonly activeFlavours: any;
 }

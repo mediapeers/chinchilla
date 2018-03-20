@@ -51,6 +51,9 @@ class Action {
             if (config_1.Config.getRoleId()) {
                 req = req.set('Role-Id', config_1.Config.getRoleId());
             }
+            if (config_1.Config.getFlavours()) {
+                req = req.set('Mpx-Flavours', config_1.Config.getFlavours());
+            }
             // add custom headers
             if (options && (options.header || options.headers)) {
                 let headers = options.headers || options.header;

@@ -65,6 +65,9 @@ export class Context {
         if (Config.getRoleId()) {
           req = req.set('Role-Id', Config.getRoleId())
         }
+        if (Config.getFlavours()) {
+          req = req.set('Mpx-Flavours', Config.getFlavours())
+        }
 
         req
           .end((err, res) => {

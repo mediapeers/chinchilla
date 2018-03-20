@@ -66,6 +66,9 @@ export class Action {
       if (Config.getRoleId()) {
         req = req.set('Role-Id', Config.getRoleId())
       }
+      if (Config.getFlavours()) {
+        req = req.set('Mpx-Flavours', Config.getFlavours())
+      }
 
       // add custom headers
       if (options && (options.header || options.headers)) {

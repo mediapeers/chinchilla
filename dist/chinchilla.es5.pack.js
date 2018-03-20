@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 26);
+/******/ 	return __webpack_require__(__webpack_require__.s = 27);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -12423,7 +12423,7 @@
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(25)(module), __webpack_require__(8)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(26)(module), __webpack_require__(8)))
 
 /***/ }),
 /* 1 */
@@ -12433,6 +12433,7 @@
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var Kekse = __webpack_require__(9);
+var qs = __webpack_require__(10);
 var lodash_1 = __webpack_require__(0);
 var tools_1 = __webpack_require__(4);
 var Cookies = /** @class */ (function () {
@@ -12511,13 +12512,28 @@ var Config = /** @class */ (function () {
     Config.cookieKey = function (name) {
         return "chinchilla." + name;
     };
+    Config.setFlavour = function (name, value) {
+        var flavours = Config.activeFlavours;
+        flavours[name] = value;
+        Config.setFlavours(qs.stringify(flavours));
+        return flavours;
+    };
+    Object.defineProperty(Config, "activeFlavours", {
+        // returns current flavours key/values
+        get: function () {
+            var value = Config.getFlavours();
+            return value ? qs.parse(value) : {};
+        },
+        enumerable: true,
+        configurable: true
+    });
     Config.endpoints = {};
     Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
     Config.timestamp = Date.now() / 1000 | 0;
     return Config;
 }());
 exports.Config = Config;
-lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], function (prop) {
+lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'], function (prop) {
     var tail = prop.charAt(0).toUpperCase() + prop.slice(1);
     Config["get" + tail] = function () {
         return Config.getValue(prop);
@@ -18154,7 +18170,7 @@ module.exports = ret;
 
 },{"./es5":13}]},{},[4])(4)
 });                    ;if (typeof window !== 'undefined' && window !== null) {                               window.P = window.Promise;                                                     } else if (typeof self !== 'undefined' && self !== null) {                             self.P = self.Promise;                                                         }
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(11), __webpack_require__(8), __webpack_require__(22).setImmediate))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(12), __webpack_require__(8), __webpack_require__(23).setImmediate))
 
 /***/ }),
 /* 3 */
@@ -18252,7 +18268,7 @@ exports.Extractor = Extractor;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var request = __webpack_require__(10);
+var request = __webpack_require__(11);
 //import * as sdebug from 'superdebug'
 //import * as http from 'http'
 var Tools = /** @class */ (function () {
@@ -18930,6 +18946,9 @@ var Context = /** @class */ (function () {
                 if (config_1.Config.getRoleId()) {
                     req = req.set('Role-Id', config_1.Config.getRoleId());
                 }
+                if (config_1.Config.getFlavours()) {
+                    req = req.set('Mpx-Flavours', config_1.Config.getFlavours());
+                }
                 req
                     .end(function (err, res) {
                     if (err)
@@ -19215,6 +19234,85 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/*
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
+"use strict";
+
+
+var has = Object.prototype.hasOwnProperty;
+
+/**
+ * Decode a URI encoded string.
+ *
+ * @param {String} input The URI encoded string.
+ * @returns {String} The decoded string.
+ * @api private
+ */
+function decode(input) {
+  return decodeURIComponent(input.replace(/\+/g, ' '));
+}
+
+/**
+ * Simple query string parser.
+ *
+ * @param {String} query The query string that needs to be parsed.
+ * @returns {Object}
+ * @api public
+ */
+function querystring(query) {
+  var parser = /([^=?&]+)=?([^&]*)/g
+    , result = {}
+    , part;
+
+  //
+  // Little nifty parsing hack, leverage the fact that RegExp.exec increments
+  // the lastIndex property so we can continue executing this loop until we've
+  // parsed all results.
+  //
+  for (;
+    part = parser.exec(query);
+    result[decode(part[1])] = decode(part[2])
+  );
+
+  return result;
+}
+
+/**
+ * Transform a query string to an object.
+ *
+ * @param {Object} obj Object that should be transformed.
+ * @param {String} prefix Optional prefix.
+ * @returns {String}
+ * @api public
+ */
+function querystringify(obj, prefix) {
+  prefix = prefix || '';
+
+  var pairs = [];
+
+  //
+  // Optionally prefix with a '?' if needed
+  //
+  if ('string' !== typeof prefix) prefix = '?';
+
+  for (var key in obj) {
+    if (has.call(obj, key)) {
+      pairs.push(encodeURIComponent(key) +'='+ encodeURIComponent(obj[key]));
+    }
+  }
+
+  return pairs.length ? prefix + pairs.join('&') : '';
+}
+
+//
+// Expose the module.
+//
+exports.stringify = querystringify;
+exports.parse = querystring;
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
 /**
  * Root reference for iframes.
  */
@@ -19229,11 +19327,11 @@ if (typeof window !== 'undefined') { // Browser window
   root = this;
 }
 
-var Emitter = __webpack_require__(16);
-var RequestBase = __webpack_require__(19);
-var isObject = __webpack_require__(12);
-var ResponseBase = __webpack_require__(20);
-var Agent = __webpack_require__(18);
+var Emitter = __webpack_require__(17);
+var RequestBase = __webpack_require__(20);
+var isObject = __webpack_require__(13);
+var ResponseBase = __webpack_require__(21);
+var Agent = __webpack_require__(19);
 
 /**
  * Noop.
@@ -20138,7 +20236,7 @@ request.put = function(url, data, fn) {
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser
@@ -20324,7 +20422,7 @@ process.umask = function() { return 0; };
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20346,7 +20444,7 @@ module.exports = isObject;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20356,7 +20454,7 @@ var lodash_1 = __webpack_require__(0);
 var UriTemplate = __webpack_require__(5);
 var Promise = __webpack_require__(2);
 var config_1 = __webpack_require__(1);
-var result_1 = __webpack_require__(24);
+var result_1 = __webpack_require__(25);
 var extractor_1 = __webpack_require__(3);
 var tools_1 = __webpack_require__(4);
 var Action = /** @class */ (function () {
@@ -20404,6 +20502,9 @@ var Action = /** @class */ (function () {
             }
             if (config_1.Config.getRoleId()) {
                 req = req.set('Role-Id', config_1.Config.getRoleId());
+            }
+            if (config_1.Config.getFlavours()) {
+                req = req.set('Mpx-Flavours', config_1.Config.getFlavours());
             }
             // add custom headers
             if (options && (options.header || options.headers)) {
@@ -20516,7 +20617,7 @@ exports.Action = Action;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20525,9 +20626,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var context_1 = __webpack_require__(7);
 var config_1 = __webpack_require__(1);
-var action_1 = __webpack_require__(13);
+var action_1 = __webpack_require__(14);
 var extractor_1 = __webpack_require__(3);
-var association_1 = __webpack_require__(23);
+var association_1 = __webpack_require__(24);
 var cache_1 = __webpack_require__(6);
 var Subject = /** @class */ (function () {
     function Subject(objectsOrApp, model) {
@@ -20719,7 +20820,7 @@ exports.Subject = Subject;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -20727,7 +20828,7 @@ exports.Subject = Subject;
 Object.defineProperty(exports, "__esModule", { value: true });
 var Promise = __webpack_require__(2);
 var lodash_1 = __webpack_require__(0);
-var subject_1 = __webpack_require__(14);
+var subject_1 = __webpack_require__(15);
 var config_1 = __webpack_require__(1);
 var context_1 = __webpack_require__(7);
 var cache_1 = __webpack_require__(6);
@@ -20797,7 +20898,7 @@ exports.default = chch;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
@@ -20966,7 +21067,7 @@ Emitter.prototype.hasListeners = function(event){
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -21156,10 +21257,10 @@ Emitter.prototype.hasListeners = function(event){
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(11)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(8), __webpack_require__(12)))
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports) {
 
 function Agent() {
@@ -21185,7 +21286,7 @@ module.exports = Agent;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21194,7 +21295,7 @@ module.exports = Agent;
 /**
  * Module of mixed-in functions shared between node and client code
  */
-var isObject = __webpack_require__(12);
+var isObject = __webpack_require__(13);
 
 /**
  * Expose `RequestBase`.
@@ -21886,7 +21987,7 @@ RequestBase.prototype._setTimeouts = function() {
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -21896,7 +21997,7 @@ RequestBase.prototype._setTimeouts = function() {
  * Module dependencies.
  */
 
-var utils = __webpack_require__(21);
+var utils = __webpack_require__(22);
 
 /**
  * Expose `ResponseBase`.
@@ -22027,7 +22128,7 @@ ResponseBase.prototype._setStatusProperties = function(status){
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22105,7 +22206,7 @@ exports.cleanHeader = function(header, changesOrigin){
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var apply = Function.prototype.apply;
@@ -22158,13 +22259,13 @@ exports._unrefActive = exports.active = function(item) {
 };
 
 // setimmediate attaches itself to the global object
-__webpack_require__(17);
+__webpack_require__(18);
 exports.setImmediate = setImmediate;
 exports.clearImmediate = clearImmediate;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22172,7 +22273,7 @@ exports.clearImmediate = clearImmediate;
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var context_1 = __webpack_require__(7);
-var action_1 = __webpack_require__(13);
+var action_1 = __webpack_require__(14);
 var extractor_1 = __webpack_require__(3);
 var Association = /** @class */ (function () {
     function Association(subject, name) {
@@ -22332,14 +22433,14 @@ exports.Association = Association;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
-var subject_1 = __webpack_require__(14);
+var subject_1 = __webpack_require__(15);
 var Result = /** @class */ (function () {
     function Result() {
         this.objects = [];
@@ -22422,7 +22523,7 @@ exports.Result = Result;
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -22450,7 +22551,7 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -22459,12 +22560,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Promise = __webpack_require__(2);
 var Cookies = __webpack_require__(9);
 var UriTemplate = __webpack_require__(5);
-var request = __webpack_require__(10);
-var chinchilla_1 = __webpack_require__(15);
+var request = __webpack_require__(11);
+var qs = __webpack_require__(10);
+var chinchilla_1 = __webpack_require__(16);
 window['Promise'] = Promise;
 window['Cookies'] = Cookies;
 window['UriTemplate'] = UriTemplate;
 window['request'] = request;
+window['qs'] = qs;
 window['chch'] = chinchilla_1.default;
 
 
