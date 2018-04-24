@@ -61,7 +61,7 @@ module Chinchilla {
         // add timestamp
         req = req.query({ t: Config.timestamp })
 
-        if (typeof module !== 'undefined' && module.exports) {
+        if (typeof !_.isUndefined(module) && module.exports) {
           req = req.timeout(10000)
         }
 
