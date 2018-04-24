@@ -7,6 +7,8 @@
 
 declare var _;
 declare var request;
+declare var module;
+declare var exports;
 
 module Chinchilla {
   export class Action {
@@ -58,6 +60,10 @@ module Chinchilla {
 
         // add timestamp
         req = req.query({ t: Config.timestamp })
+
+        if (typeof module !== 'undefined' && module.exports) {
+          req = req.timeout(10000)
+        }
 
         // add session by default
         if (!options || !(options.withoutSession === true)) {
