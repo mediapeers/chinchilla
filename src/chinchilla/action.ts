@@ -1,4 +1,4 @@
-import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get } from 'lodash'
+import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get, isUndefined } from 'lodash'
 import * as UriTemplate from 'uri-templates'
 import * as Promise from 'bluebird'
 import { Config } from './config'
@@ -78,6 +78,11 @@ export class Action {
       else if (typeof headers === 'object')
         for (var key in headers)
           req.set(key, headers[key])
+      }
+
+      // Timeout after 10 seconds if running as backend-for-frontend.
+      if (isUndefined(module) && module.exports) {
+        req = req.timeout(10000)
       }
 
       req.end((err, res) => {
