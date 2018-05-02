@@ -81,7 +81,7 @@ export class Action {
       }
 
       // Timeout after 10 seconds if running as backend-for-frontend.
-      if (isUndefined(module) && module.exports) {
+      if (Tools.isNode) {
         req = req.timeout(10000)
       }
 
