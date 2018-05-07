@@ -20515,6 +20515,10 @@ var Action = /** @class */ (function () {
                     for (var key in headers)
                         req.set(key, headers[key]);
             }
+            // Timeout after 10 seconds if running as backend-for-frontend.
+            if (tools_1.Tools.isNode) {
+                req = req.timeout(10000);
+            }
             req.end(function (err, res) {
                 if (err) {
                     var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
