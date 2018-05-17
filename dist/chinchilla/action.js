@@ -70,13 +70,19 @@ class Action {
             req.end((err, res) => {
                 if (err) {
                     var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
-                    error['headers'] = lodash_1.get(res, 'headers');
-                    error['object'] = lodash_1.get(res, 'body');
-                    error['statusCode'] = lodash_1.get(res, 'statusCode') || 500;
-                    error['statusText'] = lodash_1.get(res, 'statusText') || 'No error details available';
-                    error['url'] = lodash_1.get(res, 'req.url');
-                    error['method'] = lodash_1.get(res, 'req.method');
-                    error['stack'] = lodash_1.get(err, 'stack');
+                    if (res) {
+                        error['headers'] = res.headers;
+                        error['object'] = res.body;
+                        error['statusCode'] = res.statusCode;
+                        error['statusText'] = res.statusText;
+                        error['url'] = res.req.url;
+                        error['method'] = res.req.method;
+                        error['stack'] = err.stack;
+                    }
+                    else {
+                        error['statusCode'] = 500;
+                        error['statusText'] = 'No response returned';
+                    }
                     if (config_1.Config.errorInterceptor) {
                         // if error interceptor returns true, then abort (don't resolve nor reject)
                         if (config_1.Config.errorInterceptor(error))
