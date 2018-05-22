@@ -88,13 +88,20 @@ export class Action {
       req.end((err, res) => {
         if (err) {
           var error = new Error(get(res, 'body.description') || get(err, 'response.statusText') || 'No error details available')
-          error['headers']    = res.headers
-          error['object']     = res.body
-          error['statusCode'] = res.statusCode
-          error['statusText'] = res.statusText
-          error['url']        = res.req.url
-          error['method']     = res.req.method
-          error['stack']      = err.stack
+
+          if (res) {
+            error['headers']    = res.headers
+            error['object']     = res.body
+            error['statusCode'] = res.statusCode
+            error['statusText'] = res.statusText
+            error['url']        = res.req.url
+            error['method']     = res.req.method
+            error['stack']      = err.stack
+          }
+          else {
+            error['statusCode'] = 500
+            error['statusText'] = 'No response returned'
+          }
 
           if (Config.errorInterceptor) {
             // if error interceptor returns true, then abort (don't resolve nor reject)
