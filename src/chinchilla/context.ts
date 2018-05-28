@@ -71,7 +71,17 @@ export class Context {
 
         req
           .end((err, res) => {
-            if (err) return reject(err)
+            if (err) {
+              var error = Tools.errorResult(err, res)
+
+              if (Config.errorInterceptor) {
+                // if error interceptor returns true, then abort (don't resolve nor reject)
+                if (Config.errorInterceptor(error)) return
+              }
+
+              return reject(error)
+            }
+
             return resolve(res.body)
           })
       })

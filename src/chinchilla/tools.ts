@@ -1,4 +1,5 @@
 import * as request from 'superagent'
+import { get } from 'lodash'
 //import * as sdebug from 'superdebug'
 //import * as http from 'http'
 
@@ -20,5 +21,25 @@ export class Tools {
     else {
       return request
     }
+  }
+
+  static errorResult(err, res) {
+    var error = new Error(get(res, 'body.description') || get(err, 'response.statusText') || 'No error details available')
+
+    if (res) {
+      error['headers']    = res.headers
+      error['object']     = res.body
+      error['statusCode'] = res.statusCode
+      error['statusText'] = res.statusText
+      error['url']        = res.req.url
+      error['method']     = res.req.method
+      error['stack']      = err.stack
+    }
+    else {
+      error['statusCode'] = 500
+      error['statusText'] = 'No response returned'
+    }
+
+    return error
   }
 }
