@@ -50,8 +50,15 @@ class Context {
                 }
                 req
                     .end((err, res) => {
-                    if (err)
-                        return reject(err);
+                    if (err) {
+                        var error = tools_1.Tools.errorResult(err, res);
+                        if (config_1.Config.errorInterceptor) {
+                            // if error interceptor returns true, then abort (don't resolve nor reject)
+                            if (config_1.Config.errorInterceptor(error))
+                                return;
+                        }
+                        return reject(error);
+                    }
                     return resolve(res.body);
                 });
             });
