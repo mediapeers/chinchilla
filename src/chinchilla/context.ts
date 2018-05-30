@@ -72,6 +72,9 @@ export class Context {
         req
           .end((err, res) => {
             if (err) {
+              // remove failed context from cache..
+              Cache.runtime.removeValue(key)
+
               var error = Tools.errorResult(err, res)
 
               if (Config.errorInterceptor) {
