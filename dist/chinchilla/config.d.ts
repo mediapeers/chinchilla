@@ -22,6 +22,7 @@ export declare class Config {
     static updateCacheKey(): void;
     static setValue(name: any, value: any): void;
     static clearValue(name: any): void;
+    static clear(): void;
     static cookieKey(name: any): string;
     static setFlavour(name: any, value: any): any;
     static readonly activeFlavours: any;

@@ -22,6 +22,7 @@ class Cookies {
     }
 }
 exports.Cookies = Cookies;
+const valueNames = ['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'];
 class Config {
     static setEndpoint(name, url) {
         Config.endpoints[name] = url;
@@ -59,6 +60,13 @@ class Config {
         Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
+    }
+    static clear() {
+        lodash_1.each(valueNames, (name) => {
+            if (name === 'affiliationId')
+                return;
+            this.clearValue(name);
+        });
     }
     static cookieKey(name) {
         return `chinchilla.${name}`;

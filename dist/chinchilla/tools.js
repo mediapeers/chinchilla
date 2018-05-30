@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const request = require("superagent");
 const lodash_1 = require("lodash");
+const config_1 = require("./config");
+const cache_1 = require("./cache");
 //import * as sdebug from 'superdebug'
 //import * as http from 'http'
 class Tools {
@@ -20,7 +22,7 @@ class Tools {
             return request;
         }
     }
-    static errorResult(err, res) {
+    static handleError(err, res) {
         var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
         if (res) {
             error['headers'] = res.headers;
@@ -35,7 +37,16 @@ class Tools {
             error['statusCode'] = 500;
             error['statusText'] = 'No response returned';
         }
-        return error;
+        // session timed out, reset cookies and caches
+        if (error['statusCode'] === 419) {
+            cache_1.Cache.clear();
+            config_1.Config.clear();
+        }
+        if (config_1.Config.errorInterceptor) {
+            if (config_1.Config.errorInterceptor(error))
+                return [true, error];
+        }
+        return [false, error];
     }
 }
 exports.Tools = Tools;

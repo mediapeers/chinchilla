@@ -51,15 +51,8 @@ class Context {
                 req
                     .end((err, res) => {
                     if (err) {
-                        // remove failed context from cache..
-                        cache_1.Cache.runtime.removeValue(key);
-                        var error = tools_1.Tools.errorResult(err, res);
-                        if (config_1.Config.errorInterceptor) {
-                            // if error interceptor returns true, then abort (don't resolve nor reject)
-                            if (config_1.Config.errorInterceptor(error))
-                                return;
-                        }
-                        return reject(error);
+                        const [handled, error] = tools_1.Tools.handleError(err, res);
+                        return handled ? null : reject(error);
                     }
                     return resolve(res.body);
                 });

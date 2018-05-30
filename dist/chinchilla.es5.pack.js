@@ -12435,7 +12435,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Kekse = __webpack_require__(9);
 var qs = __webpack_require__(10);
 var lodash_1 = __webpack_require__(0);
-var tools_1 = __webpack_require__(4);
+var tools_1 = __webpack_require__(5);
 var Cookies = /** @class */ (function () {
     function Cookies() {
     }
@@ -12469,6 +12469,7 @@ var Cookies = /** @class */ (function () {
     return Cookies;
 }());
 exports.Cookies = Cookies;
+var valueNames = ['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'];
 var Config = /** @class */ (function () {
     function Config() {
     }
@@ -12508,6 +12509,14 @@ var Config = /** @class */ (function () {
         Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
+    };
+    Config.clear = function () {
+        var _this = this;
+        lodash_1.each(valueNames, function (name) {
+            if (name === 'affiliationId')
+                return;
+            _this.clearValue(name);
+        });
     };
     Config.cookieKey = function (name) {
         return "chinchilla." + name;
@@ -18178,9 +18187,140 @@ module.exports = ret;
 
 "use strict";
 
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+var config_1 = __webpack_require__(1);
+var tools_1 = __webpack_require__(5);
+var BaseCache = /** @class */ (function () {
+    function BaseCache() {
+    }
+    BaseCache.prototype.set = function (key, val, expires) {
+        if (expires === void 0) { expires = 60; }
+        var payload = {
+            expires: this.minutesFromNow(expires),
+            value: val
+        };
+        this.setValue(this.extkey(key), payload);
+    };
+    BaseCache.prototype.get = function (key) {
+        var extkey = this.extkey(key);
+        var payload = this.getValue(extkey);
+        if (payload) {
+            if (Date.now() > payload.expires) {
+                this.removeValue(extkey);
+                return null;
+            }
+            return payload.value;
+        }
+        return null;
+    };
+    BaseCache.prototype.extkey = function (suffix) {
+        return config_1.Config.getCacheKey() + "-" + suffix;
+    };
+    BaseCache.prototype.minutesFromNow = function (min) {
+        return Date.now() + min * 60000;
+    };
+    return BaseCache;
+}());
+exports.BaseCache = BaseCache;
+var RuntimeCache = /** @class */ (function (_super) {
+    __extends(RuntimeCache, _super);
+    function RuntimeCache() {
+        var _this = _super.call(this) || this;
+        _this.storage = {};
+        return _this;
+    }
+    RuntimeCache.prototype.setValue = function (extkey, val) {
+        this.storage[extkey] = val;
+    };
+    RuntimeCache.prototype.getValue = function (extkey) {
+        return this.storage[extkey];
+    };
+    RuntimeCache.prototype.removeValue = function (extkey) {
+        delete this.storage[extkey];
+    };
+    RuntimeCache.prototype.clear = function () {
+        this.storage = {};
+    };
+    return RuntimeCache;
+}(BaseCache));
+exports.RuntimeCache = RuntimeCache;
+var StorageCache = /** @class */ (function (_super) {
+    __extends(StorageCache, _super);
+    function StorageCache() {
+        var _this = _super.call(this) || this;
+        _this.storage = window.localStorage;
+        return _this;
+    }
+    StorageCache.prototype.setValue = function (extkey, val) {
+        this.storage.setItem(extkey, JSON.stringify(val));
+    };
+    StorageCache.prototype.getValue = function (extkey) {
+        return JSON.parse(this.storage.getItem(extkey) || null);
+    };
+    StorageCache.prototype.removeValue = function (extkey) {
+        this.storage.removeItem(extkey);
+    };
+    StorageCache.prototype.clear = function () {
+        this.storage.clear();
+    };
+    return StorageCache;
+}(BaseCache));
+exports.StorageCache = StorageCache;
+var Cache = /** @class */ (function () {
+    function Cache() {
+    }
+    Cache.clear = function () {
+        if (!tools_1.Tools.isNode)
+            Cache.storage.clear();
+        Cache.runtime.clear();
+    };
+    Cache.random = function (prefix) {
+        if (prefix === void 0) { prefix = 'unknown'; }
+        var hash = Math.random().toString(36).substr(2, 9);
+        return prefix + "-" + hash;
+    };
+    Object.defineProperty(Cache, "storage", {
+        get: function () {
+            if (Cache._storage)
+                return Cache._storage;
+            return Cache._storage = new StorageCache();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Cache, "runtime", {
+        get: function () {
+            if (Cache._runtime)
+                return Cache._runtime;
+            return Cache._runtime = new RuntimeCache();
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return Cache;
+}());
+exports.Cache = Cache;
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
-var UriTemplate = __webpack_require__(5);
+var UriTemplate = __webpack_require__(6);
 var Extractor = /** @class */ (function () {
     function Extractor() {
     }
@@ -18262,7 +18402,7 @@ exports.Extractor = Extractor;
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18270,6 +18410,8 @@ exports.Extractor = Extractor;
 Object.defineProperty(exports, "__esModule", { value: true });
 var request = __webpack_require__(11);
 var lodash_1 = __webpack_require__(0);
+var config_1 = __webpack_require__(1);
+var cache_1 = __webpack_require__(3);
 //import * as sdebug from 'superdebug'
 //import * as http from 'http'
 var Tools = /** @class */ (function () {
@@ -18298,7 +18440,7 @@ var Tools = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Tools.errorResult = function (err, res) {
+    Tools.handleError = function (err, res) {
         var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
         if (res) {
             error['headers'] = res.headers;
@@ -18313,7 +18455,16 @@ var Tools = /** @class */ (function () {
             error['statusCode'] = 500;
             error['statusText'] = 'No response returned';
         }
-        return error;
+        // session timed out, reset cookies and caches
+        if (error['statusCode'] === 419) {
+            cache_1.Cache.clear();
+            config_1.Config.clear();
+        }
+        if (config_1.Config.errorInterceptor) {
+            if (config_1.Config.errorInterceptor(error))
+                return [true, error];
+        }
+        return [false, error];
     };
     return Tools;
 }());
@@ -18321,7 +18472,7 @@ exports.Tools = Tools;
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (global, factory) {
@@ -18749,137 +18900,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 
 /***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var config_1 = __webpack_require__(1);
-var tools_1 = __webpack_require__(4);
-var BaseCache = /** @class */ (function () {
-    function BaseCache() {
-    }
-    BaseCache.prototype.set = function (key, val, expires) {
-        if (expires === void 0) { expires = 60; }
-        var payload = {
-            expires: this.minutesFromNow(expires),
-            value: val
-        };
-        this.setValue(this.extkey(key), payload);
-    };
-    BaseCache.prototype.get = function (key) {
-        var extkey = this.extkey(key);
-        var payload = this.getValue(extkey);
-        if (payload) {
-            if (Date.now() > payload.expires) {
-                this.removeValue(extkey);
-                return null;
-            }
-            return payload.value;
-        }
-        return null;
-    };
-    BaseCache.prototype.extkey = function (suffix) {
-        return config_1.Config.getCacheKey() + "-" + suffix;
-    };
-    BaseCache.prototype.minutesFromNow = function (min) {
-        return Date.now() + min * 60000;
-    };
-    return BaseCache;
-}());
-exports.BaseCache = BaseCache;
-var RuntimeCache = /** @class */ (function (_super) {
-    __extends(RuntimeCache, _super);
-    function RuntimeCache() {
-        var _this = _super.call(this) || this;
-        _this.storage = {};
-        return _this;
-    }
-    RuntimeCache.prototype.setValue = function (extkey, val) {
-        this.storage[extkey] = val;
-    };
-    RuntimeCache.prototype.getValue = function (extkey) {
-        return this.storage[extkey];
-    };
-    RuntimeCache.prototype.removeValue = function (extkey) {
-        delete this.storage[extkey];
-    };
-    RuntimeCache.prototype.clear = function () {
-        this.storage = {};
-    };
-    return RuntimeCache;
-}(BaseCache));
-exports.RuntimeCache = RuntimeCache;
-var StorageCache = /** @class */ (function (_super) {
-    __extends(StorageCache, _super);
-    function StorageCache() {
-        var _this = _super.call(this) || this;
-        _this.storage = window.localStorage;
-        return _this;
-    }
-    StorageCache.prototype.setValue = function (extkey, val) {
-        this.storage.setItem(extkey, JSON.stringify(val));
-    };
-    StorageCache.prototype.getValue = function (extkey) {
-        return JSON.parse(this.storage.getItem(extkey) || null);
-    };
-    StorageCache.prototype.removeValue = function (extkey) {
-        this.storage.removeItem(extkey);
-    };
-    StorageCache.prototype.clear = function () {
-        this.storage.clear();
-    };
-    return StorageCache;
-}(BaseCache));
-exports.StorageCache = StorageCache;
-var Cache = /** @class */ (function () {
-    function Cache() {
-    }
-    Cache.clear = function () {
-        if (!tools_1.Tools.isNode)
-            Cache.storage.clear();
-        Cache.runtime.clear();
-    };
-    Cache.random = function (prefix) {
-        if (prefix === void 0) { prefix = 'unknown'; }
-        var hash = Math.random().toString(36).substr(2, 9);
-        return prefix + "-" + hash;
-    };
-    Object.defineProperty(Cache, "storage", {
-        get: function () {
-            if (Cache._storage)
-                return Cache._storage;
-            return Cache._storage = new StorageCache();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Cache, "runtime", {
-        get: function () {
-            if (Cache._runtime)
-                return Cache._runtime;
-            return Cache._runtime = new RuntimeCache();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    return Cache;
-}());
-exports.Cache = Cache;
-
-
-/***/ }),
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -18899,8 +18919,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var Promise = __webpack_require__(2);
 var config_1 = __webpack_require__(1);
-var cache_1 = __webpack_require__(6);
-var tools_1 = __webpack_require__(4);
+var cache_1 = __webpack_require__(3);
+var tools_1 = __webpack_require__(5);
 var ContextAction = /** @class */ (function () {
     function ContextAction(values) {
         if (values === void 0) { values = {}; }
@@ -18970,15 +18990,8 @@ var Context = /** @class */ (function () {
                 req
                     .end(function (err, res) {
                     if (err) {
-                        // remove failed context from cache..
-                        cache_1.Cache.runtime.removeValue(key);
-                        var error = tools_1.Tools.errorResult(err, res);
-                        if (config_1.Config.errorInterceptor) {
-                            // if error interceptor returns true, then abort (don't resolve nor reject)
-                            if (config_1.Config.errorInterceptor(error))
-                                return;
-                        }
-                        return reject(error);
+                        var _a = tools_1.Tools.handleError(err, res), handled = _a[0], error = _a[1];
+                        return handled ? null : reject(error);
                     }
                     return resolve(res.body);
                 });
@@ -20478,12 +20491,12 @@ module.exports = isObject;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
-var UriTemplate = __webpack_require__(5);
+var UriTemplate = __webpack_require__(6);
 var Promise = __webpack_require__(2);
 var config_1 = __webpack_require__(1);
 var result_1 = __webpack_require__(25);
-var extractor_1 = __webpack_require__(3);
-var tools_1 = __webpack_require__(4);
+var extractor_1 = __webpack_require__(4);
+var tools_1 = __webpack_require__(5);
 var Action = /** @class */ (function () {
     function Action(contextAction, params, body, options) {
         if (params === void 0) { params = {}; }
@@ -20548,13 +20561,8 @@ var Action = /** @class */ (function () {
             }
             req.end(function (err, res) {
                 if (err) {
-                    var error = tools_1.Tools.errorResult(err, res);
-                    if (config_1.Config.errorInterceptor) {
-                        // if error interceptor returns true, then abort (don't resolve nor reject)
-                        if (config_1.Config.errorInterceptor(error))
-                            return;
-                    }
-                    return reject(error);
+                    var _a = tools_1.Tools.handleError(err, res), handled = _a[0], error = _a[1];
+                    return handled ? null : reject(error);
                 }
                 var rawResult = (_this.options && _this.options.raw_result) || false;
                 _this.result.success(res, rawResult);
@@ -20651,9 +20659,9 @@ var lodash_1 = __webpack_require__(0);
 var context_1 = __webpack_require__(7);
 var config_1 = __webpack_require__(1);
 var action_1 = __webpack_require__(14);
-var extractor_1 = __webpack_require__(3);
+var extractor_1 = __webpack_require__(4);
 var association_1 = __webpack_require__(24);
-var cache_1 = __webpack_require__(6);
+var cache_1 = __webpack_require__(3);
 var Subject = /** @class */ (function () {
     function Subject(objectsOrApp, model) {
         this.id = cache_1.Cache.random('subject');
@@ -20855,8 +20863,8 @@ var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(15);
 var config_1 = __webpack_require__(1);
 var context_1 = __webpack_require__(7);
-var cache_1 = __webpack_require__(6);
-var extractor_1 = __webpack_require__(3);
+var cache_1 = __webpack_require__(3);
+var extractor_1 = __webpack_require__(4);
 var chch = function (objectsOrApp, model) {
     // detach from existing Subject first before creating a new one..
     objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
@@ -22298,7 +22306,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var context_1 = __webpack_require__(7);
 var action_1 = __webpack_require__(14);
-var extractor_1 = __webpack_require__(3);
+var extractor_1 = __webpack_require__(4);
 var Association = /** @class */ (function () {
     function Association(subject, name) {
         var _this = this;
@@ -22583,7 +22591,7 @@ module.exports = function(module) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var Promise = __webpack_require__(2);
 var Cookies = __webpack_require__(9);
-var UriTemplate = __webpack_require__(5);
+var UriTemplate = __webpack_require__(6);
 var request = __webpack_require__(11);
 var qs = __webpack_require__(10);
 var chinchilla_1 = __webpack_require__(16);

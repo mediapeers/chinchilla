@@ -69,13 +69,8 @@ class Action {
             }
             req.end((err, res) => {
                 if (err) {
-                    var error = tools_1.Tools.errorResult(err, res);
-                    if (config_1.Config.errorInterceptor) {
-                        // if error interceptor returns true, then abort (don't resolve nor reject)
-                        if (config_1.Config.errorInterceptor(error))
-                            return;
-                    }
-                    return reject(error);
+                    const [handled, error] = tools_1.Tools.handleError(err, res);
+                    return handled ? null : reject(error);
                 }
                 const rawResult = (this.options && this.options.raw_result) || false;
                 this.result.success(res, rawResult);
