@@ -18970,6 +18970,8 @@ var Context = /** @class */ (function () {
                 req
                     .end(function (err, res) {
                     if (err) {
+                        // remove failed context from cache..
+                        cache_1.Cache.runtime.removeValue(key);
                         var error = tools_1.Tools.errorResult(err, res);
                         if (config_1.Config.errorInterceptor) {
                             // if error interceptor returns true, then abort (don't resolve nor reject)
