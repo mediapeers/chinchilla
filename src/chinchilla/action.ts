@@ -87,14 +87,8 @@ export class Action {
 
       req.end((err, res) => {
         if (err) {
-          var error = Tools.errorResult(err, res)
-
-          if (Config.errorInterceptor) {
-            // if error interceptor returns true, then abort (don't resolve nor reject)
-            if (Config.errorInterceptor(error)) return
-          }
-
-          return reject(error)
+          const [handled, error] = Tools.handleError(err, res)
+          return handled ? null : reject(error)
         }
 
         const rawResult = (this.options && this.options.raw_result) || false

@@ -18,6 +18,8 @@ export class Cookies {
   }
 }
 
+const valueNames = ['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours']
+
 export class Config {
   static endpoints = {}
   static domain: string
@@ -72,6 +74,13 @@ export class Config {
     Cookies.expire(Config.cookieKey(name), { domain: Config.domain })
 
     if (name !== 'cacheKey') Config.updateCacheKey()
+  }
+
+  static clear(): void {
+    each(valueNames, (name) => {
+      if (name === 'affiliationId') return
+      this.clearValue(name)
+    })
   }
 
   static cookieKey(name): string {

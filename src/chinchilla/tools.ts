@@ -1,5 +1,7 @@
 import * as request from 'superagent'
 import { get } from 'lodash'
+import { Config } from './config'
+import { Cache } from './cache'
 //import * as sdebug from 'superdebug'
 //import * as http from 'http'
 
@@ -23,7 +25,7 @@ export class Tools {
     }
   }
 
-  static errorResult(err, res) {
+  static handleError(err, res) {
     var error = new Error(get(res, 'body.description') || get(err, 'response.statusText') || 'No error details available')
 
     if (res) {
@@ -40,6 +42,16 @@ export class Tools {
       error['statusText'] = 'No response returned'
     }
 
-    return error
+    // session timed out, reset cookies and caches
+    if (error['statusCode'] === 419) {
+      Cache.clear()
+      Config.clear()
+    }
+
+    if (Config.errorInterceptor) {
+      if (Config.errorInterceptor(error)) return [true, error]
+    }
+
+    return [false, error]
   }
 }
