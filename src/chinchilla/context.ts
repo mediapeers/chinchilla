@@ -81,14 +81,24 @@ export class Context {
       })
     }
 
-    if (!Tools.isNode) {
+    cachedContext = new Context(dataPromise)
+
+    // when running a node web server, for multiple simultaneous requests of the same context
+    // one could fail (e.g. with a 419). for this reason we cache only after a successful result
+    // to avoid other users by coincidence get returned an error
+    if (Tools.isNode) {
+      dataPromise.then((data) => {
+        return Cache.runtime.set(key, cachedContext)
+      })
+    }
+    else {
       dataPromise.then((data) => {
         return Cache.storage.set(key, data)
       })
+
+      Cache.runtime.set(key, cachedContext)
     }
 
-    cachedContext = new Context(dataPromise)
-    Cache.runtime.set(key, cachedContext)
     return cachedContext
   }
 
