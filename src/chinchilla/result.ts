@@ -69,9 +69,10 @@ export class Result {
         break
 
       default:
-        if (isArray(result.body)) throw new Error("Unexpectedly got an array")
-        if (isEmpty(result.body)) break
-        this.objects.push(result.body)
+        if (!result.body) break
+
+        this.objects = isArray(result.body) ? result.body : [result.body]
+
         if (!raw) new Subject(this.object)
         break
     }
