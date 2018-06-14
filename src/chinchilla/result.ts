@@ -13,11 +13,11 @@ export class Result {
 
   success(result, raw = false): void {
     this.headers  = result.headers
+    this.body     = result.body
 
     if (result.body) {
       this.type         = result.body['@type']
       this.aggregations = result.body['aggregations']
-      this.body         = result.body
     }
 
     switch (this.type) {
@@ -69,11 +69,8 @@ export class Result {
         break
 
       default:
-        if (!result.body) break
-
         this.objects = isArray(result.body) ? result.body : [result.body]
-
-        if (!raw) new Subject(this.object)
+        if (result.body && !raw) new Subject(this.object)
         break
     }
   }
