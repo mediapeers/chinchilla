@@ -8,10 +8,10 @@ class Result {
     }
     success(result, raw = false) {
         this.headers = result.headers;
+        this.body = result.body;
         if (result.body) {
             this.type = result.body['@type'];
             this.aggregations = result.body['aggregations'];
-            this.body = result.body;
         }
         switch (this.type) {
             case 'graph':
@@ -58,10 +58,8 @@ class Result {
                 });
                 break;
             default:
-                if (!result.body)
-                    break;
                 this.objects = lodash_1.isArray(result.body) ? result.body : [result.body];
-                if (!raw)
+                if (result.body && !raw)
                     new subject_1.Subject(this.object);
                 break;
         }
