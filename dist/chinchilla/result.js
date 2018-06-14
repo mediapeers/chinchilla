@@ -58,11 +58,9 @@ class Result {
                 });
                 break;
             default:
-                if (lodash_1.isArray(result.body))
-                    throw new Error("Unexpectedly got an array");
-                if (lodash_1.isEmpty(result.body))
+                if (!result.body)
                     break;
-                this.objects.push(result.body);
+                this.objects = lodash_1.isArray(result.body) ? result.body : [result.body];
                 if (!raw)
                     new subject_1.Subject(this.object);
                 break;
