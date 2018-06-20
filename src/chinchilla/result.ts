@@ -8,12 +8,14 @@ export class Result {
   headers: any
   aggregations: any
   body: any
+  options: any
   objects: any[] = []
   pagination: any
 
-  success(result, raw = false): void {
+  success(result, options?: any): void {
     this.headers  = result.headers
     this.body     = result.body
+    this.options  = options || {}
 
     if (result.body) {
       this.type         = result.body['@type']
@@ -59,7 +61,8 @@ export class Result {
           this.objects.push(member)
         })
 
-        if (raw) break
+        if (this.options.rawResult) break
+
         var byContext = groupBy(this.objects, '@context')
 
         // creates new Subject for each group ob objects that share the same @context
@@ -70,7 +73,7 @@ export class Result {
 
       default:
         this.objects = isArray(result.body) ? result.body : [result.body]
-        if (result.body && !raw) new Subject(this.object)
+        if (result.body && !this.options.rawResult) new Subject(this.object)
         break
     }
   }

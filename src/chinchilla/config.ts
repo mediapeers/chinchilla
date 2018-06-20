@@ -32,6 +32,7 @@ export class Config {
   static getCacheKey: Function
   static setFlavours: Function
   static getFlavours: Function
+  static devMode = false
 
   static setEndpoint(name: string, url: string): void {
     Config.endpoints[name] = url
@@ -64,7 +65,12 @@ export class Config {
 
   static setValue(name, value): void {
     Config[name] = value
-    Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout})
+    Cookies.set(Config.cookieKey(name), value, {
+      path: '/',
+      domain: Config.domain,
+      expires: Config.cookieTimeout,
+      secure: !Config.devMode,
+    })
 
     if (name !== 'cacheKey') Config.updateCacheKey()
   }
@@ -102,7 +108,7 @@ export class Config {
   }
 }
 
-each(['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'], (prop) => {
+each(valueNames, (prop) => {
   const tail = prop.charAt(0).toUpperCase() + prop.slice(1)
 
   Config[`get${tail}`] = () => {
