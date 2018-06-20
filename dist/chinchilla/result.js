@@ -6,9 +6,10 @@ class Result {
     constructor() {
         this.objects = [];
     }
-    success(result, raw = false) {
+    success(result, options) {
         this.headers = result.headers;
         this.body = result.body;
+        this.options = options || {};
         if (result.body) {
             this.type = result.body['@type'];
             this.aggregations = result.body['aggregations'];
@@ -49,7 +50,7 @@ class Result {
                 lodash_1.each(result.body.members, (member) => {
                     this.objects.push(member);
                 });
-                if (raw)
+                if (this.options.rawResult)
                     break;
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
@@ -59,7 +60,7 @@ class Result {
                 break;
             default:
                 this.objects = lodash_1.isArray(result.body) ? result.body : [result.body];
-                if (result.body && !raw)
+                if (result.body && !this.options.rawResult)
                     new subject_1.Subject(this.object);
                 break;
         }

@@ -51,7 +51,12 @@ class Config {
     }
     static setValue(name, value) {
         Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
+        Cookies.set(Config.cookieKey(name), value, {
+            path: '/',
+            domain: Config.domain,
+            expires: Config.cookieTimeout,
+            secure: !Config.devMode,
+        });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
     }
@@ -86,8 +91,9 @@ class Config {
 Config.endpoints = {};
 Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
 Config.timestamp = Date.now() / 1000 | 0;
+Config.devMode = false;
 exports.Config = Config;
-lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'], (prop) => {
+lodash_1.each(valueNames, (prop) => {
     const tail = prop.charAt(0).toUpperCase() + prop.slice(1);
     Config[`get${tail}`] = () => {
         return Config.getValue(prop);

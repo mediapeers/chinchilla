@@ -12500,7 +12500,12 @@ var Config = /** @class */ (function () {
     };
     Config.setValue = function (name, value) {
         Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
+        Cookies.set(Config.cookieKey(name), value, {
+            path: '/',
+            domain: Config.domain,
+            expires: Config.cookieTimeout,
+            secure: !Config.devMode,
+        });
         if (name !== 'cacheKey')
             Config.updateCacheKey();
     };
@@ -12539,10 +12544,11 @@ var Config = /** @class */ (function () {
     Config.endpoints = {};
     Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
     Config.timestamp = Date.now() / 1000 | 0;
+    Config.devMode = false;
     return Config;
 }());
 exports.Config = Config;
-lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'], function (prop) {
+lodash_1.each(valueNames, function (prop) {
     var tail = prop.charAt(0).toUpperCase() + prop.slice(1);
     Config["get" + tail] = function () {
         return Config.getValue(prop);
@@ -18262,6 +18268,8 @@ var StorageCache = /** @class */ (function (_super) {
         return _this;
     }
     StorageCache.prototype.setValue = function (extkey, val) {
+        if (config_1.Config.devMode)
+            return;
         this.storage.setItem(extkey, JSON.stringify(val));
     };
     StorageCache.prototype.getValue = function (extkey) {
@@ -20497,6 +20505,7 @@ module.exports = isObject;
 
 "use strict";
 
+var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var UriTemplate = __webpack_require__(6);
@@ -20505,6 +20514,44 @@ var config_1 = __webpack_require__(1);
 var result_1 = __webpack_require__(25);
 var extractor_1 = __webpack_require__(4);
 var tools_1 = __webpack_require__(5);
+// cleans the object to be send
+// * rejects attributes starting with $
+// * rejects validation errors and isPristine attribute
+// * rejects js functions
+// * rejects empty objects {}
+// * rejects empty objects within array [{}]
+var cleanup = function (object) {
+    if (lodash_1.isEmpty(object))
+        return {};
+    var cleaned = {};
+    lodash_1.each(object, function (value, key) {
+        if (/^\$/.test(key) || key === 'errors' || key === 'isPristine' || lodash_1.isFunction(value)) {
+            // skip
+        }
+        else if (lodash_1.isArray(value)) {
+            if (lodash_1.isPlainObject(value[0])) {
+                var subset = lodash_1.map(value, function (x) {
+                    return _this.cleanupObject(x);
+                });
+                cleaned[key] = lodash_1.reject(subset, function (x) {
+                    return lodash_1.isEmpty(x);
+                });
+            }
+            else {
+                cleaned[key] = value;
+            }
+        }
+        else if (lodash_1.isPlainObject(value)) {
+            var cleanedValue = _this.cleanupObject(value);
+            if (!lodash_1.isEmpty(cleanedValue))
+                cleaned[key] = cleanedValue;
+        }
+        else {
+            cleaned[key] = value;
+        }
+    });
+    return cleaned;
+};
 var Action = /** @class */ (function () {
     function Action(contextAction, params, body, options) {
         if (params === void 0) { params = {}; }
@@ -20513,10 +20560,25 @@ var Action = /** @class */ (function () {
         this.contextAction = contextAction;
         this.uriTmpl = new UriTemplate(contextAction.template);
         this.params = extractor_1.Extractor.uriParams(contextAction, params);
-        this.options = options;
+        this.options = options || {};
+        if (this.options.raw) {
+            console.log("chinchilla: option 'raw' is deprecated. please use 'rawRequest' instead.");
+            this.options.rawRequest = this.options.raw;
+        }
+        if (this.options.raw_result) {
+            console.log("chinchilla: option 'raw_result' is deprecated. please use 'rawResult' instead.");
+            this.options.rawResult = this.options.raw_result;
+        }
         // reformat body to match rails API
         this.body = this.formatBody(body);
         this.ready = new Promise(function (resolve, reject) {
+            var required = lodash_1.filter(_this.contextAction.mappings, 'required');
+            for (var index in required) {
+                var variable = lodash_1.get(required[index], 'variable');
+                if (!_this.params[variable]) {
+                    return reject(new Error("Required param '" + variable + "' for '" + _this.contextAction.template + "' missing!"));
+                }
+            }
             var uri = _this.uriTmpl.fillFromObject(_this.params);
             var req;
             switch (contextAction.method) {
@@ -20542,7 +20604,7 @@ var Action = /** @class */ (function () {
             // add timestamp
             req = req.query({ t: config_1.Config.timestamp });
             // add session by default
-            if (!options || !(options.withoutSession === true)) {
+            if (!_this.options.withoutSession) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());
             }
             if (config_1.Config.getAffiliationId()) {
@@ -20572,68 +20634,28 @@ var Action = /** @class */ (function () {
                     var _a = tools_1.Tools.handleError(err, res), handled = _a[0], error = _a[1];
                     return handled ? null : reject(error);
                 }
-                var rawResult = (_this.options && _this.options.raw_result) || false;
-                _this.result.success(res, rawResult);
+                _this.result.success(res, _this.options);
                 resolve(_this.result);
             });
         });
     }
-    Action.prototype.formatBody = function (body) {
+    Action.prototype.formatBody = function (data) {
         var _this = this;
-        if (lodash_1.isEmpty(body))
+        if (lodash_1.isEmpty(data))
             return;
         var formatted = {};
-        if (this.options && (this.options.raw === true)) {
-            formatted = this.cleanupObject(body);
+        if (this.options.rawRequest) {
+            formatted = cleanup(data);
         }
-        else if (lodash_1.isArray(body)) {
-            lodash_1.each(body, function (obj) {
-                formatted[obj.id] = _this.remapAttributes(_this.cleanupObject(obj));
+        else if (lodash_1.isArray(data)) {
+            lodash_1.each(data, function (obj) {
+                formatted[obj.id] = _this.remapAttributes(cleanup(obj));
             });
         }
         else {
-            formatted = this.remapAttributes(this.cleanupObject(body));
+            formatted = this.remapAttributes(cleanup(data));
         }
         return formatted;
-    };
-    // cleans the object to be send
-    // * rejects attributes starting with $
-    // * rejects validation errors and isPristine attribute
-    // * rejects js functions
-    // * rejects empty objects {}
-    // * rejects empty objects within array [{}]
-    Action.prototype.cleanupObject = function (object) {
-        var _this = this;
-        if (lodash_1.isEmpty(object))
-            return {};
-        var cleaned = {};
-        lodash_1.each(object, function (value, key) {
-            if (/^\$/.test(key) || key === 'errors' || key === 'isPristine' || lodash_1.isFunction(value)) {
-                // skip
-            }
-            else if (lodash_1.isArray(value)) {
-                if (lodash_1.isPlainObject(value[0])) {
-                    var subset = lodash_1.map(value, function (x) {
-                        return _this.cleanupObject(x);
-                    });
-                    cleaned[key] = lodash_1.reject(subset, function (x) {
-                        return lodash_1.isEmpty(x);
-                    });
-                }
-                else {
-                    cleaned[key] = value;
-                }
-            }
-            else if (lodash_1.isPlainObject(value)) {
-                var cleanedValue = _this.cleanupObject(value);
-                if (!lodash_1.isEmpty(cleanedValue))
-                    cleaned[key] = cleanedValue;
-            }
-            else {
-                cleaned[key] = value;
-            }
-        });
-        return cleaned;
     };
     Action.prototype.remapAttributes = function (object) {
         lodash_1.each(object, function (value, key) {
@@ -22485,11 +22507,11 @@ var Result = /** @class */ (function () {
     function Result() {
         this.objects = [];
     }
-    Result.prototype.success = function (result, raw) {
+    Result.prototype.success = function (result, options) {
         var _this = this;
-        if (raw === void 0) { raw = false; }
         this.headers = result.headers;
         this.body = result.body;
+        this.options = options || {};
         if (result.body) {
             this.type = result.body['@type'];
             this.aggregations = result.body['aggregations'];
@@ -22530,7 +22552,7 @@ var Result = /** @class */ (function () {
                 lodash_1.each(result.body.members, function (member) {
                     _this.objects.push(member);
                 });
-                if (raw)
+                if (this.options.rawResult)
                     break;
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
@@ -22540,7 +22562,7 @@ var Result = /** @class */ (function () {
                 break;
             default:
                 this.objects = lodash_1.isArray(result.body) ? result.body : [result.body];
-                if (result.body && !raw)
+                if (result.body && !this.options.rawResult)
                     new subject_1.Subject(this.object);
                 break;
         }
