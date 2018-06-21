@@ -24,7 +24,7 @@ const cleanup = (object) => {
     else if (isArray(value)) {
       if (isPlainObject(value[0])) {
         var subset = map(value, (x) => {
-          return this.cleanupObject(x)
+          return cleanup(x)
         })
         cleaned[key] = reject(subset, (x) => {
           return isEmpty(x)
@@ -35,7 +35,7 @@ const cleanup = (object) => {
       }
     }
     else if (isPlainObject(value)) {
-      var cleanedValue = this.cleanupObject(value)
+      var cleanedValue = cleanup(value)
       if (!isEmpty(cleanedValue)) cleaned[key] = cleanedValue
     }
     else {

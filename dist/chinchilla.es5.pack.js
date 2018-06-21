@@ -20505,7 +20505,6 @@ module.exports = isObject;
 
 "use strict";
 
-var _this = this;
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var UriTemplate = __webpack_require__(6);
@@ -20531,7 +20530,7 @@ var cleanup = function (object) {
         else if (lodash_1.isArray(value)) {
             if (lodash_1.isPlainObject(value[0])) {
                 var subset = lodash_1.map(value, function (x) {
-                    return _this.cleanupObject(x);
+                    return cleanup(x);
                 });
                 cleaned[key] = lodash_1.reject(subset, function (x) {
                     return lodash_1.isEmpty(x);
@@ -20542,7 +20541,7 @@ var cleanup = function (object) {
             }
         }
         else if (lodash_1.isPlainObject(value)) {
-            var cleanedValue = _this.cleanupObject(value);
+            var cleanedValue = cleanup(value);
             if (!lodash_1.isEmpty(cleanedValue))
                 cleaned[key] = cleanedValue;
         }

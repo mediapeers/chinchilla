@@ -24,7 +24,7 @@ const cleanup = (object) => {
         else if (lodash_1.isArray(value)) {
             if (lodash_1.isPlainObject(value[0])) {
                 var subset = lodash_1.map(value, (x) => {
-                    return this.cleanupObject(x);
+                    return cleanup(x);
                 });
                 cleaned[key] = lodash_1.reject(subset, (x) => {
                     return lodash_1.isEmpty(x);
@@ -35,7 +35,7 @@ const cleanup = (object) => {
             }
         }
         else if (lodash_1.isPlainObject(value)) {
-            var cleanedValue = this.cleanupObject(value);
+            var cleanedValue = cleanup(value);
             if (!lodash_1.isEmpty(cleanedValue))
                 cleaned[key] = cleanedValue;
         }
