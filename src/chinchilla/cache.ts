@@ -73,6 +73,8 @@ export class StorageCache extends BaseCache {
   }
 
   setValue(extkey: string, val: any) {
+    if (Config.devMode) return
+
     this.storage.setItem(extkey, JSON.stringify(val))
   }
 

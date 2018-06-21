@@ -15,6 +15,7 @@ export declare class Config {
     static getCacheKey: Function;
     static setFlavours: Function;
     static getFlavours: Function;
+    static devMode: boolean;
     static setEndpoint(name: string, url: string): void;
     static setCookieDomain(domain: string): void;
     static setErrorInterceptor(fn: any): void;

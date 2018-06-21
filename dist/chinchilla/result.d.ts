@@ -4,8 +4,9 @@ export declare class Result {
     headers: any;
     aggregations: any;
     body: any;
+    options: any;
     objects: any[];
     pagination: any;
-    success(result: any, raw?: boolean): void;
+    success(result: any, options?: any): void;
     readonly object: any;
 }

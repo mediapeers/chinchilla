@@ -7,16 +7,69 @@ const config_1 = require("./config");
 const result_1 = require("./result");
 const extractor_1 = require("./extractor");
 const tools_1 = require("./tools");
+// cleans the object to be send
+// * rejects attributes starting with $
+// * rejects validation errors and isPristine attribute
+// * rejects js functions
+// * rejects empty objects {}
+// * rejects empty objects within array [{}]
+const cleanup = (object) => {
+    if (lodash_1.isEmpty(object))
+        return {};
+    var cleaned = {};
+    lodash_1.each(object, (value, key) => {
+        if (/^\$/.test(key) || key === 'errors' || key === 'isPristine' || lodash_1.isFunction(value)) {
+            // skip
+        }
+        else if (lodash_1.isArray(value)) {
+            if (lodash_1.isPlainObject(value[0])) {
+                var subset = lodash_1.map(value, (x) => {
+                    return this.cleanupObject(x);
+                });
+                cleaned[key] = lodash_1.reject(subset, (x) => {
+                    return lodash_1.isEmpty(x);
+                });
+            }
+            else {
+                cleaned[key] = value;
+            }
+        }
+        else if (lodash_1.isPlainObject(value)) {
+            var cleanedValue = this.cleanupObject(value);
+            if (!lodash_1.isEmpty(cleanedValue))
+                cleaned[key] = cleanedValue;
+        }
+        else {
+            cleaned[key] = value;
+        }
+    });
+    return cleaned;
+};
 class Action {
     constructor(contextAction, params = {}, body, options) {
         this.result = new result_1.Result();
         this.contextAction = contextAction;
         this.uriTmpl = new UriTemplate(contextAction.template);
         this.params = extractor_1.Extractor.uriParams(contextAction, params);
-        this.options = options;
+        this.options = options || {};
+        if (this.options.raw) {
+            console.log(`chinchilla: option 'raw' is deprecated. please use 'rawRequest' instead.`);
+            this.options.rawRequest = this.options.raw;
+        }
+        if (this.options.raw_result) {
+            console.log(`chinchilla: option 'raw_result' is deprecated. please use 'rawResult' instead.`);
+            this.options.rawResult = this.options.raw_result;
+        }
         // reformat body to match rails API
         this.body = this.formatBody(body);
         this.ready = new Promise((resolve, reject) => {
+            var required = lodash_1.filter(this.contextAction.mappings, 'required');
+            for (var index in required) {
+                var variable = lodash_1.get(required[index], 'variable');
+                if (!this.params[variable]) {
+                    return reject(new Error(`Required param '${variable}' for '${this.contextAction.template}' missing!`));
+                }
+            }
             var uri = this.uriTmpl.fillFromObject(this.params);
             var req;
             switch (contextAction.method) {
@@ -42,7 +95,7 @@ class Action {
             // add timestamp
             req = req.query({ t: config_1.Config.timestamp });
             // add session by default
-            if (!options || !(options.withoutSession === true)) {
+            if (!this.options.withoutSession) {
                 req = req.set('Session-Id', config_1.Config.getSessionId());
             }
             if (config_1.Config.getAffiliationId()) {
@@ -72,66 +125,27 @@ class Action {
                     const [handled, error] = tools_1.Tools.handleError(err, res);
                     return handled ? null : reject(error);
                 }
-                const rawResult = (this.options && this.options.raw_result) || false;
-                this.result.success(res, rawResult);
+                this.result.success(res, this.options);
                 resolve(this.result);
             });
         });
     }
-    formatBody(body) {
-        if (lodash_1.isEmpty(body))
+    formatBody(data) {
+        if (lodash_1.isEmpty(data))
             return;
         var formatted = {};
-        if (this.options && (this.options.raw === true)) {
-            formatted = this.cleanupObject(body);
+        if (this.options.rawRequest) {
+            formatted = cleanup(data);
         }
-        else if (lodash_1.isArray(body)) {
-            lodash_1.each(body, (obj) => {
-                formatted[obj.id] = this.remapAttributes(this.cleanupObject(obj));
+        else if (lodash_1.isArray(data)) {
+            lodash_1.each(data, (obj) => {
+                formatted[obj.id] = this.remapAttributes(cleanup(obj));
             });
         }
         else {
-            formatted = this.remapAttributes(this.cleanupObject(body));
+            formatted = this.remapAttributes(cleanup(data));
         }
         return formatted;
-    }
-    // cleans the object to be send
-    // * rejects attributes starting with $
-    // * rejects validation errors and isPristine attribute
-    // * rejects js functions
-    // * rejects empty objects {}
-    // * rejects empty objects within array [{}]
-    cleanupObject(object) {
-        if (lodash_1.isEmpty(object))
-            return {};
-        var cleaned = {};
-        lodash_1.each(object, (value, key) => {
-            if (/^\$/.test(key) || key === 'errors' || key === 'isPristine' || lodash_1.isFunction(value)) {
-                // skip
-            }
-            else if (lodash_1.isArray(value)) {
-                if (lodash_1.isPlainObject(value[0])) {
-                    var subset = lodash_1.map(value, (x) => {
-                        return this.cleanupObject(x);
-                    });
-                    cleaned[key] = lodash_1.reject(subset, (x) => {
-                        return lodash_1.isEmpty(x);
-                    });
-                }
-                else {
-                    cleaned[key] = value;
-                }
-            }
-            else if (lodash_1.isPlainObject(value)) {
-                var cleanedValue = this.cleanupObject(value);
-                if (!lodash_1.isEmpty(cleanedValue))
-                    cleaned[key] = cleanedValue;
-            }
-            else {
-                cleaned[key] = value;
-            }
-        });
-        return cleaned;
     }
     remapAttributes(object) {
         lodash_1.each(object, (value, key) => {

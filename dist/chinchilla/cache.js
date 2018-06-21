@@ -55,6 +55,8 @@ class StorageCache extends BaseCache {
         this.storage = window.localStorage;
     }
     setValue(extkey, val) {
+        if (config_1.Config.devMode)
+            return;
         this.storage.setItem(extkey, JSON.stringify(val));
     }
     getValue(extkey) {
