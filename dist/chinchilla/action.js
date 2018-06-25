@@ -67,7 +67,13 @@ class Action {
             for (var index in required) {
                 var variable = lodash_1.get(required[index], 'variable');
                 if (!this.params[variable]) {
-                    return reject(new Error(`Required param '${variable}' for '${this.contextAction.template}' missing!`));
+                    const msg = `Required param '${variable}' for '${this.contextAction.template}' missing!`;
+                    if (config_1.Config.devMode) {
+                        return reject(new Error(msg));
+                    }
+                    else {
+                        console.log(msg);
+                    }
                 }
             }
             var uri = this.uriTmpl.fillFromObject(this.params);
