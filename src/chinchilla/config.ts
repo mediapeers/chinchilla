@@ -27,11 +27,20 @@ export class Config {
   static cookieTimeout = 30*24*60*60 // 1 month
   static timestamp = Date.now() / 1000 | 0
   static getAffiliationId: Function
+  static setAffiliationId: Function
+  static clearAffiliationId: Function
   static getRoleId: Function
+  static setRoleId: Function
+  static clearRoleId: Function
   static getSessionId: Function
+  static setSessionId: Function
+  static clearSessionId: Function
   static getCacheKey: Function
-  static setFlavours: Function
+  static setCacheKey: Function
+  static clearCacheKey: Function
   static getFlavours: Function
+  static setFlavours: Function
+  static clearFlavours: Function
   static devMode = false
 
   static setEndpoint(name: string, url: string): void {
