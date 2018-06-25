@@ -22,14 +22,15 @@
     "url": "https://github.com/mediapeers/chinchilla.git"
   },
   "dependencies": {
+    "bluebird": "^3.5.0",
     "cookies-js": "^1.2.3",
+    "core-js": "^2.5.7",
     "global": "^4.3.2",
     "lodash": "~3.10.1",
     "querystringify": "^1.0.0",
     "superagent": "~3.8.2",
     "uri-templates": "~0.1.9",
     "webpack": "^2.2.1",
-    "bluebird": "^3.5.0",
     "webpack-node-externals": "^1.5.4"
   },
   "devDependencies": {
