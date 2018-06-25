@@ -79,7 +79,13 @@ export class Action {
         var variable = get(required[index], 'variable')
 
         if (!this.params[variable]) {
-          return reject(new Error(`Required param '${variable}' for '${this.contextAction.template}' missing!`))
+          const msg = `Required param '${variable}' for '${this.contextAction.template}' missing!`
+          if (Config.devMode) {
+            return reject(new Error(msg))
+          }
+          else {
+            console.log(msg)
+          }
         }
       }
 

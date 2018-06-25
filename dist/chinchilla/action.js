@@ -67,7 +67,13 @@ class Action {
             for (var index in required) {
                 var variable = lodash_1.get(required[index], 'variable');
                 if (!this.params[variable]) {
-                    return reject(new Error(`Required param '${variable}' for '${this.contextAction.template}' missing!`));
+                    const msg = `Required param '${variable}' for '${this.contextAction.template}' missing!`;
+                    if (config_1.Config.devMode) {
+                        return reject(new Error(msg));
+                    }
+                    else {
+                        console.log(msg);
+                    }
                 }
             }
             var uri = this.uriTmpl.fillFromObject(this.params);
@@ -156,6 +162,7 @@ class Action {
                 });
                 object[key] = values;
             }
+            // append '_attributes' to nested objects (attributes that are an object or are an array of objects)
             else if (lodash_1.isPlainObject(value) || (lodash_1.isArray(value) && lodash_1.isPlainObject(lodash_1.first(value)))) {
                 object[`${key}_attributes`] = value;
                 delete object[key];

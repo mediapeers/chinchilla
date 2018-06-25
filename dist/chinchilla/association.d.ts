@@ -13,7 +13,7 @@ export declare class Association {
     constructor(subject: Subject, name: string);
     static get(subject: Subject, name: string): any;
     getDataFor(object: Object): any;
-    private fillCache(result);
+    private fillCache;
     private readonly associationParams;
-    private readAssociationData();
+    private readAssociationData;
 }

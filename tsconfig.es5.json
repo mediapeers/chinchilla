@@ -5,6 +5,7 @@
     "noImplicitAny": false,
     "outDir": "tmp",
     "types": [],
+    "lib": [ "es2015", "es2017", "dom" ]
   },
   "files": [
     "src/es5.pack.ts"

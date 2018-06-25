@@ -1,5 +1,8 @@
 module.exports = {
-  entry: './src/es5.pack.ts',
+  entry: [
+    'core-js/fn/object/assign',
+    './src/es5.pack.ts',
+    ],
   output: {
     path: __dirname + '/dist',
     filename: 'chinchilla.es5.pack.js'

@@ -16,6 +16,7 @@ class Tools {
             //agent.maxSockets = 100
             return request
                 .agent()
+                //.use(sdebug(console.info))
                 .set({ "Accept-Encoding": "gzip,deflate" });
         }
         else {
