@@ -11,6 +11,6 @@ export declare class Action {
     contextAction: ContextAction;
     result: Result;
     constructor(contextAction: ContextAction, params: {}, body: any, options?: any);
-    private formatBody(data);
-    private remapAttributes(object);
+    private formatBody;
+    private remapAttributes;
 }
