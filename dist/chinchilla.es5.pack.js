@@ -1,41 +1,41 @@
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
+
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
-/******/
+
 /******/ 		// Check if module is in cache
-/******/ 		if(installedModules[moduleId]) {
+/******/ 		if(installedModules[moduleId])
 /******/ 			return installedModules[moduleId].exports;
-/******/ 		}
+
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = installedModules[moduleId] = {
 /******/ 			i: moduleId,
 /******/ 			l: false,
 /******/ 			exports: {}
 /******/ 		};
-/******/
+
 /******/ 		// Execute the module function
 /******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
-/******/
+
 /******/ 		// Flag the module as loaded
 /******/ 		module.l = true;
-/******/
+
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/
-/******/
+
+
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
-/******/
+
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
-/******/
+
 /******/ 	// identity function for calling harmony imports with the correct context
 /******/ 	__webpack_require__.i = function(value) { return value; };
-/******/
+
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
@@ -46,7 +46,7 @@
 /******/ 			});
 /******/ 		}
 /******/ 	};
-/******/
+
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
 /******/ 	__webpack_require__.n = function(module) {
 /******/ 		var getter = module && module.__esModule ?
@@ -55,13 +55,13 @@
 /******/ 		__webpack_require__.d(getter, 'a', getter);
 /******/ 		return getter;
 /******/ 	};
-/******/
+
 /******/ 	// Object.prototype.hasOwnProperty.call
 /******/ 	__webpack_require__.o = function(object, property) { return Object.prototype.hasOwnProperty.call(object, property); };
-/******/
+
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
-/******/
+
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(__webpack_require__.s = 66);
 /******/ })
@@ -18224,6 +18224,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+var lodash_1 = __webpack_require__(0);
 var config_1 = __webpack_require__(1);
 var tools_1 = __webpack_require__(7);
 var BaseCache = /** @class */ (function () {
@@ -18249,6 +18250,10 @@ var BaseCache = /** @class */ (function () {
         }
         return null;
     };
+    BaseCache.prototype.remove = function (key) {
+        var extkey = this.extkey(key);
+        this.removeValue(extkey);
+    };
     BaseCache.prototype.extkey = function (suffix) {
         return config_1.Config.getCacheKey() + "-" + suffix;
     };
@@ -18272,7 +18277,20 @@ var RuntimeCache = /** @class */ (function (_super) {
         return this.storage[extkey];
     };
     RuntimeCache.prototype.removeValue = function (extkey) {
-        delete this.storage[extkey];
+        var _this = this;
+        var keyparts = extkey.split('*');
+        if (keyparts.length > 1) {
+            var toDelete_1 = [];
+            lodash_1.each(this.storage, function (val, key) {
+                if (lodash_1.startsWith(key, keyparts[0]))
+                    toDelete_1.push(key);
+            });
+            lodash_1.each(toDelete_1, function (key) { return delete _this.storage[key]; });
+            console.log('removed!', toDelete_1, this.storage);
+        }
+        else {
+            delete this.storage[extkey];
+        }
     };
     RuntimeCache.prototype.clear = function () {
         this.storage = {};
@@ -18296,7 +18314,21 @@ var StorageCache = /** @class */ (function (_super) {
         return JSON.parse(this.storage.getItem(extkey) || null);
     };
     StorageCache.prototype.removeValue = function (extkey) {
-        this.storage.removeItem(extkey);
+        var _this = this;
+        var keyparts = extkey.split('*');
+        if (keyparts.length > 1) {
+            var toDelete = [];
+            for (var i = 0; i < localStorage.length; i++) {
+                var key = localStorage.key(i);
+                if (lodash_1.startsWith(key, keyparts[0]))
+                    toDelete.push(key);
+            }
+            lodash_1.each(toDelete, function (key) { return _this.storage.removeItem(key); });
+            console.log('removed!', toDelete, this.storage);
+        }
+        else {
+            this.storage.removeItem(extkey);
+        }
     };
     StorageCache.prototype.clear = function () {
         this.storage.clear();

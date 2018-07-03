@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const lodash_1 = require("lodash");
 const config_1 = require("./config");
 const tools_1 = require("./tools");
 class BaseCache {
@@ -22,6 +23,10 @@ class BaseCache {
         }
         return null;
     }
+    remove(key) {
+        const extkey = this.extkey(key);
+        this.removeValue(extkey);
+    }
     extkey(suffix) {
         return `${config_1.Config.getCacheKey()}-${suffix}`;
     }
@@ -42,7 +47,19 @@ class RuntimeCache extends BaseCache {
         return this.storage[extkey];
     }
     removeValue(extkey) {
-        delete this.storage[extkey];
+        const keyparts = extkey.split('*');
+        if (keyparts.length > 1) {
+            const toDelete = [];
+            lodash_1.each(this.storage, (val, key) => {
+                if (lodash_1.startsWith(key, keyparts[0]))
+                    toDelete.push(key);
+            });
+            lodash_1.each(toDelete, (key) => delete this.storage[key]);
+            console.log('removed!', toDelete, this.storage);
+        }
+        else {
+            delete this.storage[extkey];
+        }
     }
     clear() {
         this.storage = {};
@@ -63,7 +80,20 @@ class StorageCache extends BaseCache {
         return JSON.parse(this.storage.getItem(extkey) || null);
     }
     removeValue(extkey) {
-        this.storage.removeItem(extkey);
+        const keyparts = extkey.split('*');
+        if (keyparts.length > 1) {
+            const toDelete = [];
+            for (var i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (lodash_1.startsWith(key, keyparts[0]))
+                    toDelete.push(key);
+            }
+            lodash_1.each(toDelete, (key) => this.storage.removeItem(key));
+            console.log('removed!', toDelete, this.storage);
+        }
+        else {
+            this.storage.removeItem(extkey);
+        }
     }
     clear() {
         this.storage.clear();

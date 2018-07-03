@@ -6,6 +6,7 @@ export declare abstract class BaseCache {
     abstract clear(): any;
     set(key: string, val: any, expires?: number): void;
     get(key: string): any;
+    remove(key: string): void;
     extkey(suffix: string): string;
     minutesFromNow(min: number): number;
 }
