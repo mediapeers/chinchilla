@@ -18286,7 +18286,6 @@ var RuntimeCache = /** @class */ (function (_super) {
                     toDelete_1.push(key);
             });
             lodash_1.each(toDelete_1, function (key) { return delete _this.storage[key]; });
-            console.log('removed!', toDelete_1, this.storage);
         }
         else {
             delete this.storage[extkey];
@@ -18324,7 +18323,6 @@ var StorageCache = /** @class */ (function (_super) {
                     toDelete.push(key);
             }
             lodash_1.each(toDelete, function (key) { return _this.storage.removeItem(key); });
-            console.log('removed!', toDelete, this.storage);
         }
         else {
             this.storage.removeItem(extkey);

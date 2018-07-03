@@ -55,7 +55,6 @@ class RuntimeCache extends BaseCache {
                     toDelete.push(key);
             });
             lodash_1.each(toDelete, (key) => delete this.storage[key]);
-            console.log('removed!', toDelete, this.storage);
         }
         else {
             delete this.storage[extkey];
@@ -89,7 +88,6 @@ class StorageCache extends BaseCache {
                     toDelete.push(key);
             }
             lodash_1.each(toDelete, (key) => this.storage.removeItem(key));
-            console.log('removed!', toDelete, this.storage);
         }
         else {
             this.storage.removeItem(extkey);
