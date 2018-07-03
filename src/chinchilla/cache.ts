@@ -1,4 +1,4 @@
-import { each } from 'lodash'
+import { each, startsWith } from 'lodash'
 import { Config } from './config'
 import { Tools } from './tools'
 
@@ -34,6 +34,11 @@ export abstract class BaseCache {
     return null
   }
 
+  remove(key: string) {
+    const extkey = this.extkey(key)
+    this.removeValue(extkey)
+  }
+
   extkey(suffix:string) {
     return `${Config.getCacheKey()}-${suffix}`
   }
@@ -58,7 +63,20 @@ export class RuntimeCache extends BaseCache {
   }
 
   removeValue(extkey: string) {
-    delete this.storage[extkey]
+    const keyparts = extkey.split('*')
+
+    if (keyparts.length > 1) {
+      const toDelete = []
+
+      each(this.storage, (val, key) => {
+        if (startsWith(key, keyparts[0])) toDelete.push(key)
+      })
+
+      each(toDelete, (key) => delete this.storage[key])
+    }
+    else {
+      delete this.storage[extkey]
+    }
   }
 
   clear() {
@@ -83,7 +101,21 @@ export class StorageCache extends BaseCache {
   }
 
   removeValue(extkey: string) {
-    this.storage.removeItem(extkey)
+    const keyparts = extkey.split('*')
+
+    if (keyparts.length > 1) {
+      const toDelete = []
+
+      for (var i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (startsWith(key, keyparts[0])) toDelete.push(key)
+      }
+
+      each(toDelete, (key) => this.storage.removeItem(key))
+    }
+    else {
+      this.storage.removeItem(extkey)
+    }
   }
 
   clear() {
