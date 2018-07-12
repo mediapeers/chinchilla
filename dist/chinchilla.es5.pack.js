@@ -18176,8 +18176,6 @@ var StorageCache = /** @class */ (function (_super) {
         return _this;
     }
     StorageCache.prototype.setValue = function (extkey, val) {
-        if (config_1.Config.getInstance().settings.devMode)
-            return;
         this.storage.setItem(extkey, JSON.stringify(val));
     };
     StorageCache.prototype.getValue = function (extkey) {
@@ -18707,9 +18705,11 @@ var Context = /** @class */ (function () {
             });
         }
         else {
-            dataPromise.then(function (data) {
-                return cache_1.Cache.storage.put(config.getCacheKey(key), data);
-            });
+            if (!config.settings.devMode) {
+                dataPromise.then(function (data) {
+                    return cache_1.Cache.storage.put(config.getCacheKey(key), data);
+                });
+            }
             cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
         }
         return cachedContext;

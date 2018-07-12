@@ -93,9 +93,11 @@ export class Context {
       })
     }
     else {
-      dataPromise.then((data) => {
-        return Cache.storage.put(config.getCacheKey(key), data)
-      })
+      if (!config.settings.devMode) {
+        dataPromise.then((data) => {
+          return Cache.storage.put(config.getCacheKey(key), data)
+        })
+      }
 
       Cache.runtime.put(config.getCacheKey(key), cachedContext)
     }

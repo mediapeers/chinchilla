@@ -68,9 +68,11 @@ class Context {
             });
         }
         else {
-            dataPromise.then((data) => {
-                return cache_1.Cache.storage.put(config.getCacheKey(key), data);
-            });
+            if (!config.settings.devMode) {
+                dataPromise.then((data) => {
+                    return cache_1.Cache.storage.put(config.getCacheKey(key), data);
+                });
+            }
             cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
         }
         return cachedContext;
