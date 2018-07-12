@@ -1,5 +1,6 @@
 import { each, find, first, groupBy, isArray, isEmpty, startsWith } from 'lodash'
 import { Subject } from './subject'
+import { Config } from './config'
 
 export class Result {
   static paginationProps = ['@total_count', '@total_pages', '@current_page']
@@ -12,7 +13,7 @@ export class Result {
   objects: any[] = []
   pagination: any
 
-  success(result, options?: any): void {
+  success(result, config: Config, options?: any): void {
     this.headers  = result.headers
     this.body     = result.body
     this.options  = options || {}
@@ -27,7 +28,7 @@ export class Result {
         var members = result.body['@graph']
         if (!members) return
 
-        new Subject(members)
+        new Subject(members, null, config)
 
         each(members, (node) => {
           if (node.parent_id) {
@@ -67,13 +68,13 @@ export class Result {
 
         // creates new Subject for each group ob objects that share the same @context
         each(byContext, (objects, context) => {
-          new Subject(objects)
+          new Subject(objects, null, config)
         })
         break
 
       default:
         this.objects = isArray(result.body) ? result.body : [result.body]
-        if (result.body && !this.options.rawResult) new Subject(this.object)
+        if (result.body && !this.options.rawResult) new Subject(this.object, null, config)
         break
     }
   }

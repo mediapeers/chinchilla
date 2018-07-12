@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const Promise = require("bluebird");
-const config_1 = require("./config");
 const cache_1 = require("./cache");
 const tools_1 = require("./tools");
 class ContextAction {
@@ -20,38 +19,39 @@ class ContextCollectionAction extends ContextAction {
 }
 exports.ContextCollectionAction = ContextCollectionAction;
 class Context {
-    static get(contextUrl) {
+    static get(contextUrl, config) {
+        config = config;
         let key = lodash_1.first(contextUrl.split('?'));
         let cachedContext;
-        if (cachedContext = cache_1.Cache.runtime.get(key)) {
+        if (cachedContext = cache_1.Cache.runtime.fetch(config.getCacheKey(key))) {
             return cachedContext;
         }
         let dataPromise;
         let cachedData;
-        if (!tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.get(key))) {
+        if (!config.settings.devMode && !tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.fetch(config.getCacheKey(key)))) {
             dataPromise = Promise.resolve(cachedData);
         }
         else {
             dataPromise = new Promise((resolve, reject) => {
                 var req = tools_1.Tools.req
                     .get(contextUrl)
-                    .query({ t: config_1.Config.timestamp });
-                if (config_1.Config.getSessionId()) {
-                    req = req.set('Session-Id', config_1.Config.getSessionId());
+                    .query({ t: config.settings.timestamp });
+                if (config.getSessionId()) {
+                    req = req.set('Session-Id', config.getSessionId());
                 }
-                if (config_1.Config.getAffiliationId()) {
-                    req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+                if (config.getAffiliationId()) {
+                    req = req.set('Affiliation-Id', config.getAffiliationId());
                 }
-                if (config_1.Config.getRoleId()) {
-                    req = req.set('Role-Id', config_1.Config.getRoleId());
+                if (config.getRoleId()) {
+                    req = req.set('Role-Id', config.getRoleId());
                 }
-                if (config_1.Config.getFlavours()) {
-                    req = req.set('Mpx-Flavours', config_1.Config.getFlavours());
+                if (config.getFlavours()) {
+                    req = req.set('Mpx-Flavours', config.getFlavours());
                 }
                 req
                     .end((err, res) => {
                     if (err) {
-                        const [handled, error] = tools_1.Tools.handleError(err, res);
+                        const [handled, error] = tools_1.Tools.handleError(err, res, config);
                         return handled ? null : reject(error);
                     }
                     return resolve(res.body);
@@ -64,14 +64,14 @@ class Context {
         // to avoid other users by coincidence get returned an error
         if (tools_1.Tools.isNode) {
             dataPromise.then((data) => {
-                return cache_1.Cache.runtime.set(key, cachedContext);
+                return cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
             });
         }
         else {
             dataPromise.then((data) => {
-                return cache_1.Cache.storage.set(key, data);
+                return cache_1.Cache.storage.put(config.getCacheKey(key), data);
             });
-            cache_1.Cache.runtime.set(key, cachedContext);
+            cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
         }
         return cachedContext;
     }

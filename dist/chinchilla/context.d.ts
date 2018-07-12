@@ -1,4 +1,5 @@
 import * as Promise from 'bluebird';
+import { Config } from './config';
 export declare class ContextAction {
     resource: string;
     response: string;
@@ -25,7 +26,7 @@ export interface ContextProperty {
 export declare class Context {
     ready: Promise<Context>;
     data: any;
-    static get(contextUrl: string): any;
+    static get(contextUrl: string, config: Config): any;
     constructor(dataPromise: any);
     readonly context: any;
     readonly id: any;

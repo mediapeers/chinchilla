@@ -7,27 +7,30 @@ const config_1 = require("./chinchilla/config");
 const context_1 = require("./chinchilla/context");
 const cache_1 = require("./chinchilla/cache");
 const extractor_1 = require("./chinchilla/extractor");
-const chch = Object.assign((objectsOrApp, model) => {
+const chch = Object.assign((objectsOrApp, model, config) => {
     // detach from existing Subject first before creating a new one..
     objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
-    return new subject_1.Subject(objectsOrApp, model);
+    return new subject_1.Subject(objectsOrApp, model, config);
 }, {
-    config: config_1.Config,
+    config: config_1.Config.getInstance(),
     cache: cache_1.Cache,
     extractor: extractor_1.Extractor,
-    new: (app, model, attrs = {}) => {
-        return lodash_1.merge({ '@context': `${config_1.Config.endpoints[app]}/context/${model}` }, attrs);
+    new: (app, model, attrs = {}, config) => {
+        config = config || config_1.Config.getInstance();
+        return lodash_1.merge({ '@context': `${config.settings.endpoints[app]}/context/${model}` }, attrs);
     },
-    contextUrl: (app, model) => {
-        return `${config_1.Config.endpoints[app]}/context/${model}`;
+    contextUrl: (app, model, config) => {
+        config = config || config_1.Config.getInstance();
+        return `${config.settings.endpoints[app]}/context/${model}`;
     },
-    context: (urlOrApp, model) => {
+    context: (urlOrApp, model, config) => {
+        config = config || config_1.Config.getInstance();
         if (!model) {
             // assume first param is the context url
-            return context_1.Context.get(urlOrApp).ready;
+            return context_1.Context.get(urlOrApp, config).ready;
         }
         else {
-            return context_1.Context.get(`${config_1.Config.endpoints[urlOrApp]}/context/${model}`).ready;
+            return context_1.Context.get(`${config.settings.endpoints[urlOrApp]}/context/${model}`, config).ready;
         }
     },
     // unfurl('pm, 'product', 'query', params) -> defaults to $c

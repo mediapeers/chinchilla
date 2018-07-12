@@ -7,32 +7,38 @@ import { Cache } from './chinchilla/cache'
 import { Extractor } from './chinchilla/extractor'
 
 const chch = Object.assign(
-  (objectsOrApp, model?) => {
+  (objectsOrApp, model?, config? : Config) => {
     // detach from existing Subject first before creating a new one..
     objectsOrApp = Subject.detachFromSubject(objectsOrApp)
 
-    return new Subject(objectsOrApp, model)
+    return new Subject(objectsOrApp, model, config)
   },
   {
-    config: Config,
+    config: Config.getInstance(),
     cache: Cache,
     extractor: Extractor,
-    new: (app, model, attrs = {}) => {
+    new: (app, model, attrs = {}, config?: Config) => {
+      config = config || Config.getInstance()
+
       return merge(
-        { '@context': `${Config.endpoints[app]}/context/${model}` },
+        { '@context': `${config.settings.endpoints[app]}/context/${model}` },
         attrs
       )
     },
-    contextUrl: (app, model) => {
-      return `${Config.endpoints[app]}/context/${model}`
+    contextUrl: (app, model, config?: Config) => {
+      config = config || Config.getInstance()
+
+      return `${config.settings.endpoints[app]}/context/${model}`
     },
-    context: (urlOrApp, model) => {
+    context: (urlOrApp, model?: string, config?: Config) => {
+      config = config || Config.getInstance()
+
       if (!model) {
         // assume first param is the context url
-        return Context.get(urlOrApp).ready
+        return Context.get(urlOrApp, config).ready
       }
       else {
-        return Context.get(`${Config.endpoints[urlOrApp]}/context/${model}`).ready
+        return Context.get(`${config.settings.endpoints[urlOrApp]}/context/${model}`, config).ready
       }
     },
     // unfurl('pm, 'product', 'query', params) -> defaults to $c

@@ -12429,143 +12429,6 @@
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Kekse = __webpack_require__(14);
-var qs = __webpack_require__(23);
-var lodash_1 = __webpack_require__(0);
-var tools_1 = __webpack_require__(7);
-var Cookies = /** @class */ (function () {
-    function Cookies() {
-    }
-    Cookies.get = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        if (tools_1.Tools.isNode)
-            return;
-        return Kekse.get.apply(null, args);
-    };
-    Cookies.set = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        if (tools_1.Tools.isNode)
-            return;
-        return Kekse.set.apply(null, args);
-    };
-    Cookies.expire = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        if (tools_1.Tools.isNode)
-            return;
-        return Kekse.expire.apply(null, args);
-    };
-    return Cookies;
-}());
-exports.Cookies = Cookies;
-var valueNames = ['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'];
-var Config = /** @class */ (function () {
-    function Config() {
-    }
-    Config.setEndpoint = function (name, url) {
-        Config.endpoints[name] = url;
-    };
-    Config.setCookieDomain = function (domain) {
-        Config.domain = domain;
-    };
-    Config.setErrorInterceptor = function (fn) {
-        Config.errorInterceptor = fn;
-    };
-    Config.getValue = function (name) {
-        return Config[name] || Cookies.get(Config.cookieKey(name));
-    };
-    Config.updateCacheKey = function () {
-        var affiliationId, roleId, sessionId, cacheKey;
-        if ((affiliationId = Config.getValue('affiliationId')) && (roleId = Config.getValue('roleId'))) {
-            cacheKey = affiliationId + "-" + roleId;
-        }
-        else if (sessionId = Config.getValue('sessionId')) {
-            cacheKey = sessionId;
-        }
-        else {
-            cacheKey = 'anonymous';
-        }
-        Config.setValue('cacheKey', cacheKey);
-    };
-    Config.setValue = function (name, value) {
-        Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, {
-            path: '/',
-            domain: Config.domain,
-            expires: Config.cookieTimeout,
-            secure: !Config.devMode,
-        });
-        if (name !== 'cacheKey')
-            Config.updateCacheKey();
-    };
-    Config.clearValue = function (name) {
-        Config[name] = undefined;
-        Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
-        if (name !== 'cacheKey')
-            Config.updateCacheKey();
-    };
-    Config.clear = function () {
-        var _this = this;
-        lodash_1.each(valueNames, function (name) {
-            if (name === 'affiliationId')
-                return;
-            _this.clearValue(name);
-        });
-    };
-    Config.cookieKey = function (name) {
-        return "chinchilla." + name;
-    };
-    Config.setFlavour = function (name, value) {
-        var flavours = Config.activeFlavours;
-        flavours[name] = value;
-        Config.setFlavours(qs.stringify(flavours));
-        return flavours;
-    };
-    Object.defineProperty(Config, "activeFlavours", {
-        // returns current flavours key/values
-        get: function () {
-            var value = Config.getFlavours();
-            return value ? qs.parse(value) : {};
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Config.endpoints = {};
-    Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
-    Config.timestamp = Date.now() / 1000 | 0;
-    Config.devMode = false;
-    return Config;
-}());
-exports.Config = Config;
-lodash_1.each(valueNames, function (prop) {
-    var tail = prop.charAt(0).toUpperCase() + prop.slice(1);
-    Config["get" + tail] = function () {
-        return Config.getValue(prop);
-    };
-    Config["set" + tail] = function (value) {
-        Config.setValue(prop, value);
-    };
-    Config["clear" + tail] = function () {
-        Config.clearValue(prop);
-    };
-});
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
 /* WEBPACK VAR INJECTION */(function(process, global, setImmediate) {/* @preserve
  * The MIT License (MIT)
  * 
@@ -18188,7 +18051,7 @@ module.exports = ret;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22), __webpack_require__(13), __webpack_require__(61).setImmediate))
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports) {
 
 var core = module.exports = { version: '2.5.7' };
@@ -18196,7 +18059,7 @@ if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 
 /***/ }),
-/* 4 */
+/* 3 */
 /***/ (function(module, exports) {
 
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
@@ -18208,7 +18071,7 @@ if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18225,21 +18088,25 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
-var config_1 = __webpack_require__(1);
+var config_1 = __webpack_require__(5);
 var tools_1 = __webpack_require__(7);
 var BaseCache = /** @class */ (function () {
     function BaseCache() {
     }
-    BaseCache.prototype.set = function (key, val, expires) {
+    BaseCache.prototype.put = function (extkey, val, expires) {
         if (expires === void 0) { expires = 60; }
         var payload = {
             expires: this.minutesFromNow(expires),
             value: val
         };
-        this.setValue(this.extkey(key), payload);
+        this.setValue(extkey, payload);
     };
-    BaseCache.prototype.get = function (key) {
-        var extkey = this.extkey(key);
+    BaseCache.prototype.set = function (key, val, expires) {
+        if (expires === void 0) { expires = 60; }
+        var config = config_1.Config.getInstance();
+        this.put(config.getCacheKey(key), val, expires);
+    };
+    BaseCache.prototype.fetch = function (extkey) {
         var payload = this.getValue(extkey);
         if (payload) {
             if (Date.now() > payload.expires) {
@@ -18250,12 +18117,16 @@ var BaseCache = /** @class */ (function () {
         }
         return null;
     };
-    BaseCache.prototype.remove = function (key) {
-        var extkey = this.extkey(key);
+    BaseCache.prototype.get = function (key) {
+        var config = config_1.Config.getInstance();
+        return this.fetch(config.getCacheKey(key));
+    };
+    BaseCache.prototype.drop = function (extkey) {
         this.removeValue(extkey);
     };
-    BaseCache.prototype.extkey = function (suffix) {
-        return config_1.Config.getCacheKey() + "-" + suffix;
+    BaseCache.prototype.remove = function (key) {
+        var config = config_1.Config.getInstance();
+        this.drop(config.getCacheKey(key));
     };
     BaseCache.prototype.minutesFromNow = function (min) {
         return Date.now() + min * 60000;
@@ -18305,7 +18176,7 @@ var StorageCache = /** @class */ (function (_super) {
         return _this;
     }
     StorageCache.prototype.setValue = function (extkey, val) {
-        if (config_1.Config.devMode)
+        if (config_1.Config.getInstance().settings.devMode)
             return;
         this.storage.setItem(extkey, JSON.stringify(val));
     };
@@ -18368,6 +18239,173 @@ var Cache = /** @class */ (function () {
     return Cache;
 }());
 exports.Cache = Cache;
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Kekse = __webpack_require__(14);
+var qs = __webpack_require__(23);
+var lodash_1 = __webpack_require__(0);
+var tools_1 = __webpack_require__(7);
+var Cookies = /** @class */ (function () {
+    function Cookies() {
+    }
+    Cookies.get = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        if (tools_1.Tools.isNode)
+            return;
+        return Kekse.get.apply(null, args);
+    };
+    Cookies.set = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        if (tools_1.Tools.isNode)
+            return;
+        return Kekse.set.apply(null, args);
+    };
+    Cookies.expire = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i] = arguments[_i];
+        }
+        if (tools_1.Tools.isNode)
+            return;
+        return Kekse.expire.apply(null, args);
+    };
+    return Cookies;
+}());
+exports.Cookies = Cookies;
+var configNames = ['affiliationId', 'roleId', 'sessionId', 'flavours'];
+var settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor'];
+var Config = /** @class */ (function () {
+    function Config(settings) {
+        if (settings === void 0) { settings = {}; }
+        this.initGetSet();
+        this.settings = lodash_1.merge({
+            endpoints: {},
+            cookieTimeout: 30 * 24 * 60 * 60,
+            timestamp: Date.now() / 1000 | 0,
+        }, settings);
+    }
+    Config.getInstance = function () {
+        if (!Config.instance)
+            Config.instance = new Config();
+        return Config.instance;
+    };
+    Config.prototype.initGetSet = function () {
+        var _this = this;
+        lodash_1.each(settingNames, function (prop) {
+            Object.defineProperty(_this, prop, {
+                get: function () {
+                    console.log("chinchilla: 'config." + prop + "' is deprecated. please use 'config.settings." + prop + "' instead.");
+                    return lodash_1.get(_this.settings, prop);
+                },
+                set: function (value) {
+                    console.log("chinchilla: 'config." + prop + "' is deprecated. please use 'config.settings." + prop + "' instead.");
+                    return _this.settings[prop] = value;
+                }
+            });
+        });
+        lodash_1.each(configNames, function (prop) {
+            var tail = prop.charAt(0).toUpperCase() + prop.slice(1);
+            _this["get" + tail] = function () {
+                return _this.getValue(prop);
+            };
+            _this["set" + tail] = function (value) {
+                _this.setValue(prop, value);
+            };
+            _this["clear" + tail] = function () {
+                _this.clearValue(prop);
+            };
+        });
+    };
+    Config.prototype.clone = function () {
+        return new Config(lodash_1.clone(this.settings));
+    };
+    Config.prototype.setEndpoint = function (name, url) {
+        this.settings.endpoints[name] = url;
+    };
+    Config.prototype.setCookieDomain = function (domain) {
+        this.settings.domain = domain;
+    };
+    Config.prototype.setErrorInterceptor = function (fn) {
+        this.settings.errorInterceptor = fn;
+    };
+    Config.prototype.getValue = function (name) {
+        return this.settings[name] || Cookies.get(this.cookieKey(name));
+    };
+    Config.prototype.updateCacheKey = function () {
+        var affiliationId, roleId, sessionId, cacheKey;
+        if ((affiliationId = this.getValue('affiliationId')) && (roleId = this.getValue('roleId'))) {
+            cacheKey = affiliationId + "-" + roleId;
+        }
+        else if (sessionId = this.getValue('sessionId')) {
+            cacheKey = sessionId;
+        }
+        else {
+            cacheKey = 'anonymous';
+        }
+        this.setValue('cacheKey', cacheKey);
+    };
+    Config.prototype.getCacheKey = function (suffix) {
+        return suffix ? this.getValue('cacheKey') + "-" + suffix : this.getValue('cacheKey');
+    };
+    Config.prototype.setValue = function (name, value) {
+        this.settings[name] = value;
+        Cookies.set(this.cookieKey(name), value, {
+            path: '/',
+            domain: this.settings.domain,
+            expires: this.settings.cookieTimeout,
+            secure: !this.settings.devMode,
+        });
+        if (name !== 'cacheKey')
+            this.updateCacheKey();
+    };
+    Config.prototype.clearValue = function (name) {
+        this.settings[name] = undefined;
+        Cookies.expire(this.cookieKey(name), { domain: this.settings.domain });
+        if (name !== 'cacheKey')
+            this.updateCacheKey();
+    };
+    Config.prototype.clear = function () {
+        var _this = this;
+        lodash_1.each(configNames, function (name) {
+            if (name === 'affiliationId')
+                return;
+            _this.clearValue(name);
+        });
+    };
+    Config.prototype.cookieKey = function (name) {
+        return "chinchilla." + name;
+    };
+    Config.prototype.setFlavour = function (name, value) {
+        var flavours = this.activeFlavours;
+        flavours[name] = value;
+        this.setFlavours(qs.stringify(flavours));
+        return flavours;
+    };
+    Object.defineProperty(Config.prototype, "activeFlavours", {
+        // returns current flavours key/values
+        get: function () {
+            var value = this.getFlavours();
+            return value ? qs.parse(value) : {};
+        },
+        enumerable: true,
+        configurable: true
+    });
+    return Config;
+}());
+exports.Config = Config;
 
 
 /***/ }),
@@ -18468,8 +18506,7 @@ exports.Extractor = Extractor;
 Object.defineProperty(exports, "__esModule", { value: true });
 var request = __webpack_require__(24);
 var lodash_1 = __webpack_require__(0);
-var config_1 = __webpack_require__(1);
-var cache_1 = __webpack_require__(5);
+var cache_1 = __webpack_require__(4);
 //import * as sdebug from 'superdebug'
 //import * as http from 'http'
 var Tools = /** @class */ (function () {
@@ -18499,7 +18536,7 @@ var Tools = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
-    Tools.handleError = function (err, res) {
+    Tools.handleError = function (err, res, config) {
         var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
         if (res) {
             error['headers'] = res.headers;
@@ -18517,10 +18554,10 @@ var Tools = /** @class */ (function () {
         // session timed out, reset cookies and caches
         if (error['statusCode'] === 419) {
             cache_1.Cache.clear();
-            config_1.Config.clear();
+            config.clear();
         }
-        if (config_1.Config.errorInterceptor) {
-            if (config_1.Config.errorInterceptor(error))
+        if (config.settings.errorInterceptor) {
+            if (config.settings.errorInterceptor(error))
                 return [true, error];
         }
         return [false, error];
@@ -18580,9 +18617,8 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
-var Promise = __webpack_require__(2);
-var config_1 = __webpack_require__(1);
-var cache_1 = __webpack_require__(5);
+var Promise = __webpack_require__(1);
+var cache_1 = __webpack_require__(4);
 var tools_1 = __webpack_require__(7);
 var ContextAction = /** @class */ (function () {
     function ContextAction(values) {
@@ -18622,38 +18658,39 @@ var Context = /** @class */ (function () {
             return _this;
         });
     }
-    Context.get = function (contextUrl) {
+    Context.get = function (contextUrl, config) {
+        config = config;
         var key = lodash_1.first(contextUrl.split('?'));
         var cachedContext;
-        if (cachedContext = cache_1.Cache.runtime.get(key)) {
+        if (cachedContext = cache_1.Cache.runtime.fetch(config.getCacheKey(key))) {
             return cachedContext;
         }
         var dataPromise;
         var cachedData;
-        if (!tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.get(key))) {
+        if (!config.settings.devMode && !tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.fetch(config.getCacheKey(key)))) {
             dataPromise = Promise.resolve(cachedData);
         }
         else {
             dataPromise = new Promise(function (resolve, reject) {
                 var req = tools_1.Tools.req
                     .get(contextUrl)
-                    .query({ t: config_1.Config.timestamp });
-                if (config_1.Config.getSessionId()) {
-                    req = req.set('Session-Id', config_1.Config.getSessionId());
+                    .query({ t: config.settings.timestamp });
+                if (config.getSessionId()) {
+                    req = req.set('Session-Id', config.getSessionId());
                 }
-                if (config_1.Config.getAffiliationId()) {
-                    req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+                if (config.getAffiliationId()) {
+                    req = req.set('Affiliation-Id', config.getAffiliationId());
                 }
-                if (config_1.Config.getRoleId()) {
-                    req = req.set('Role-Id', config_1.Config.getRoleId());
+                if (config.getRoleId()) {
+                    req = req.set('Role-Id', config.getRoleId());
                 }
-                if (config_1.Config.getFlavours()) {
-                    req = req.set('Mpx-Flavours', config_1.Config.getFlavours());
+                if (config.getFlavours()) {
+                    req = req.set('Mpx-Flavours', config.getFlavours());
                 }
                 req
                     .end(function (err, res) {
                     if (err) {
-                        var _a = tools_1.Tools.handleError(err, res), handled = _a[0], error = _a[1];
+                        var _a = tools_1.Tools.handleError(err, res, config), handled = _a[0], error = _a[1];
                         return handled ? null : reject(error);
                     }
                     return resolve(res.body);
@@ -18666,14 +18703,14 @@ var Context = /** @class */ (function () {
         // to avoid other users by coincidence get returned an error
         if (tools_1.Tools.isNode) {
             dataPromise.then(function (data) {
-                return cache_1.Cache.runtime.set(key, cachedContext);
+                return cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
             });
         }
         else {
             dataPromise.then(function (data) {
-                return cache_1.Cache.storage.set(key, data);
+                return cache_1.Cache.storage.put(config.getCacheKey(key), data);
             });
-            cache_1.Cache.runtime.set(key, cachedContext);
+            cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
         }
         return cachedContext;
     };
@@ -20673,8 +20710,7 @@ module.exports = isObject;
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var UriTemplate = __webpack_require__(12);
-var Promise = __webpack_require__(2);
-var config_1 = __webpack_require__(1);
+var Promise = __webpack_require__(1);
 var result_1 = __webpack_require__(64);
 var extractor_1 = __webpack_require__(6);
 var tools_1 = __webpack_require__(7);
@@ -20717,7 +20753,7 @@ var cleanup = function (object) {
     return cleaned;
 };
 var Action = /** @class */ (function () {
-    function Action(contextAction, params, body, options) {
+    function Action(contextAction, params, body, config, options) {
         if (params === void 0) { params = {}; }
         var _this = this;
         this.result = new result_1.Result();
@@ -20741,7 +20777,7 @@ var Action = /** @class */ (function () {
                 var variable = lodash_1.get(required[index], 'variable');
                 if (!_this.params[variable]) {
                     var msg = "Required param '" + variable + "' for '" + _this.contextAction.template + "' missing!";
-                    if (config_1.Config.devMode) {
+                    if (config.settings.devMode) {
                         return reject(new Error(msg));
                     }
                     else {
@@ -20772,19 +20808,19 @@ var Action = /** @class */ (function () {
                     break;
             }
             // add timestamp
-            req = req.query({ t: config_1.Config.timestamp });
+            req = req.query({ t: config.settings.timestamp });
             // add session by default
             if (!_this.options.withoutSession) {
-                req = req.set('Session-Id', config_1.Config.getSessionId());
+                req = req.set('Session-Id', config.getSessionId());
             }
-            if (config_1.Config.getAffiliationId()) {
-                req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+            if (config.getAffiliationId()) {
+                req = req.set('Affiliation-Id', config.getAffiliationId());
             }
-            if (config_1.Config.getRoleId()) {
-                req = req.set('Role-Id', config_1.Config.getRoleId());
+            if (config.getRoleId()) {
+                req = req.set('Role-Id', config.getRoleId());
             }
-            if (config_1.Config.getFlavours()) {
-                req = req.set('Mpx-Flavours', config_1.Config.getFlavours());
+            if (config.getFlavours()) {
+                req = req.set('Mpx-Flavours', config.getFlavours());
             }
             // add custom headers
             if (options && (options.header || options.headers)) {
@@ -20801,10 +20837,10 @@ var Action = /** @class */ (function () {
             }
             req.end(function (err, res) {
                 if (err) {
-                    var _a = tools_1.Tools.handleError(err, res), handled = _a[0], error = _a[1];
+                    var _a = tools_1.Tools.handleError(err, res, config), handled = _a[0], error = _a[1];
                     return handled ? null : reject(error);
                 }
-                _this.result.success(res, _this.options);
+                _this.result.success(res, config, _this.options);
                 resolve(_this.result);
             });
         });
@@ -20858,17 +20894,18 @@ exports.Action = Action;
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var context_1 = __webpack_require__(11);
-var config_1 = __webpack_require__(1);
+var config_1 = __webpack_require__(5);
 var action_1 = __webpack_require__(26);
 var extractor_1 = __webpack_require__(6);
 var association_1 = __webpack_require__(63);
-var cache_1 = __webpack_require__(5);
+var cache_1 = __webpack_require__(4);
 var Subject = /** @class */ (function () {
-    function Subject(objectsOrApp, model) {
+    function Subject(objectsOrApp, model, config) {
         this.id = cache_1.Cache.random('subject');
+        this.config = config || config_1.Config.getInstance();
         // adds and initializes objects to this Subject
         if (lodash_1.isString(objectsOrApp)) {
-            this.contextUrl = config_1.Config.endpoints[objectsOrApp] + "/context/" + model;
+            this.contextUrl = this.config.settings.endpoints[objectsOrApp] + "/context/" + model;
         }
         else {
             lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
@@ -20894,7 +20931,7 @@ var Subject = /** @class */ (function () {
         return promise = this.context.ready.then(function (context) {
             var contextAction = context.memberAction(name);
             var mergedParams = lodash_1.merge({}, _this.objectParams, inputParams);
-            var action = new action_1.Action(contextAction, mergedParams, _this.subject, options);
+            var action = new action_1.Action(contextAction, mergedParams, _this.subject, _this.config, options);
             promise['$objects'] = action.result.objects;
             return action.ready;
         });
@@ -20912,7 +20949,7 @@ var Subject = /** @class */ (function () {
         return this.context.ready.then(function (context) {
             var contextAction = context.collectionAction(name);
             var mergedParams = lodash_1.merge({}, _this.objectParams, inputParams);
-            return new action_1.Action(contextAction, mergedParams, _this.subject, options).ready;
+            return new action_1.Action(contextAction, mergedParams, _this.subject, _this.config, options).ready;
         });
     };
     // alias
@@ -20937,7 +20974,7 @@ var Subject = /** @class */ (function () {
     };
     // returns Association that resolves to a Result where the objects might belong to different Subjects
     Subject.prototype.association = function (name) {
-        return association_1.Association.get(this, name);
+        return association_1.Association.get(this, name, this.config);
     };
     // can be used to easily instantiate a new object with given context like this
     //
@@ -20951,7 +20988,7 @@ var Subject = /** @class */ (function () {
         get: function () {
             if (this._context)
                 return this._context;
-            return this._context = context_1.Context.get(this.contextUrl);
+            return this._context = context_1.Context.get(this.contextUrl, this.config);
         },
         enumerable: true,
         configurable: true
@@ -21057,7 +21094,7 @@ exports.Subject = Subject;
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(55);
-module.exports = __webpack_require__(3).Object.assign;
+module.exports = __webpack_require__(2).Object.assign;
 
 
 /***/ }),
@@ -21067,7 +21104,7 @@ module.exports = __webpack_require__(3).Object.assign;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = __webpack_require__(2);
+var Promise = __webpack_require__(1);
 var Cookies = __webpack_require__(14);
 var UriTemplate = __webpack_require__(12);
 var request = __webpack_require__(24);
@@ -21342,7 +21379,7 @@ module.exports = function (fn, that, length) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var isObject = __webpack_require__(10);
-var document = __webpack_require__(4).document;
+var document = __webpack_require__(3).document;
 // typeof document.createElement is 'object' in old IE
 var is = isObject(document) && isObject(document.createElement);
 module.exports = function (it) {
@@ -21364,8 +21401,8 @@ module.exports = (
 /* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global = __webpack_require__(4);
-var core = __webpack_require__(3);
+var global = __webpack_require__(3);
+var core = __webpack_require__(2);
 var hide = __webpack_require__(17);
 var redefine = __webpack_require__(48);
 var ctx = __webpack_require__(35);
@@ -21556,7 +21593,7 @@ module.exports = function (bitmap, value) {
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global = __webpack_require__(4);
+var global = __webpack_require__(3);
 var hide = __webpack_require__(17);
 var has = __webpack_require__(16);
 var SRC = __webpack_require__(21)('src');
@@ -21564,7 +21601,7 @@ var TO_STRING = 'toString';
 var $toString = Function[TO_STRING];
 var TPL = ('' + $toString).split(TO_STRING);
 
-__webpack_require__(3).inspectSource = function (it) {
+__webpack_require__(2).inspectSource = function (it) {
   return $toString.call(it);
 };
 
@@ -21604,8 +21641,8 @@ module.exports = function (key) {
 /* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var core = __webpack_require__(3);
-var global = __webpack_require__(4);
+var core = __webpack_require__(2);
+var global = __webpack_require__(3);
 var SHARED = '__core-js_shared__';
 var store = global[SHARED] || (global[SHARED] = {});
 
@@ -22887,35 +22924,38 @@ exports.clearImmediate = clearImmediate;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = __webpack_require__(2);
+var Promise = __webpack_require__(1);
 var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(27);
-var config_1 = __webpack_require__(1);
+var config_1 = __webpack_require__(5);
 var context_1 = __webpack_require__(11);
-var cache_1 = __webpack_require__(5);
+var cache_1 = __webpack_require__(4);
 var extractor_1 = __webpack_require__(6);
-var chch = Object.assign(function (objectsOrApp, model) {
+var chch = Object.assign(function (objectsOrApp, model, config) {
     // detach from existing Subject first before creating a new one..
     objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
-    return new subject_1.Subject(objectsOrApp, model);
+    return new subject_1.Subject(objectsOrApp, model, config);
 }, {
-    config: config_1.Config,
+    config: config_1.Config.getInstance(),
     cache: cache_1.Cache,
     extractor: extractor_1.Extractor,
-    new: function (app, model, attrs) {
+    new: function (app, model, attrs, config) {
         if (attrs === void 0) { attrs = {}; }
-        return lodash_1.merge({ '@context': config_1.Config.endpoints[app] + "/context/" + model }, attrs);
+        config = config || config_1.Config.getInstance();
+        return lodash_1.merge({ '@context': config.settings.endpoints[app] + "/context/" + model }, attrs);
     },
-    contextUrl: function (app, model) {
-        return config_1.Config.endpoints[app] + "/context/" + model;
+    contextUrl: function (app, model, config) {
+        config = config || config_1.Config.getInstance();
+        return config.settings.endpoints[app] + "/context/" + model;
     },
-    context: function (urlOrApp, model) {
+    context: function (urlOrApp, model, config) {
+        config = config || config_1.Config.getInstance();
         if (!model) {
             // assume first param is the context url
-            return context_1.Context.get(urlOrApp).ready;
+            return context_1.Context.get(urlOrApp, config).ready;
         }
         else {
-            return context_1.Context.get(config_1.Config.endpoints[urlOrApp] + "/context/" + model).ready;
+            return context_1.Context.get(config.settings.endpoints[urlOrApp] + "/context/" + model, config).ready;
         }
     },
     // unfurl('pm, 'product', 'query', params) -> defaults to $c
@@ -22967,15 +23007,17 @@ exports.default = chch;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
+var config_1 = __webpack_require__(5);
 var context_1 = __webpack_require__(11);
 var action_1 = __webpack_require__(26);
 var extractor_1 = __webpack_require__(6);
 var Association = /** @class */ (function () {
-    function Association(subject, name) {
+    function Association(subject, name, config) {
         var _this = this;
         this.habtm = false;
         // this cache contains the association data for each of the subject's objects
         this.cache = {};
+        config = config || config_1.Config.getInstance();
         this.subject = subject;
         this.name = name;
         this.associationData = this.readAssociationData();
@@ -22985,7 +23027,7 @@ var Association = /** @class */ (function () {
             this.associationData = lodash_1.flatten(this.associationData);
         this.ready = this.subject.context.ready.then(function (context) {
             _this.associationProperty = context.association(name);
-            return context_1.Context.get(_this.associationProperty.type).ready.then(function (associationContext) {
+            return context_1.Context.get(_this.associationProperty.type, config).ready.then(function (associationContext) {
                 _this.context = associationContext;
                 var contextAction = _this.associationData.length > 1 || _this.associationProperty.collection ?
                     associationContext.collectionAction('get') :
@@ -22994,7 +23036,7 @@ var Association = /** @class */ (function () {
                     throw new Error("could not load association " + name);
                 //var extractedParams = Extractor.extractCollectionParams(this.subject.context, this.subject.objects)
                 //TODO is ^^ this needed?
-                return new action_1.Action(contextAction, _this.associationParams, {}).ready.then(function (result) {
+                return new action_1.Action(contextAction, _this.associationParams, {}, config).ready.then(function (result) {
                     _this.fillCache(result);
                     return result;
                 });
@@ -23004,14 +23046,14 @@ var Association = /** @class */ (function () {
     // instances of Association get cached for every Subject. this means for any Subject the association data
     // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
     // them loads their associations individually
-    Association.get = function (subject, name) {
+    Association.get = function (subject, name, config) {
         var key = "subject-" + subject.id + "-" + name;
         var instance;
         if (instance = Association.cache[key]) {
             return instance;
         }
         else {
-            instance = new Association(subject, name);
+            instance = new Association(subject, name, config);
             Association.cache[key] = instance;
             return instance;
         }
@@ -23140,7 +23182,7 @@ var Result = /** @class */ (function () {
     function Result() {
         this.objects = [];
     }
-    Result.prototype.success = function (result, options) {
+    Result.prototype.success = function (result, config, options) {
         var _this = this;
         this.headers = result.headers;
         this.body = result.body;
@@ -23154,7 +23196,7 @@ var Result = /** @class */ (function () {
                 var members = result.body['@graph'];
                 if (!members)
                     return;
-                new subject_1.Subject(members);
+                new subject_1.Subject(members, null, config);
                 lodash_1.each(members, function (node) {
                     if (node.parent_id) {
                         // this is a child
@@ -23190,13 +23232,13 @@ var Result = /** @class */ (function () {
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
                 lodash_1.each(byContext, function (objects, context) {
-                    new subject_1.Subject(objects);
+                    new subject_1.Subject(objects, null, config);
                 });
                 break;
             default:
                 this.objects = lodash_1.isArray(result.body) ? result.body : [result.body];
                 if (result.body && !this.options.rawResult)
-                    new subject_1.Subject(this.object);
+                    new subject_1.Subject(this.object, null, config);
                 break;
         }
     };

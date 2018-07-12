@@ -10,6 +10,7 @@ export class Subject {
   subject: any // the object(s) we deal with
   contextUrl: string
   id: string
+  config: Config
   _context: Context
 
   static detachFromSubject(objects: any) {
@@ -29,12 +30,13 @@ export class Subject {
     return objects
   }
 
-  constructor(objectsOrApp: any, model?: string) {
+  constructor(objectsOrApp: any, model?: string, config?: Config) {
     this.id = Cache.random('subject')
+    this.config = config || Config.getInstance()
 
     // adds and initializes objects to this Subject
     if (isString(objectsOrApp)) {
-      this.contextUrl = `${Config.endpoints[objectsOrApp]}/context/${model}`
+      this.contextUrl = `${this.config.settings.endpoints[objectsOrApp]}/context/${model}`
     }
     else {
       isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp)
@@ -47,7 +49,7 @@ export class Subject {
       var contextAction = context.memberAction(name)
       var mergedParams  = merge({}, this.objectParams, inputParams)
 
-      var action = new Action(contextAction, mergedParams, this.subject, options)
+      var action = new Action(contextAction, mergedParams, this.subject, this.config, options)
       promise['$objects'] = action.result.objects
 
       return action.ready
@@ -64,7 +66,7 @@ export class Subject {
       var contextAction = context.collectionAction(name)
       var mergedParams  = merge({}, this.objectParams, inputParams)
 
-      return new Action(contextAction, mergedParams, this.subject, options).ready
+      return new Action(contextAction, mergedParams, this.subject, this.config, options).ready
     })
   }
 
@@ -84,7 +86,7 @@ export class Subject {
 
   // returns Association that resolves to a Result where the objects might belong to different Subjects
   association(name: string): Association {
-    return Association.get(this, name)
+    return Association.get(this, name, this.config)
   }
 
   // can be used to easily instantiate a new object with given context like this
@@ -101,7 +103,7 @@ export class Subject {
 
   get context(): Context {
     if (this._context) return this._context
-    return this._context = Context.get(this.contextUrl)
+    return this._context = Context.get(this.contextUrl, this.config)
   }
 
   get objects() {
