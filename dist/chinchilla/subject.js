@@ -7,6 +7,7 @@ const action_1 = require("./action");
 const extractor_1 = require("./extractor");
 const association_1 = require("./association");
 const cache_1 = require("./cache");
+const tools_1 = require("./tools");
 class Subject {
     static detachFromSubject(objects) {
         var detach = function (object) {
@@ -22,15 +23,23 @@ class Subject {
         }
         return objects;
     }
-    constructor(objectsOrApp, model, config) {
+    constructor(one, two, three) {
         this.id = cache_1.Cache.random('subject');
-        this.config = config || config_1.Config.getInstance();
-        // adds and initializes objects to this Subject
-        if (lodash_1.isString(objectsOrApp)) {
-            this.contextUrl = `${this.config.settings.endpoints[objectsOrApp]}/context/${model}`;
+        if (lodash_1.isString(one)) {
+            // one -> app, two -> model, three -> config
+            if (lodash_1.isEmpty(two) || !lodash_1.isString(two))
+                throw new Error("chinchilla: missing 'model' param");
+            if (tools_1.Tools.isNode && lodash_1.isEmpty(three))
+                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
+            this.config = three || config_1.Config.getInstance();
+            this.contextUrl = `${this.config.settings.endpoints[one]}/context/${two}`;
         }
         else {
-            lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
+            // one -> object(s), two -> config
+            if (tools_1.Tools.isNode && lodash_1.isEmpty(two))
+                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
+            this.config = three || config_1.Config.getInstance();
+            lodash_1.isArray(one) ? this.addObjects(one) : this.addObject(one);
         }
     }
     memberAction(name, inputParams, options) {

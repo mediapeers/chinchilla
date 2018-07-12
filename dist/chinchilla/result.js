@@ -19,7 +19,7 @@ class Result {
                 var members = result.body['@graph'];
                 if (!members)
                     return;
-                new subject_1.Subject(members, null, config);
+                new subject_1.Subject(members, config);
                 lodash_1.each(members, (node) => {
                     if (node.parent_id) {
                         // this is a child
@@ -55,13 +55,13 @@ class Result {
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
                 lodash_1.each(byContext, (objects, context) => {
-                    new subject_1.Subject(objects, null, config);
+                    new subject_1.Subject(objects, config);
                 });
                 break;
             default:
                 this.objects = lodash_1.isArray(result.body) ? result.body : [result.body];
                 if (result.body && !this.options.rawResult)
-                    new subject_1.Subject(this.object, null, config);
+                    new subject_1.Subject(this.object, config);
                 break;
         }
     }

@@ -2,7 +2,7 @@ import { Subject } from './chinchilla/subject';
 import { Config } from './chinchilla/config';
 import { Cache } from './chinchilla/cache';
 import { Extractor } from './chinchilla/extractor';
-declare const chch: ((objectsOrApp: any, model?: any, config?: Config) => Subject) & {
+declare const chch: ((one: any, two?: string | Config, three?: Config) => Subject) & {
     config: Config;
     cache: typeof Cache;
     extractor: typeof Extractor;

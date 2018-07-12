@@ -8,7 +8,7 @@ export declare class Subject {
     config: Config;
     _context: Context;
     static detachFromSubject(objects: any): any;
-    constructor(objectsOrApp: any, model?: string, config?: Config);
+    constructor(one: string | any, two?: string | Config, three?: Config);
     memberAction(name: string, inputParams?: any, options?: any): Promise<any>;
     $m(...args: any[]): any;
     collectionAction(name: string, inputParams: any, options?: any): Promise<any>;
