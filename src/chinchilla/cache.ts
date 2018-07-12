@@ -10,16 +10,20 @@ export abstract class BaseCache {
   abstract removeValue(extkey: string)
   abstract clear()
 
-  set(key: string, val: any, expires: number = 60) {
+  put(extkey: string, val: any, expires: number = 60) {
     const payload = {
       expires: this.minutesFromNow(expires),
       value: val
     }
-    this.setValue(this.extkey(key), payload)
+    this.setValue(extkey, payload)
   }
 
-  get(key: string) {
-    const extkey = this.extkey(key)
+  set(key: string, val: any, expires: number = 60) {
+    const config = Config.getInstance()
+    this.put(config.getCacheKey(key), val, expires)
+  }
+
+  fetch(extkey: string) {
     const payload = this.getValue(extkey)
 
     if (payload) {
@@ -34,13 +38,18 @@ export abstract class BaseCache {
     return null
   }
 
-  remove(key: string) {
-    const extkey = this.extkey(key)
+  get(key: string) {
+    const config = Config.getInstance()
+    return this.fetch(config.getCacheKey(key))
+  }
+
+  drop(extkey: string) {
     this.removeValue(extkey)
   }
 
-  extkey(suffix:string) {
-    return `${Config.getCacheKey()}-${suffix}`
+  remove(key: string) {
+    const config = Config.getInstance()
+    this.drop(config.getCacheKey(key))
   }
 
   minutesFromNow(min:number) {
@@ -91,7 +100,7 @@ export class StorageCache extends BaseCache {
   }
 
   setValue(extkey: string, val: any) {
-    if (Config.devMode) return
+    if (Config.getInstance().settings.devMode) return
 
     this.storage.setItem(extkey, JSON.stringify(val))
   }

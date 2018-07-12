@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const UriTemplate = require("uri-templates");
 const Promise = require("bluebird");
-const config_1 = require("./config");
 const result_1 = require("./result");
 const extractor_1 = require("./extractor");
 const tools_1 = require("./tools");
@@ -46,7 +45,7 @@ const cleanup = (object) => {
     return cleaned;
 };
 class Action {
-    constructor(contextAction, params = {}, body, options) {
+    constructor(contextAction, params = {}, body, config, options) {
         this.result = new result_1.Result();
         this.contextAction = contextAction;
         this.uriTmpl = new UriTemplate(contextAction.template);
@@ -68,7 +67,7 @@ class Action {
                 var variable = lodash_1.get(required[index], 'variable');
                 if (!this.params[variable]) {
                     const msg = `Required param '${variable}' for '${this.contextAction.template}' missing!`;
-                    if (config_1.Config.devMode) {
+                    if (config.settings.devMode) {
                         return reject(new Error(msg));
                     }
                     else {
@@ -99,19 +98,19 @@ class Action {
                     break;
             }
             // add timestamp
-            req = req.query({ t: config_1.Config.timestamp });
+            req = req.query({ t: config.settings.timestamp });
             // add session by default
             if (!this.options.withoutSession) {
-                req = req.set('Session-Id', config_1.Config.getSessionId());
+                req = req.set('Session-Id', config.getSessionId());
             }
-            if (config_1.Config.getAffiliationId()) {
-                req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
+            if (config.getAffiliationId()) {
+                req = req.set('Affiliation-Id', config.getAffiliationId());
             }
-            if (config_1.Config.getRoleId()) {
-                req = req.set('Role-Id', config_1.Config.getRoleId());
+            if (config.getRoleId()) {
+                req = req.set('Role-Id', config.getRoleId());
             }
-            if (config_1.Config.getFlavours()) {
-                req = req.set('Mpx-Flavours', config_1.Config.getFlavours());
+            if (config.getFlavours()) {
+                req = req.set('Mpx-Flavours', config.getFlavours());
             }
             // add custom headers
             if (options && (options.header || options.headers)) {
@@ -128,10 +127,10 @@ class Action {
             }
             req.end((err, res) => {
                 if (err) {
-                    const [handled, error] = tools_1.Tools.handleError(err, res);
+                    const [handled, error] = tools_1.Tools.handleError(err, res, config);
                     return handled ? null : reject(error);
                 }
-                this.result.success(res, this.options);
+                this.result.success(res, config, this.options);
                 resolve(this.result);
             });
         });

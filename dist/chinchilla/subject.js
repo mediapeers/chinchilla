@@ -22,11 +22,12 @@ class Subject {
         }
         return objects;
     }
-    constructor(objectsOrApp, model) {
+    constructor(objectsOrApp, model, config) {
         this.id = cache_1.Cache.random('subject');
+        this.config = config || config_1.Config.getInstance();
         // adds and initializes objects to this Subject
         if (lodash_1.isString(objectsOrApp)) {
-            this.contextUrl = `${config_1.Config.endpoints[objectsOrApp]}/context/${model}`;
+            this.contextUrl = `${this.config.settings.endpoints[objectsOrApp]}/context/${model}`;
         }
         else {
             lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
@@ -37,7 +38,7 @@ class Subject {
         return promise = this.context.ready.then((context) => {
             var contextAction = context.memberAction(name);
             var mergedParams = lodash_1.merge({}, this.objectParams, inputParams);
-            var action = new action_1.Action(contextAction, mergedParams, this.subject, options);
+            var action = new action_1.Action(contextAction, mergedParams, this.subject, this.config, options);
             promise['$objects'] = action.result.objects;
             return action.ready;
         });
@@ -50,7 +51,7 @@ class Subject {
         return this.context.ready.then((context) => {
             var contextAction = context.collectionAction(name);
             var mergedParams = lodash_1.merge({}, this.objectParams, inputParams);
-            return new action_1.Action(contextAction, mergedParams, this.subject, options).ready;
+            return new action_1.Action(contextAction, mergedParams, this.subject, this.config, options).ready;
         });
     }
     // alias
@@ -67,7 +68,7 @@ class Subject {
     }
     // returns Association that resolves to a Result where the objects might belong to different Subjects
     association(name) {
-        return association_1.Association.get(this, name);
+        return association_1.Association.get(this, name, this.config);
     }
     // can be used to easily instantiate a new object with given context like this
     //
@@ -79,7 +80,7 @@ class Subject {
     get context() {
         if (this._context)
             return this._context;
-        return this._context = context_1.Context.get(this.contextUrl);
+        return this._context = context_1.Context.get(this.contextUrl, this.config);
     }
     get objects() {
         return lodash_1.isArray(this.subject) ? this.subject : [this.subject];

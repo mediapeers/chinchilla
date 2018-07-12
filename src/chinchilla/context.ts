@@ -37,42 +37,43 @@ export class Context {
   ready: Promise<Context>
   data: any
 
-  static get(contextUrl: string) {
+  static get(contextUrl: string, config: Config) {
+    config = config
     let key = first(contextUrl.split('?'))
 
     let cachedContext
-    if (cachedContext = Cache.runtime.get(key)){
+    if (cachedContext = Cache.runtime.fetch(config.getCacheKey(key))) {
       return cachedContext
     }
 
     let dataPromise
     let cachedData
-    if (!Tools.isNode && (cachedData = Cache.storage.get(key))) {
+    if (!config.settings.devMode && !Tools.isNode && (cachedData = Cache.storage.fetch(config.getCacheKey(key)))) {
       dataPromise = Promise.resolve(cachedData)
     }
     else {
       dataPromise = new Promise((resolve, reject) => {
         var req = Tools.req
           .get(contextUrl)
-          .query({ t: Config.timestamp })
+          .query({ t: config.settings.timestamp })
 
-        if (Config.getSessionId()) {
-          req = req.set('Session-Id', Config.getSessionId())
+        if (config.getSessionId()) {
+          req = req.set('Session-Id', config.getSessionId())
         }
-        if (Config.getAffiliationId()) {
-          req = req.set('Affiliation-Id', Config.getAffiliationId())
+        if (config.getAffiliationId()) {
+          req = req.set('Affiliation-Id', config.getAffiliationId())
         }
-        if (Config.getRoleId()) {
-          req = req.set('Role-Id', Config.getRoleId())
+        if (config.getRoleId()) {
+          req = req.set('Role-Id', config.getRoleId())
         }
-        if (Config.getFlavours()) {
-          req = req.set('Mpx-Flavours', Config.getFlavours())
+        if (config.getFlavours()) {
+          req = req.set('Mpx-Flavours', config.getFlavours())
         }
 
         req
           .end((err, res) => {
             if (err) {
-              const [handled, error] = Tools.handleError(err, res)
+              const [handled, error] = Tools.handleError(err, res, config)
               return handled ? null : reject(error)
             }
 
@@ -88,15 +89,15 @@ export class Context {
     // to avoid other users by coincidence get returned an error
     if (Tools.isNode) {
       dataPromise.then((data) => {
-        return Cache.runtime.set(key, cachedContext)
+        return Cache.runtime.put(config.getCacheKey(key), cachedContext)
       })
     }
     else {
       dataPromise.then((data) => {
-        return Cache.storage.set(key, data)
+        return Cache.storage.put(config.getCacheKey(key), data)
       })
 
-      Cache.runtime.set(key, cachedContext)
+      Cache.runtime.put(config.getCacheKey(key), cachedContext)
     }
 
     return cachedContext

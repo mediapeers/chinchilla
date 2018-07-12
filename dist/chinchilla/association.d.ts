@@ -1,4 +1,5 @@
 import { Subject } from './subject';
+import { Config } from './config';
 import { Context, ContextProperty } from './context';
 export declare class Association {
     subject: Subject;
@@ -10,8 +11,8 @@ export declare class Association {
     associationProperty: ContextProperty;
     cache: Object;
     static cache: {};
-    constructor(subject: Subject, name: string);
-    static get(subject: Subject, name: string): any;
+    constructor(subject: Subject, name: string, config: Config);
+    static get(subject: Subject, name: string, config?: Config): any;
     getDataFor(object: Object): any;
     private fillCache;
     private readonly associationParams;

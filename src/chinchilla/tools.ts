@@ -25,7 +25,7 @@ export class Tools {
     }
   }
 
-  static handleError(err, res) {
+  static handleError(err, res, config: Config) {
     var error = new Error(get(res, 'body.description') || get(err, 'response.statusText') || 'No error details available')
 
     if (res) {
@@ -45,11 +45,11 @@ export class Tools {
     // session timed out, reset cookies and caches
     if (error['statusCode'] === 419) {
       Cache.clear()
-      Config.clear()
+      config.clear()
     }
 
-    if (Config.errorInterceptor) {
-      if (Config.errorInterceptor(error)) return [true, error]
+    if (config.settings.errorInterceptor) {
+      if (config.settings.errorInterceptor(error)) return [true, error]
     }
 
     return [false, error]
