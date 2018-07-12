@@ -20920,7 +20920,7 @@ var Subject = /** @class */ (function () {
             // one -> object(s), two -> config
             if (tools_1.Tools.isNode && lodash_1.isEmpty(two))
                 throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
-            this.config = three || config_1.Config.getInstance();
+            this.config = two || config_1.Config.getInstance();
             lodash_1.isArray(one) ? this.addObjects(one) : this.addObject(one);
         }
     }
