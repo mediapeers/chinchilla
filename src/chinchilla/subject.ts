@@ -46,7 +46,7 @@ export class Subject {
       // one -> object(s), two -> config
       if (Tools.isNode && isEmpty(two)) throw new Error("chinchilla: missing 'config' param (in NodeJs context)")
 
-      this.config = three || Config.getInstance()
+      this.config = two as Config || Config.getInstance()
       isArray(one) ? this.addObjects(one) : this.addObject(one)
     }
   }
