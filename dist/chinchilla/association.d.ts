@@ -12,7 +12,7 @@ export declare class Association {
     cache: Object;
     static cache: {};
     constructor(subject: Subject, name: string, config: Config);
-    static get(subject: Subject, name: string, config?: Config): any;
+    static get(subject: Subject, name: string, config: Config): any;
     getDataFor(object: Object): any;
     private fillCache;
     private readonly associationParams;

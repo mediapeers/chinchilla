@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
-const config_1 = require("./config");
 const context_1 = require("./context");
 const action_1 = require("./action");
 const extractor_1 = require("./extractor");
@@ -10,7 +9,6 @@ class Association {
         this.habtm = false;
         // this cache contains the association data for each of the subject's objects
         this.cache = {};
-        config = config || config_1.Config.getInstance();
         this.subject = subject;
         this.name = name;
         this.associationData = this.readAssociationData();

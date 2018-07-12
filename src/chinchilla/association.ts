@@ -22,7 +22,6 @@ export class Association {
   static cache = {}
 
   constructor(subject: Subject, name: string, config: Config) {
-    config                = config || Config.getInstance()
     this.subject          = subject
     this.name             = name
     this.associationData  = this.readAssociationData()
@@ -57,7 +56,7 @@ export class Association {
   // instances of Association get cached for every Subject. this means for any Subject the association data
   // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
   // them loads their associations individually
-  static get(subject: Subject, name: string, config?: Config) {
+  static get(subject: Subject, name: string, config: Config) {
     var key = `subject-${subject.id}-${name}`
 
     var instance
