@@ -28,7 +28,7 @@ export class Result {
         var members = result.body['@graph']
         if (!members) return
 
-        new Subject(members, null, config)
+        new Subject(members, config)
 
         each(members, (node) => {
           if (node.parent_id) {
@@ -68,13 +68,13 @@ export class Result {
 
         // creates new Subject for each group ob objects that share the same @context
         each(byContext, (objects, context) => {
-          new Subject(objects, null, config)
+          new Subject(objects, config)
         })
         break
 
       default:
         this.objects = isArray(result.body) ? result.body : [result.body]
-        if (result.body && !this.options.rawResult) new Subject(this.object, null, config)
+        if (result.body && !this.options.rawResult) new Subject(this.object, config)
         break
     }
   }

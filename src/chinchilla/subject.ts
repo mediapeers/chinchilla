@@ -1,10 +1,11 @@
-import { clone, isArray, map, isPlainObject, isString, merge, first, each } from 'lodash'
+import { clone, isArray, map, isPlainObject, isString, merge, first, each, isEmpty } from 'lodash'
 import { Context } from './context'
 import { Config } from './config'
 import { Action } from './action'
 import { Extractor } from './extractor'
 import { Association } from './association'
 import { Cache } from './cache'
+import { Tools } from './tools'
 
 export class Subject {
   subject: any // the object(s) we deal with
@@ -30,16 +31,23 @@ export class Subject {
     return objects
   }
 
-  constructor(objectsOrApp: any, model?: string, config?: Config) {
+  constructor(one: string|any, two?: string|Config, three?: Config) {
     this.id = Cache.random('subject')
-    this.config = config || Config.getInstance()
 
-    // adds and initializes objects to this Subject
-    if (isString(objectsOrApp)) {
-      this.contextUrl = `${this.config.settings.endpoints[objectsOrApp]}/context/${model}`
+    if (isString(one)) {
+      // one -> app, two -> model, three -> config
+      if (isEmpty(two) || !isString(two)) throw new Error("chinchilla: missing 'model' param")
+      if (Tools.isNode && isEmpty(three)) throw new Error("chinchilla: missing 'config' param (in NodeJs context)")
+
+      this.config = three || Config.getInstance()
+      this.contextUrl = `${this.config.settings.endpoints[one]}/context/${two}`
     }
     else {
-      isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp)
+      // one -> object(s), two -> config
+      if (Tools.isNode && isEmpty(two)) throw new Error("chinchilla: missing 'config' param (in NodeJs context)")
+
+      this.config = three || Config.getInstance()
+      isArray(one) ? this.addObjects(one) : this.addObject(one)
     }
   }
 

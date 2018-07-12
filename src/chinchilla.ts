@@ -7,11 +7,10 @@ import { Cache } from './chinchilla/cache'
 import { Extractor } from './chinchilla/extractor'
 
 const chch = Object.assign(
-  (objectsOrApp, model?, config? : Config) => {
+  (one: string|any, two?: string|Config, three?: Config) => {
     // detach from existing Subject first before creating a new one..
-    objectsOrApp = Subject.detachFromSubject(objectsOrApp)
-
-    return new Subject(objectsOrApp, model, config)
+    one = Subject.detachFromSubject(one)
+    return new Subject(one, two, three)
   },
   {
     config: Config.getInstance(),
