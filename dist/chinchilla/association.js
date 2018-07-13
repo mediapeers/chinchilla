@@ -5,7 +5,7 @@ const context_1 = require("./context");
 const action_1 = require("./action");
 const extractor_1 = require("./extractor");
 class Association {
-    constructor(subject, name) {
+    constructor(subject, name, config) {
         this.habtm = false;
         // this cache contains the association data for each of the subject's objects
         this.cache = {};
@@ -18,7 +18,7 @@ class Association {
             this.associationData = lodash_1.flatten(this.associationData);
         this.ready = this.subject.context.ready.then((context) => {
             this.associationProperty = context.association(name);
-            return context_1.Context.get(this.associationProperty.type).ready.then((associationContext) => {
+            return context_1.Context.get(this.associationProperty.type, config).ready.then((associationContext) => {
                 this.context = associationContext;
                 var contextAction = this.associationData.length > 1 || this.associationProperty.collection ?
                     associationContext.collectionAction('get') :
@@ -27,7 +27,7 @@ class Association {
                     throw new Error(`could not load association ${name}`);
                 //var extractedParams = Extractor.extractCollectionParams(this.subject.context, this.subject.objects)
                 //TODO is ^^ this needed?
-                return new action_1.Action(contextAction, this.associationParams, {}).ready.then((result) => {
+                return new action_1.Action(contextAction, this.associationParams, {}, config).ready.then((result) => {
                     this.fillCache(result);
                     return result;
                 });
@@ -37,14 +37,14 @@ class Association {
     // instances of Association get cached for every Subject. this means for any Subject the association data
     // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
     // them loads their associations individually
-    static get(subject, name) {
+    static get(subject, name, config) {
         var key = `subject-${subject.id}-${name}`;
         var instance;
         if (instance = Association.cache[key]) {
             return instance;
         }
         else {
-            instance = new Association(subject, name);
+            instance = new Association(subject, name, config);
             Association.cache[key] = instance;
             return instance;
         }

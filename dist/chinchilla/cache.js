@@ -4,15 +4,18 @@ const lodash_1 = require("lodash");
 const config_1 = require("./config");
 const tools_1 = require("./tools");
 class BaseCache {
-    set(key, val, expires = 60) {
+    put(extkey, val, expires = 60) {
         const payload = {
             expires: this.minutesFromNow(expires),
             value: val
         };
-        this.setValue(this.extkey(key), payload);
+        this.setValue(extkey, payload);
     }
-    get(key) {
-        const extkey = this.extkey(key);
+    set(key, val, expires = 60) {
+        const config = config_1.Config.getInstance();
+        this.put(config.getCacheKey(key), val, expires);
+    }
+    fetch(extkey) {
         const payload = this.getValue(extkey);
         if (payload) {
             if (Date.now() > payload.expires) {
@@ -23,12 +26,16 @@ class BaseCache {
         }
         return null;
     }
-    remove(key) {
-        const extkey = this.extkey(key);
+    get(key) {
+        const config = config_1.Config.getInstance();
+        return this.fetch(config.getCacheKey(key));
+    }
+    drop(extkey) {
         this.removeValue(extkey);
     }
-    extkey(suffix) {
-        return `${config_1.Config.getCacheKey()}-${suffix}`;
+    remove(key) {
+        const config = config_1.Config.getInstance();
+        this.drop(config.getCacheKey(key));
     }
     minutesFromNow(min) {
         return Date.now() + min * 60000;
@@ -71,8 +78,6 @@ class StorageCache extends BaseCache {
         this.storage = window.localStorage;
     }
     setValue(extkey, val) {
-        if (config_1.Config.devMode)
-            return;
         this.storage.setItem(extkey, JSON.stringify(val));
     }
     getValue(extkey) {

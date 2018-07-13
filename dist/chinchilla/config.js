@@ -22,86 +22,116 @@ class Cookies {
     }
 }
 exports.Cookies = Cookies;
-const valueNames = ['affiliationId', 'roleId', 'sessionId', 'cacheKey', 'flavours'];
+const configNames = ['affiliationId', 'roleId', 'sessionId', 'flavours'];
+const settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor'];
 class Config {
-    static setEndpoint(name, url) {
-        Config.endpoints[name] = url;
+    static getInstance() {
+        if (!Config.instance)
+            Config.instance = new Config();
+        return Config.instance;
     }
-    static setCookieDomain(domain) {
-        Config.domain = domain;
+    constructor(settings = {}) {
+        this.initGetSet();
+        this.settings = lodash_1.merge({
+            endpoints: {},
+            cookieTimeout: 30 * 24 * 60 * 60,
+            timestamp: Date.now() / 1000 | 0,
+        }, settings);
     }
-    static setErrorInterceptor(fn) {
-        Config.errorInterceptor = fn;
+    initGetSet() {
+        lodash_1.each(settingNames, (prop) => {
+            Object.defineProperty(this, prop, {
+                get: () => {
+                    console.log(`chinchilla: 'config.${prop}' is deprecated. please use 'config.settings.${prop}' instead.`);
+                    return lodash_1.get(this.settings, prop);
+                },
+                set: (value) => {
+                    console.log(`chinchilla: 'config.${prop}' is deprecated. please use 'config.settings.${prop}' instead.`);
+                    return this.settings[prop] = value;
+                }
+            });
+        });
+        lodash_1.each(configNames, (prop) => {
+            const tail = prop.charAt(0).toUpperCase() + prop.slice(1);
+            this[`get${tail}`] = () => {
+                return this.getValue(prop);
+            };
+            this[`set${tail}`] = (value) => {
+                this.setValue(prop, value);
+            };
+            this[`clear${tail}`] = () => {
+                this.clearValue(prop);
+            };
+        });
     }
-    static getValue(name) {
-        return Config[name] || Cookies.get(Config.cookieKey(name));
+    clone() {
+        return new Config(lodash_1.clone(this.settings));
     }
-    static updateCacheKey() {
+    setEndpoint(name, url) {
+        this.settings.endpoints[name] = url;
+    }
+    setCookieDomain(domain) {
+        this.settings.domain = domain;
+    }
+    setErrorInterceptor(fn) {
+        this.settings.errorInterceptor = fn;
+    }
+    getValue(name) {
+        return this.settings[name] || Cookies.get(this.cookieKey(name));
+    }
+    updateCacheKey() {
         let affiliationId, roleId, sessionId, cacheKey;
-        if ((affiliationId = Config.getValue('affiliationId')) && (roleId = Config.getValue('roleId'))) {
+        if ((affiliationId = this.getValue('affiliationId')) && (roleId = this.getValue('roleId'))) {
             cacheKey = `${affiliationId}-${roleId}`;
         }
-        else if (sessionId = Config.getValue('sessionId')) {
+        else if (sessionId = this.getValue('sessionId')) {
             cacheKey = sessionId;
         }
         else {
             cacheKey = 'anonymous';
         }
-        Config.setValue('cacheKey', cacheKey);
+        this.setValue('cacheKey', cacheKey);
     }
-    static setValue(name, value) {
-        Config[name] = value;
-        Cookies.set(Config.cookieKey(name), value, {
+    getCacheKey(suffix) {
+        return suffix ? `${this.getValue('cacheKey')}-${suffix}` : this.getValue('cacheKey');
+    }
+    setValue(name, value) {
+        this.settings[name] = value;
+        Cookies.set(this.cookieKey(name), value, {
             path: '/',
-            domain: Config.domain,
-            expires: Config.cookieTimeout,
-            secure: !Config.devMode,
+            domain: this.settings.domain,
+            expires: this.settings.cookieTimeout,
+            secure: !this.settings.devMode,
         });
         if (name !== 'cacheKey')
-            Config.updateCacheKey();
+            this.updateCacheKey();
     }
-    static clearValue(name) {
-        Config[name] = undefined;
-        Cookies.expire(Config.cookieKey(name), { domain: Config.domain });
+    clearValue(name) {
+        this.settings[name] = undefined;
+        Cookies.expire(this.cookieKey(name), { domain: this.settings.domain });
         if (name !== 'cacheKey')
-            Config.updateCacheKey();
+            this.updateCacheKey();
     }
-    static clear() {
-        lodash_1.each(valueNames, (name) => {
+    clear() {
+        lodash_1.each(configNames, (name) => {
             if (name === 'affiliationId')
                 return;
             this.clearValue(name);
         });
     }
-    static cookieKey(name) {
+    cookieKey(name) {
         return `chinchilla.${name}`;
     }
-    static setFlavour(name, value) {
-        let flavours = Config.activeFlavours;
+    setFlavour(name, value) {
+        let flavours = this.activeFlavours;
         flavours[name] = value;
-        Config.setFlavours(qs.stringify(flavours));
+        this.setFlavours(qs.stringify(flavours));
         return flavours;
     }
     // returns current flavours key/values
-    static get activeFlavours() {
-        const value = Config.getFlavours();
+    get activeFlavours() {
+        const value = this.getFlavours();
         return value ? qs.parse(value) : {};
     }
 }
-Config.endpoints = {};
-Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
-Config.timestamp = Date.now() / 1000 | 0;
-Config.devMode = false;
 exports.Config = Config;
-lodash_1.each(valueNames, (prop) => {
-    const tail = prop.charAt(0).toUpperCase() + prop.slice(1);
-    Config[`get${tail}`] = () => {
-        return Config.getValue(prop);
-    };
-    Config[`set${tail}`] = (value) => {
-        Config.setValue(prop, value);
-    };
-    Config[`clear${tail}`] = () => {
-        Config.clearValue(prop);
-    };
-});

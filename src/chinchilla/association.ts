@@ -1,5 +1,6 @@
 import { isArray, flatten, first, each, findKey, map } from 'lodash'
 import { Subject } from './subject'
+import { Config } from './config'
 import { Context, ContextProperty } from './context'
 import { Action } from './action'
 import { Result } from './result'
@@ -20,7 +21,7 @@ export class Association {
   // this is a cache for all Association instances
   static cache = {}
 
-  constructor(subject: Subject, name: string) {
+  constructor(subject: Subject, name: string, config: Config) {
     this.subject          = subject
     this.name             = name
     this.associationData  = this.readAssociationData()
@@ -32,7 +33,7 @@ export class Association {
     this.ready = this.subject.context.ready.then((context) => {
       this.associationProperty = context.association(name)
 
-      return Context.get(this.associationProperty.type).ready.then((associationContext) => {
+      return Context.get(this.associationProperty.type, config).ready.then((associationContext) => {
         this.context = associationContext
 
         var contextAction = this.associationData.length > 1 || this.associationProperty.collection ?
@@ -44,7 +45,7 @@ export class Association {
         //var extractedParams = Extractor.extractCollectionParams(this.subject.context, this.subject.objects)
         //TODO is ^^ this needed?
 
-        return new Action(contextAction, this.associationParams, {}).ready.then((result) => {
+        return new Action(contextAction, this.associationParams, {}, config).ready.then((result) => {
           this.fillCache(result)
           return result
         })
@@ -55,7 +56,7 @@ export class Association {
   // instances of Association get cached for every Subject. this means for any Subject the association data
   // is loaded only once. however it is possible to have multiple Subjects containing the same objects and each of
   // them loads their associations individually
-  static get(subject: Subject, name: string) {
+  static get(subject: Subject, name: string, config: Config) {
     var key = `subject-${subject.id}-${name}`
 
     var instance
@@ -63,7 +64,7 @@ export class Association {
       return instance
     }
     else {
-      instance                = new Association(subject, name)
+      instance                = new Association(subject, name, config)
       Association.cache[key]  = instance
 
       return instance

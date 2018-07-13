@@ -55,7 +55,7 @@ export class Action {
   contextAction: ContextAction
   result: Result = new Result()
 
-  constructor(contextAction: ContextAction, params = {}, body: any, options?: any) {
+  constructor(contextAction: ContextAction, params = {}, body: any, config: Config, options?: any) {
     this.contextAction  = contextAction
     this.uriTmpl        = new UriTemplate(contextAction.template)
     this.params         = Extractor.uriParams(contextAction, params)
@@ -80,7 +80,7 @@ export class Action {
 
         if (!this.params[variable]) {
           const msg = `Required param '${variable}' for '${this.contextAction.template}' missing!`
-          if (Config.devMode) {
+          if (config.settings.devMode) {
             return reject(new Error(msg))
           }
           else {
@@ -117,20 +117,20 @@ export class Action {
           break
       }
       // add timestamp
-      req = req.query({ t: Config.timestamp })
+      req = req.query({ t: config.settings.timestamp })
 
       // add session by default
       if (!this.options.withoutSession) {
-        req = req.set('Session-Id', Config.getSessionId())
+        req = req.set('Session-Id', config.getSessionId())
       }
-      if (Config.getAffiliationId()) {
-        req = req.set('Affiliation-Id', Config.getAffiliationId())
+      if (config.getAffiliationId()) {
+        req = req.set('Affiliation-Id', config.getAffiliationId())
       }
-      if (Config.getRoleId()) {
-        req = req.set('Role-Id', Config.getRoleId())
+      if (config.getRoleId()) {
+        req = req.set('Role-Id', config.getRoleId())
       }
-      if (Config.getFlavours()) {
-        req = req.set('Mpx-Flavours', Config.getFlavours())
+      if (config.getFlavours()) {
+        req = req.set('Mpx-Flavours', config.getFlavours())
       }
 
       // add custom headers
@@ -150,11 +150,11 @@ export class Action {
 
       req.end((err, res) => {
         if (err) {
-          const [handled, error] = Tools.handleError(err, res)
+          const [handled, error] = Tools.handleError(err, res, config)
           return handled ? null : reject(error)
         }
 
-        this.result.success(res, this.options)
+        this.result.success(res, config, this.options)
         resolve(this.result)
       })
     })

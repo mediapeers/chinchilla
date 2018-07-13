@@ -4,10 +4,12 @@ export declare abstract class BaseCache {
     abstract setValue(extkey: string, val: any): any;
     abstract removeValue(extkey: string): any;
     abstract clear(): any;
+    put(extkey: string, val: any, expires?: number): void;
     set(key: string, val: any, expires?: number): void;
+    fetch(extkey: string): any;
     get(key: string): any;
+    drop(extkey: string): void;
     remove(key: string): void;
-    extkey(suffix: string): string;
     minutesFromNow(min: number): number;
 }
 export declare class RuntimeCache extends BaseCache {

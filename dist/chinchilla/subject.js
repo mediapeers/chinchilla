@@ -7,6 +7,7 @@ const action_1 = require("./action");
 const extractor_1 = require("./extractor");
 const association_1 = require("./association");
 const cache_1 = require("./cache");
+const tools_1 = require("./tools");
 class Subject {
     static detachFromSubject(objects) {
         var detach = function (object) {
@@ -22,14 +23,23 @@ class Subject {
         }
         return objects;
     }
-    constructor(objectsOrApp, model) {
+    constructor(one, two, three) {
         this.id = cache_1.Cache.random('subject');
-        // adds and initializes objects to this Subject
-        if (lodash_1.isString(objectsOrApp)) {
-            this.contextUrl = `${config_1.Config.endpoints[objectsOrApp]}/context/${model}`;
+        if (lodash_1.isString(one)) {
+            // one -> app, two -> model, three -> config
+            if (lodash_1.isEmpty(two) || !lodash_1.isString(two))
+                throw new Error("chinchilla: missing 'model' param");
+            if (tools_1.Tools.isNode && lodash_1.isEmpty(three))
+                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
+            this.config = three || config_1.Config.getInstance();
+            this.contextUrl = `${this.config.settings.endpoints[one]}/context/${two}`;
         }
         else {
-            lodash_1.isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp);
+            // one -> object(s), two -> config
+            if (tools_1.Tools.isNode && lodash_1.isEmpty(two))
+                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
+            this.config = two || config_1.Config.getInstance();
+            lodash_1.isArray(one) ? this.addObjects(one) : this.addObject(one);
         }
     }
     memberAction(name, inputParams, options) {
@@ -37,7 +47,7 @@ class Subject {
         return promise = this.context.ready.then((context) => {
             var contextAction = context.memberAction(name);
             var mergedParams = lodash_1.merge({}, this.objectParams, inputParams);
-            var action = new action_1.Action(contextAction, mergedParams, this.subject, options);
+            var action = new action_1.Action(contextAction, mergedParams, this.subject, this.config, options);
             promise['$objects'] = action.result.objects;
             return action.ready;
         });
@@ -50,7 +60,7 @@ class Subject {
         return this.context.ready.then((context) => {
             var contextAction = context.collectionAction(name);
             var mergedParams = lodash_1.merge({}, this.objectParams, inputParams);
-            return new action_1.Action(contextAction, mergedParams, this.subject, options).ready;
+            return new action_1.Action(contextAction, mergedParams, this.subject, this.config, options).ready;
         });
     }
     // alias
@@ -67,7 +77,7 @@ class Subject {
     }
     // returns Association that resolves to a Result where the objects might belong to different Subjects
     association(name) {
-        return association_1.Association.get(this, name);
+        return association_1.Association.get(this, name, this.config);
     }
     // can be used to easily instantiate a new object with given context like this
     //
@@ -79,7 +89,7 @@ class Subject {
     get context() {
         if (this._context)
             return this._context;
-        return this._context = context_1.Context.get(this.contextUrl);
+        return this._context = context_1.Context.get(this.contextUrl, this.config);
     }
     get objects() {
         return lodash_1.isArray(this.subject) ? this.subject : [this.subject];

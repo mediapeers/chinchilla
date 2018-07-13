@@ -1,15 +1,17 @@
-import { clone, isArray, map, isPlainObject, isString, merge, first, each } from 'lodash'
+import { clone, isArray, map, isPlainObject, isString, merge, first, each, isEmpty } from 'lodash'
 import { Context } from './context'
 import { Config } from './config'
 import { Action } from './action'
 import { Extractor } from './extractor'
 import { Association } from './association'
 import { Cache } from './cache'
+import { Tools } from './tools'
 
 export class Subject {
   subject: any // the object(s) we deal with
   contextUrl: string
   id: string
+  config: Config
   _context: Context
 
   static detachFromSubject(objects: any) {
@@ -29,15 +31,23 @@ export class Subject {
     return objects
   }
 
-  constructor(objectsOrApp: any, model?: string) {
+  constructor(one: string|any, two?: string|Config, three?: Config) {
     this.id = Cache.random('subject')
 
-    // adds and initializes objects to this Subject
-    if (isString(objectsOrApp)) {
-      this.contextUrl = `${Config.endpoints[objectsOrApp]}/context/${model}`
+    if (isString(one)) {
+      // one -> app, two -> model, three -> config
+      if (isEmpty(two) || !isString(two)) throw new Error("chinchilla: missing 'model' param")
+      if (Tools.isNode && isEmpty(three)) throw new Error("chinchilla: missing 'config' param (in NodeJs context)")
+
+      this.config = three || Config.getInstance()
+      this.contextUrl = `${this.config.settings.endpoints[one]}/context/${two}`
     }
     else {
-      isArray(objectsOrApp) ? this.addObjects(objectsOrApp) : this.addObject(objectsOrApp)
+      // one -> object(s), two -> config
+      if (Tools.isNode && isEmpty(two)) throw new Error("chinchilla: missing 'config' param (in NodeJs context)")
+
+      this.config = two as Config || Config.getInstance()
+      isArray(one) ? this.addObjects(one) : this.addObject(one)
     }
   }
 
@@ -47,7 +57,7 @@ export class Subject {
       var contextAction = context.memberAction(name)
       var mergedParams  = merge({}, this.objectParams, inputParams)
 
-      var action = new Action(contextAction, mergedParams, this.subject, options)
+      var action = new Action(contextAction, mergedParams, this.subject, this.config, options)
       promise['$objects'] = action.result.objects
 
       return action.ready
@@ -64,7 +74,7 @@ export class Subject {
       var contextAction = context.collectionAction(name)
       var mergedParams  = merge({}, this.objectParams, inputParams)
 
-      return new Action(contextAction, mergedParams, this.subject, options).ready
+      return new Action(contextAction, mergedParams, this.subject, this.config, options).ready
     })
   }
 
@@ -84,7 +94,7 @@ export class Subject {
 
   // returns Association that resolves to a Result where the objects might belong to different Subjects
   association(name: string): Association {
-    return Association.get(this, name)
+    return Association.get(this, name, this.config)
   }
 
   // can be used to easily instantiate a new object with given context like this
@@ -101,7 +111,7 @@ export class Subject {
 
   get context(): Context {
     if (this._context) return this._context
-    return this._context = Context.get(this.contextUrl)
+    return this._context = Context.get(this.contextUrl, this.config)
   }
 
   get objects() {
