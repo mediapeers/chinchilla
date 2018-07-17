@@ -37,15 +37,12 @@ export class Subject {
     if (isString(one)) {
       // one -> app, two -> model, three -> config
       if (isEmpty(two) || !isString(two)) throw new Error("chinchilla: missing 'model' param")
-      if (Tools.isNode && isEmpty(three)) throw new Error("chinchilla: missing 'config' param (in NodeJs context)")
 
       this.config = three || Config.getInstance()
       this.contextUrl = `${this.config.settings.endpoints[one]}/context/${two}`
     }
     else {
       // one -> object(s), two -> config
-      if (Tools.isNode && isEmpty(two)) throw new Error("chinchilla: missing 'config' param (in NodeJs context)")
-
       this.config = two as Config || Config.getInstance()
       isArray(one) ? this.addObjects(one) : this.addObject(one)
     }

@@ -12429,76 +12429,6 @@
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var request = __webpack_require__(24);
-var lodash_1 = __webpack_require__(0);
-var cache_1 = __webpack_require__(5);
-//import * as sdebug from 'superdebug'
-//import * as http from 'http'
-var Tools = /** @class */ (function () {
-    function Tools() {
-    }
-    Object.defineProperty(Tools, "isNode", {
-        get: function () {
-            return typeof window === 'undefined';
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Tools, "req", {
-        get: function () {
-            if (Tools.isNode) {
-                //const agent = new http.Agent()
-                //agent.maxSockets = 100
-                return request
-                    .agent()
-                    //.use(sdebug(console.info))
-                    .set({ "Accept-Encoding": "gzip,deflate" });
-            }
-            else {
-                return request;
-            }
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Tools.handleError = function (err, res, config) {
-        var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
-        if (res) {
-            error['headers'] = res.headers;
-            error['object'] = res.body;
-            error['statusCode'] = res.statusCode;
-            error['statusText'] = res.statusText;
-            error['url'] = res.req.url;
-            error['method'] = res.req.method;
-            error['stack'] = err.stack;
-        }
-        else {
-            error['statusCode'] = 500;
-            error['statusText'] = 'No response returned';
-        }
-        // session timed out, reset cookies and caches
-        if (error['statusCode'] === 419) {
-            cache_1.Cache.clear();
-            config.clear();
-        }
-        if (config.settings.errorInterceptor) {
-            if (config.settings.errorInterceptor(error))
-                return [true, error];
-        }
-        return [false, error];
-    };
-    return Tools;
-}());
-exports.Tools = Tools;
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
 /* WEBPACK VAR INJECTION */(function(process, global, setImmediate) {/* @preserve
  * The MIT License (MIT)
  * 
@@ -18125,7 +18055,7 @@ module.exports = ret;
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(22), __webpack_require__(13), __webpack_require__(61).setImmediate))
 
 /***/ }),
-/* 3 */
+/* 2 */
 /***/ (function(module, exports) {
 
 var core = module.exports = { version: '2.5.7' };
@@ -18133,7 +18063,7 @@ if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
 
 /***/ }),
-/* 4 */
+/* 3 */
 /***/ (function(module, exports) {
 
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
@@ -18145,7 +18075,7 @@ if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 
 
 /***/ }),
-/* 5 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18163,7 +18093,7 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var config_1 = __webpack_require__(10);
-var tools_1 = __webpack_require__(1);
+var tools_1 = __webpack_require__(6);
 var BaseCache = /** @class */ (function () {
     function BaseCache() {
     }
@@ -18314,7 +18244,7 @@ exports.Cache = Cache;
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -18403,6 +18333,76 @@ exports.Extractor = Extractor;
 
 
 /***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var request = __webpack_require__(24);
+var lodash_1 = __webpack_require__(0);
+var cache_1 = __webpack_require__(4);
+//import * as sdebug from 'superdebug'
+//import * as http from 'http'
+var Tools = /** @class */ (function () {
+    function Tools() {
+    }
+    Object.defineProperty(Tools, "isNode", {
+        get: function () {
+            return typeof window === 'undefined';
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Tools, "req", {
+        get: function () {
+            if (Tools.isNode) {
+                //const agent = new http.Agent()
+                //agent.maxSockets = 100
+                return request
+                    .agent()
+                    //.use(sdebug(console.info))
+                    .set({ "Accept-Encoding": "gzip,deflate" });
+            }
+            else {
+                return request;
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Tools.handleError = function (err, res, config) {
+        var error = new Error(lodash_1.get(res, 'body.description') || lodash_1.get(err, 'response.statusText') || 'No error details available');
+        if (res) {
+            error['headers'] = res.headers;
+            error['object'] = res.body;
+            error['statusCode'] = res.statusCode;
+            error['statusText'] = res.statusText;
+            error['url'] = res.req.url;
+            error['method'] = res.req.method;
+            error['stack'] = err.stack;
+        }
+        else {
+            error['statusCode'] = 500;
+            error['statusText'] = 'No response returned';
+        }
+        // session timed out, reset cookies and caches
+        if (error['statusCode'] === 419) {
+            cache_1.Cache.clear();
+            config.clear();
+        }
+        if (config.settings.errorInterceptor) {
+            if (config.settings.errorInterceptor(error))
+                return [true, error];
+        }
+        return [false, error];
+    };
+    return Tools;
+}());
+exports.Tools = Tools;
+
+
+/***/ }),
 /* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -18444,7 +18444,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var Kekse = __webpack_require__(14);
 var qs = __webpack_require__(23);
 var lodash_1 = __webpack_require__(0);
-var tools_1 = __webpack_require__(1);
+var tools_1 = __webpack_require__(6);
 var Cookies = /** @class */ (function () {
     function Cookies() {
     }
@@ -18619,9 +18619,9 @@ var __extends = (this && this.__extends) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
-var Promise = __webpack_require__(2);
-var cache_1 = __webpack_require__(5);
-var tools_1 = __webpack_require__(1);
+var Promise = __webpack_require__(1);
+var cache_1 = __webpack_require__(4);
+var tools_1 = __webpack_require__(6);
 var ContextAction = /** @class */ (function () {
     function ContextAction(values) {
         if (values === void 0) { values = {}; }
@@ -20714,10 +20714,10 @@ module.exports = isObject;
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var UriTemplate = __webpack_require__(12);
-var Promise = __webpack_require__(2);
+var Promise = __webpack_require__(1);
 var result_1 = __webpack_require__(64);
-var extractor_1 = __webpack_require__(6);
-var tools_1 = __webpack_require__(1);
+var extractor_1 = __webpack_require__(5);
+var tools_1 = __webpack_require__(6);
 // cleans the object to be send
 // * rejects attributes starting with $
 // * rejects validation errors and isPristine attribute
@@ -20900,10 +20900,9 @@ var lodash_1 = __webpack_require__(0);
 var context_1 = __webpack_require__(11);
 var config_1 = __webpack_require__(10);
 var action_1 = __webpack_require__(26);
-var extractor_1 = __webpack_require__(6);
+var extractor_1 = __webpack_require__(5);
 var association_1 = __webpack_require__(63);
-var cache_1 = __webpack_require__(5);
-var tools_1 = __webpack_require__(1);
+var cache_1 = __webpack_require__(4);
 var Subject = /** @class */ (function () {
     function Subject(one, two, three) {
         this.id = cache_1.Cache.random('subject');
@@ -20911,15 +20910,11 @@ var Subject = /** @class */ (function () {
             // one -> app, two -> model, three -> config
             if (lodash_1.isEmpty(two) || !lodash_1.isString(two))
                 throw new Error("chinchilla: missing 'model' param");
-            if (tools_1.Tools.isNode && lodash_1.isEmpty(three))
-                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
             this.config = three || config_1.Config.getInstance();
             this.contextUrl = this.config.settings.endpoints[one] + "/context/" + two;
         }
         else {
             // one -> object(s), two -> config
-            if (tools_1.Tools.isNode && lodash_1.isEmpty(two))
-                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
             this.config = two || config_1.Config.getInstance();
             lodash_1.isArray(one) ? this.addObjects(one) : this.addObject(one);
         }
@@ -21107,7 +21102,7 @@ exports.Subject = Subject;
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(55);
-module.exports = __webpack_require__(3).Object.assign;
+module.exports = __webpack_require__(2).Object.assign;
 
 
 /***/ }),
@@ -21117,7 +21112,7 @@ module.exports = __webpack_require__(3).Object.assign;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = __webpack_require__(2);
+var Promise = __webpack_require__(1);
 var Cookies = __webpack_require__(14);
 var UriTemplate = __webpack_require__(12);
 var request = __webpack_require__(24);
@@ -21392,7 +21387,7 @@ module.exports = function (fn, that, length) {
 /***/ (function(module, exports, __webpack_require__) {
 
 var isObject = __webpack_require__(9);
-var document = __webpack_require__(4).document;
+var document = __webpack_require__(3).document;
 // typeof document.createElement is 'object' in old IE
 var is = isObject(document) && isObject(document.createElement);
 module.exports = function (it) {
@@ -21414,8 +21409,8 @@ module.exports = (
 /* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global = __webpack_require__(4);
-var core = __webpack_require__(3);
+var global = __webpack_require__(3);
+var core = __webpack_require__(2);
 var hide = __webpack_require__(17);
 var redefine = __webpack_require__(48);
 var ctx = __webpack_require__(35);
@@ -21606,7 +21601,7 @@ module.exports = function (bitmap, value) {
 /* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var global = __webpack_require__(4);
+var global = __webpack_require__(3);
 var hide = __webpack_require__(17);
 var has = __webpack_require__(16);
 var SRC = __webpack_require__(21)('src');
@@ -21614,7 +21609,7 @@ var TO_STRING = 'toString';
 var $toString = Function[TO_STRING];
 var TPL = ('' + $toString).split(TO_STRING);
 
-__webpack_require__(3).inspectSource = function (it) {
+__webpack_require__(2).inspectSource = function (it) {
   return $toString.call(it);
 };
 
@@ -21654,8 +21649,8 @@ module.exports = function (key) {
 /* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var core = __webpack_require__(3);
-var global = __webpack_require__(4);
+var core = __webpack_require__(2);
+var global = __webpack_require__(3);
 var SHARED = '__core-js_shared__';
 var store = global[SHARED] || (global[SHARED] = {});
 
@@ -22937,13 +22932,13 @@ exports.clearImmediate = clearImmediate;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = __webpack_require__(2);
+var Promise = __webpack_require__(1);
 var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(27);
 var config_1 = __webpack_require__(10);
 var context_1 = __webpack_require__(11);
-var cache_1 = __webpack_require__(5);
-var extractor_1 = __webpack_require__(6);
+var cache_1 = __webpack_require__(4);
+var extractor_1 = __webpack_require__(5);
 var chch = Object.assign(function (one, two, three) {
     // detach from existing Subject first before creating a new one..
     one = subject_1.Subject.detachFromSubject(one);
@@ -23022,7 +23017,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var context_1 = __webpack_require__(11);
 var action_1 = __webpack_require__(26);
-var extractor_1 = __webpack_require__(6);
+var extractor_1 = __webpack_require__(5);
 var Association = /** @class */ (function () {
     function Association(subject, name, config) {
         var _this = this;
