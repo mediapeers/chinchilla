@@ -11,10 +11,6 @@ class BaseCache {
         };
         this.setValue(extkey, payload);
     }
-    set(key, val, expires = 60) {
-        const config = config_1.Config.getInstance();
-        this.put(config.getCacheKey(key), val, expires);
-    }
     fetch(extkey) {
         const payload = this.getValue(extkey);
         if (payload) {
@@ -26,16 +22,31 @@ class BaseCache {
         }
         return null;
     }
+    drop(extkey) {
+        this.removeValue(extkey);
+    }
+    change(extkey, fn, defaultValue) {
+        let val = this.fetch(extkey) || defaultValue;
+        if (fn) {
+            val = fn(val);
+        }
+        this.put(extkey, val);
+    }
+    set(key, val, expires = 60) {
+        const config = config_1.Config.getInstance();
+        this.put(config.getCacheKey(key), val, expires);
+    }
     get(key) {
         const config = config_1.Config.getInstance();
         return this.fetch(config.getCacheKey(key));
     }
-    drop(extkey) {
-        this.removeValue(extkey);
-    }
     remove(key) {
         const config = config_1.Config.getInstance();
         this.drop(config.getCacheKey(key));
+    }
+    update(key, fn, defaultValue) {
+        const config = config_1.Config.getInstance();
+        return this.change(config.getCacheKey(key), fn, defaultValue);
     }
     minutesFromNow(min) {
         return Date.now() + min * 60000;
