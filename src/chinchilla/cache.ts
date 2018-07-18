@@ -18,11 +18,6 @@ export abstract class BaseCache {
     this.setValue(extkey, payload)
   }
 
-  set(key: string, val: any, expires: number = 60) {
-    const config = Config.getInstance()
-    this.put(config.getCacheKey(key), val, expires)
-  }
-
   fetch(extkey: string) {
     const payload = this.getValue(extkey)
 
@@ -38,18 +33,34 @@ export abstract class BaseCache {
     return null
   }
 
+  drop(extkey: string) {
+    this.removeValue(extkey)
+  }
+
+  change(extkey, fn?, defaultValue?) {
+    let val = this.fetch(extkey) || defaultValue
+    if (fn) { val = fn(val) }
+    this.put(extkey, val)
+  }
+
+  set(key: string, val: any, expires: number = 60) {
+    const config = Config.getInstance()
+    this.put(config.getCacheKey(key), val, expires)
+  }
+
   get(key: string) {
     const config = Config.getInstance()
     return this.fetch(config.getCacheKey(key))
   }
 
-  drop(extkey: string) {
-    this.removeValue(extkey)
-  }
-
   remove(key: string) {
     const config = Config.getInstance()
     this.drop(config.getCacheKey(key))
+  }
+
+  update(key: string, fn?, defaultValue?) {
+    const config = Config.getInstance()
+    return this.change(config.getCacheKey(key), fn, defaultValue)
   }
 
   minutesFromNow(min:number) {
