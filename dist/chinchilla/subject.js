@@ -7,7 +7,6 @@ const action_1 = require("./action");
 const extractor_1 = require("./extractor");
 const association_1 = require("./association");
 const cache_1 = require("./cache");
-const tools_1 = require("./tools");
 class Subject {
     static detachFromSubject(objects) {
         var detach = function (object) {
@@ -29,15 +28,11 @@ class Subject {
             // one -> app, two -> model, three -> config
             if (lodash_1.isEmpty(two) || !lodash_1.isString(two))
                 throw new Error("chinchilla: missing 'model' param");
-            if (tools_1.Tools.isNode && lodash_1.isEmpty(three))
-                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
             this.config = three || config_1.Config.getInstance();
             this.contextUrl = `${this.config.settings.endpoints[one]}/context/${two}`;
         }
         else {
             // one -> object(s), two -> config
-            if (tools_1.Tools.isNode && lodash_1.isEmpty(two))
-                throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
             this.config = two || config_1.Config.getInstance();
             lodash_1.isArray(one) ? this.addObjects(one) : this.addObject(one);
         }
