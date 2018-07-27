@@ -1,5 +1,5 @@
 import * as request from 'superagent'
-import { get } from 'lodash'
+import { get, result } from 'lodash'
 import { Config } from './config'
 import { Cache } from './cache'
 //import * as sdebug from 'superdebug'
@@ -38,8 +38,11 @@ export class Tools {
       error['stack']      = err.stack
     }
     else {
-      error['statusCode'] = 500
-      error['statusText'] = 'No response returned'
+      const errMsg = result(err, 'toString')
+
+      // assuming maintenance on terminated request.. (causing preflights to fail with empty response)
+      error['statusCode'] = errMsg && errMsg.match(/terminated/i) ? 418 : 500
+      error['statusText'] = errMsg || 'Unknown error'
     }
 
     // session timed out, reset cookies and caches
