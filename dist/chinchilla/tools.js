@@ -34,8 +34,10 @@ class Tools {
             error['stack'] = err.stack;
         }
         else {
-            error['statusCode'] = 500;
-            error['statusText'] = 'No response returned';
+            const errMsg = lodash_1.result(err, 'toString');
+            // assuming maintenance on terminated request.. (causing preflights to fail with empty response)
+            error['statusCode'] = errMsg && errMsg.match(/terminated/i) ? 418 : 500;
+            error['statusText'] = errMsg || 'Unknown error';
         }
         // session timed out, reset cookies and caches
         if (error['statusCode'] === 419) {
