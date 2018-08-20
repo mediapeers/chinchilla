@@ -35,8 +35,7 @@ class Tools {
         }
         else {
             const errMsg = lodash_1.result(err, 'toString');
-            // assuming maintenance on terminated request.. (causing preflights to fail with empty response)
-            error['statusCode'] = errMsg && errMsg.match(/terminated/i) ? 418 : 500;
+            error['statusCode'] = 500;
             error['statusText'] = errMsg || 'Unknown error';
         }
         // session timed out, reset cookies and caches
