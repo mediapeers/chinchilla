@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const config_1 = require("./config");
 const tools_1 = require("./tools");
+const PREFIX = 'chch';
 class BaseCache {
     put(extkey, val, expires = 60) {
         const payload = {
@@ -89,12 +90,15 @@ class StorageCache extends BaseCache {
         this.storage = window.localStorage;
     }
     setValue(extkey, val) {
+        extkey = `${PREFIX}-${extkey}`;
         this.storage.setItem(extkey, JSON.stringify(val));
     }
     getValue(extkey) {
+        extkey = `${PREFIX}-${extkey}`;
         return JSON.parse(this.storage.getItem(extkey) || null);
     }
     removeValue(extkey) {
+        extkey = `${PREFIX}-${extkey}`;
         const keyparts = extkey.split('*');
         if (keyparts.length > 1) {
             const toDelete = [];
@@ -110,7 +114,13 @@ class StorageCache extends BaseCache {
         }
     }
     clear() {
-        this.storage.clear();
+        const toDelete = [];
+        for (var i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (lodash_1.startsWith(key, PREFIX))
+                toDelete.push(key);
+        }
+        lodash_1.each(toDelete, (key) => this.storage.removeItem(key));
     }
 }
 exports.StorageCache = StorageCache;

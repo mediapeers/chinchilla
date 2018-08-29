@@ -2,6 +2,8 @@ import { each, startsWith } from 'lodash'
 import { Config } from './config'
 import { Tools } from './tools'
 
+const PREFIX = 'chch'
+
 export abstract class BaseCache {
   protected storage
 
@@ -111,14 +113,17 @@ export class StorageCache extends BaseCache {
   }
 
   setValue(extkey: string, val: any) {
+    extkey = `${PREFIX}-${extkey}`
     this.storage.setItem(extkey, JSON.stringify(val))
   }
 
   getValue(extkey: string) {
+    extkey = `${PREFIX}-${extkey}`
     return JSON.parse(this.storage.getItem(extkey) || null)
   }
 
   removeValue(extkey: string) {
+    extkey = `${PREFIX}-${extkey}`
     const keyparts = extkey.split('*')
 
     if (keyparts.length > 1) {
@@ -137,7 +142,14 @@ export class StorageCache extends BaseCache {
   }
 
   clear() {
-    this.storage.clear()
+    const toDelete = []
+
+    for (var i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (startsWith(key, PREFIX)) toDelete.push(key)
+    }
+
+    each(toDelete, (key) => this.storage.removeItem(key))
   }
 }
 

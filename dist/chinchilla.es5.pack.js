@@ -18165,6 +18165,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
 var config_1 = __webpack_require__(10);
 var tools_1 = __webpack_require__(1);
+var PREFIX = 'chch';
 var BaseCache = /** @class */ (function () {
     function BaseCache() {
     }
@@ -18262,13 +18263,16 @@ var StorageCache = /** @class */ (function (_super) {
         return _this;
     }
     StorageCache.prototype.setValue = function (extkey, val) {
+        extkey = PREFIX + "-" + extkey;
         this.storage.setItem(extkey, JSON.stringify(val));
     };
     StorageCache.prototype.getValue = function (extkey) {
+        extkey = PREFIX + "-" + extkey;
         return JSON.parse(this.storage.getItem(extkey) || null);
     };
     StorageCache.prototype.removeValue = function (extkey) {
         var _this = this;
+        extkey = PREFIX + "-" + extkey;
         var keyparts = extkey.split('*');
         if (keyparts.length > 1) {
             var toDelete = [];
@@ -18284,7 +18288,14 @@ var StorageCache = /** @class */ (function (_super) {
         }
     };
     StorageCache.prototype.clear = function () {
-        this.storage.clear();
+        var _this = this;
+        var toDelete = [];
+        for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (lodash_1.startsWith(key, PREFIX))
+                toDelete.push(key);
+        }
+        lodash_1.each(toDelete, function (key) { return _this.storage.removeItem(key); });
     };
     return StorageCache;
 }(BaseCache));
