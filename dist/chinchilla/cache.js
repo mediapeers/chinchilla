@@ -26,12 +26,12 @@ class BaseCache {
     drop(extkey) {
         this.removeValue(extkey);
     }
-    change(extkey, fn, defaultValue) {
+    change(extkey, fn, defaultValue, expires = 60) {
         let val = this.fetch(extkey) || defaultValue;
         if (fn) {
             val = fn(val);
         }
-        this.put(extkey, val);
+        this.put(extkey, val, expires);
     }
     set(key, val, expires = 60) {
         const config = config_1.Config.getInstance();
@@ -45,9 +45,9 @@ class BaseCache {
         const config = config_1.Config.getInstance();
         this.drop(config.getCacheKey(key));
     }
-    update(key, fn, defaultValue) {
+    update(key, fn, defaultValue, expires = 60) {
         const config = config_1.Config.getInstance();
-        return this.change(config.getCacheKey(key), fn, defaultValue);
+        return this.change(config.getCacheKey(key), fn, defaultValue, expires);
     }
     minutesFromNow(min) {
         return Date.now() + min * 60000;

@@ -18191,12 +18191,13 @@ var BaseCache = /** @class */ (function () {
     BaseCache.prototype.drop = function (extkey) {
         this.removeValue(extkey);
     };
-    BaseCache.prototype.change = function (extkey, fn, defaultValue) {
+    BaseCache.prototype.change = function (extkey, fn, defaultValue, expires) {
+        if (expires === void 0) { expires = 60; }
         var val = this.fetch(extkey) || defaultValue;
         if (fn) {
             val = fn(val);
         }
-        this.put(extkey, val);
+        this.put(extkey, val, expires);
     };
     BaseCache.prototype.set = function (key, val, expires) {
         if (expires === void 0) { expires = 60; }
@@ -18211,9 +18212,10 @@ var BaseCache = /** @class */ (function () {
         var config = config_1.Config.getInstance();
         this.drop(config.getCacheKey(key));
     };
-    BaseCache.prototype.update = function (key, fn, defaultValue) {
+    BaseCache.prototype.update = function (key, fn, defaultValue, expires) {
+        if (expires === void 0) { expires = 60; }
         var config = config_1.Config.getInstance();
-        return this.change(config.getCacheKey(key), fn, defaultValue);
+        return this.change(config.getCacheKey(key), fn, defaultValue, expires);
     };
     BaseCache.prototype.minutesFromNow = function (min) {
         return Date.now() + min * 60000;
