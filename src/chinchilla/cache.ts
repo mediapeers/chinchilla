@@ -39,10 +39,10 @@ export abstract class BaseCache {
     this.removeValue(extkey)
   }
 
-  change(extkey, fn?, defaultValue?) {
+  change(extkey, fn?, defaultValue?, expires: number = 60) {
     let val = this.fetch(extkey) || defaultValue
     if (fn) { val = fn(val) }
-    this.put(extkey, val)
+    this.put(extkey, val, expires)
   }
 
   set(key: string, val: any, expires: number = 60) {
@@ -60,9 +60,9 @@ export abstract class BaseCache {
     this.drop(config.getCacheKey(key))
   }
 
-  update(key: string, fn?, defaultValue?) {
+  update(key: string, fn?, defaultValue?, expires: number = 60) {
     const config = Config.getInstance()
-    return this.change(config.getCacheKey(key), fn, defaultValue)
+    return this.change(config.getCacheKey(key), fn, defaultValue, expires)
   }
 
   minutesFromNow(min:number) {
