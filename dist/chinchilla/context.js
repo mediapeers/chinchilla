@@ -63,7 +63,7 @@ class Context {
         // one could fail (e.g. with a 419). for this reason we cache only after a successful result
         // to avoid other users by coincidence get returned an error
         if (tools_1.Tools.isNode) {
-            dataPromise.then((data) => {
+            dataPromise.then((_data) => {
                 return cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
             });
         }
@@ -80,7 +80,7 @@ class Context {
     constructor(dataPromise) {
         this.ready = dataPromise.then((data) => {
             this.data = data;
-            lodash_1.each(this.properties, function (property, name) {
+            lodash_1.each(this.properties, function (property) {
                 property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
             });
             return this;

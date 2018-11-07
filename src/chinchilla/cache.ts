@@ -90,7 +90,7 @@ export class RuntimeCache extends BaseCache {
     if (keyparts.length > 1) {
       const toDelete = []
 
-      each(this.storage, (val, key) => {
+      each(this.storage, (_val, key) => {
         if (startsWith(key, keyparts[0])) toDelete.push(key)
       })
 

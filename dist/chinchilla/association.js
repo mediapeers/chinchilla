@@ -91,12 +91,12 @@ class Association {
                 // - -> find the association inside of phone context which points to @id of user context
                 // 1. attempt: try to find association name using parent context id in own associations
                 var associationName;
-                associationName = lodash_1.findKey(this.context.properties, (value, key) => {
+                associationName = lodash_1.findKey(this.context.properties, (value) => {
                     return value && value.type && value.type === this.subject.context.id;
                 });
                 // 2. attempt: try to find association name using inverse_of if given
                 if (!associationName) {
-                    associationName = lodash_1.findKey(this.context.properties, (value, key) => {
+                    associationName = lodash_1.findKey(this.context.properties, (value) => {
                         return value && value.inverse_of && value.inverse_of === this.name;
                     });
                 }

@@ -69,7 +69,7 @@ class RuntimeCache extends BaseCache {
         const keyparts = extkey.split('*');
         if (keyparts.length > 1) {
             const toDelete = [];
-            lodash_1.each(this.storage, (val, key) => {
+            lodash_1.each(this.storage, (_val, key) => {
                 if (lodash_1.startsWith(key, keyparts[0]))
                     toDelete.push(key);
             });

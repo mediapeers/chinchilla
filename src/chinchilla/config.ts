@@ -21,7 +21,7 @@ export class Cookies {
 const configNames  = ['affiliationId', 'roleId', 'sessionId', 'flavours']
 const settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor']
 
-interface Settings {
+export interface Settings {
   endpoints: any
   cookieTimeout: number
   timestamp: number

@@ -1,4 +1,4 @@
-import { each, find, first, groupBy, isArray, isEmpty, startsWith } from 'lodash'
+import { each, find, first, groupBy, isArray } from 'lodash'
 import { Subject } from './subject'
 import { Config } from './config'
 
@@ -67,7 +67,7 @@ export class Result {
         var byContext = groupBy(this.objects, '@context')
 
         // creates new Subject for each group ob objects that share the same @context
-        each(byContext, (objects, context) => {
+        each(byContext, (objects) => {
           new Subject(objects, config)
         })
         break

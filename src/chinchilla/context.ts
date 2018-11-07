@@ -1,4 +1,4 @@
-import { each, first, isEmpty } from 'lodash'
+import { each, first } from 'lodash'
 import * as Promise from 'bluebird'
 import { Config } from './config'
 import { Cache } from './cache'
@@ -88,7 +88,7 @@ export class Context {
     // one could fail (e.g. with a 419). for this reason we cache only after a successful result
     // to avoid other users by coincidence get returned an error
     if (Tools.isNode) {
-      dataPromise.then((data) => {
+      dataPromise.then((_data) => {
         return Cache.runtime.put(config.getCacheKey(key), cachedContext)
       })
     }
@@ -109,7 +109,7 @@ export class Context {
     this.ready = dataPromise.then((data) => {
       this.data = data
 
-      each(this.properties, function(property, name) {
+      each(this.properties, function(property) {
         property.isAssociation = property.type && /^(http|https)\:/.test(property.type)
       })
 

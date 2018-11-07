@@ -154,8 +154,7 @@ class Subject {
     initAssociationGetters(object) {
         if (!object.$associations)
             return;
-        lodash_1.each(object.$associations, (value, key) => {
-            var promiseKey = `${key}Promise`;
+        lodash_1.each(object.$associations, (_value, key) => {
             Object.defineProperty(object, key, {
                 get: () => {
                     return this.association(key).getDataFor(object);
