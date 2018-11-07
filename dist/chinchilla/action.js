@@ -161,6 +161,7 @@ class Action {
                 });
                 object[key] = values;
             }
+            // append '_attributes' to nested objects (attributes that are an object or are an array of objects)
             else if (lodash_1.isPlainObject(value) || (lodash_1.isArray(value) && lodash_1.isPlainObject(lodash_1.first(value)))) {
                 object[`${key}_attributes`] = value;
                 delete object[key];

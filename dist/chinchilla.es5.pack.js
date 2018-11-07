@@ -18241,7 +18241,7 @@ var RuntimeCache = /** @class */ (function (_super) {
         var keyparts = extkey.split('*');
         if (keyparts.length > 1) {
             var toDelete_1 = [];
-            lodash_1.each(this.storage, function (val, key) {
+            lodash_1.each(this.storage, function (_val, key) {
                 if (lodash_1.startsWith(key, keyparts[0]))
                     toDelete_1.push(key);
             });
@@ -18679,7 +18679,7 @@ var Context = /** @class */ (function () {
         var _this = this;
         this.ready = dataPromise.then(function (data) {
             _this.data = data;
-            lodash_1.each(_this.properties, function (property, name) {
+            lodash_1.each(_this.properties, function (property) {
                 property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
             });
             return _this;
@@ -18729,7 +18729,7 @@ var Context = /** @class */ (function () {
         // one could fail (e.g. with a 419). for this reason we cache only after a successful result
         // to avoid other users by coincidence get returned an error
         if (tools_1.Tools.isNode) {
-            dataPromise.then(function (data) {
+            dataPromise.then(function (_data) {
                 return cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
             });
         }
@@ -21108,8 +21108,7 @@ var Subject = /** @class */ (function () {
         var _this = this;
         if (!object.$associations)
             return;
-        lodash_1.each(object.$associations, function (value, key) {
-            var promiseKey = key + "Promise";
+        lodash_1.each(object.$associations, function (_value, key) {
             Object.defineProperty(object, key, {
                 get: function () {
                     return _this.association(key).getDataFor(object);
@@ -23137,12 +23136,12 @@ var Association = /** @class */ (function () {
                 // - -> find the association inside of phone context which points to @id of user context
                 // 1. attempt: try to find association name using parent context id in own associations
                 var associationName;
-                associationName = lodash_1.findKey(this.context.properties, function (value, key) {
+                associationName = lodash_1.findKey(this.context.properties, function (value) {
                     return value && value.type && value.type === _this.subject.context.id;
                 });
                 // 2. attempt: try to find association name using inverse_of if given
                 if (!associationName) {
-                    associationName = lodash_1.findKey(this.context.properties, function (value, key) {
+                    associationName = lodash_1.findKey(this.context.properties, function (value) {
                         return value && value.inverse_of && value.inverse_of === _this.name;
                     });
                 }
@@ -23267,7 +23266,7 @@ var Result = /** @class */ (function () {
                     break;
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
-                lodash_1.each(byContext, function (objects, context) {
+                lodash_1.each(byContext, function (objects) {
                     new subject_1.Subject(objects, config);
                 });
                 break;

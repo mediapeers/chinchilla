@@ -21,8 +21,8 @@ export declare class Subject {
     readonly object: Object;
     readonly objectParams: Object;
     destroy(): void;
-    private addObjects(objects);
-    private addObject(object);
-    private moveAssociationReferences(object);
-    private initAssociationGetters(object);
+    private addObjects;
+    private addObject;
+    private moveAssociationReferences;
+    private initAssociationGetters;
 }
