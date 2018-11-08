@@ -3,7 +3,7 @@ export declare class Cookies {
     static set(...args: any[]): any;
     static expire(...args: any[]): any;
 }
-interface Settings {
+export interface Settings {
     endpoints: any;
     cookieTimeout: number;
     timestamp: number;
@@ -43,4 +43,3 @@ export declare class Config {
     setFlavour(name: any, value: any): any;
     readonly activeFlavours: any;
 }
-export {};

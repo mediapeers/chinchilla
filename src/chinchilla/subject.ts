@@ -187,9 +187,7 @@ export class Subject {
   private initAssociationGetters(object: any): void {
     if (!object.$associations) return
 
-    each(object.$associations, (value, key) => {
-      var promiseKey = `${key}Promise`
-
+    each(object.$associations, (_value, key) => {
       Object.defineProperty(object, key, {
         get: () => {
           return this.association(key).getDataFor(object)

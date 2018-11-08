@@ -54,7 +54,7 @@ class Result {
                     break;
                 var byContext = lodash_1.groupBy(this.objects, '@context');
                 // creates new Subject for each group ob objects that share the same @context
-                lodash_1.each(byContext, (objects, context) => {
+                lodash_1.each(byContext, (objects) => {
                     new subject_1.Subject(objects, config);
                 });
                 break;

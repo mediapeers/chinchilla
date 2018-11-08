@@ -1,9 +1,9 @@
-import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get, isUndefined, filter } from 'lodash'
+import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get, filter } from 'lodash'
 import * as UriTemplate from 'uri-templates'
 import * as Promise from 'bluebird'
 import { Config } from './config'
 import { Result } from './result'
-import { Context, ContextAction } from './context'
+import { ContextAction } from './context'
 import { Extractor } from './extractor'
 import { Tools } from './tools'
 
