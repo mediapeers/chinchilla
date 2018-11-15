@@ -34,11 +34,11 @@
     "superagent": "~3.8.2",
     "uri-templates": "~0.1.9",
     "webpack": "^2.2.1",
-    "webpack-node-externals": "^1.5.4"
+    "webpack-node-externals": "^1.5.4",
+    "async-repl": "^0.4.0"
   },
   "devDependencies": {
     "@types/node": "^9.4.0",
-    "async-repl": "^0.4.0",
     "superdebug": "^2.0.0",
     "ts-loader": "^2.0.0",
     "typescript": "^2.5.3"
