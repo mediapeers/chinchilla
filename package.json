@@ -17,6 +17,9 @@
     "build-es5": "webpack",
     "clean": "rm -rf ./dist"
   },
+  "bin": {
+    "chch": "./bin/cli.js"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/mediapeers/chinchilla.git"
@@ -35,6 +38,7 @@
   },
   "devDependencies": {
     "@types/node": "^9.4.0",
+    "async-repl": "^0.4.0",
     "superdebug": "^2.0.0",
     "ts-loader": "^2.0.0",
     "typescript": "^2.5.3"

@@ -20835,7 +20835,7 @@ var Action = /** @class */ (function () {
             // add timestamp
             req = req.query({ t: config.settings.timestamp });
             // add session by default
-            if (!_this.options.withoutSession) {
+            if (!_this.options.withoutSession && config.getSessionId()) {
                 req = req.set('Session-Id', config.getSessionId());
             }
             if (config.getAffiliationId()) {
