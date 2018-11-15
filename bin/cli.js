@@ -1,10 +1,9 @@
 #!/usr/bin/env node
-const pwd = process.cwd()
 const _ = require('lodash')
 const path = require('path')
 const repl = require('repl')
 const stubber = require('async-repl/stubber')
-const chinchilla = require(path.join(pwd, 'dist/chinchilla.js')).default
+const chinchilla = require(path.join(__dirname, '..', 'dist/chinchilla.js')).default
 
 const env = process.argv[2]
 
