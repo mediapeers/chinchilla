@@ -57,7 +57,8 @@ const chch = Object.assign(
 )
 
 const replInstance = repl.start({ prompt: 'chch> ' })
-_.merge(replInstance.context, {
+
+Object.assign(replInstance.context, {
   chch: chch,
   login: async (email, password) => {
     chch.config.clearSessionId()
@@ -70,6 +71,13 @@ _.merge(replInstance.context, {
   logout: () => {
     chch.config.clearSessionId()
     console.log('> logged out.')
+  },
+})
+Object.defineProperty(replInstance.context, 'exit', {
+  get: () => {
+    console.log('> bye.')
+    process.exit()
   }
 })
+
 stubber(replInstance)
