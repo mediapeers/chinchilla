@@ -10,7 +10,7 @@ Chinchilla is a javascript library that consumes contexts inspired by [JSON-LD](
 Chinchilla depends on a bunch of other javascript libraries. Please make sure these dependencies are resolved before you use Chinchilla.
 This is the list:
 
- 
+
 * [bluebird](https://github.com/petkaantonov/bluebird)
 * [lodash](https://github.com/lodash/lodash)
 * [superagent](https://github.com/visionmedia/superagent)
@@ -158,7 +158,7 @@ Chinchilla does lazy loading automatically to make your life even more relaxed. 
 ~~~javascript
 chch('um', 'user').$m('get', id: 1).then (result) ->
   user = result.object
-  
+
   user.organization # triggers loading the association, returns null
   user.organization # returns the organization object when the organization has been fetched
 ~~~
@@ -168,7 +168,39 @@ You can also use a promise:
 ~~~javascript
 chch('um', 'user').$m('get', id: 1).then (result) ->
   user = result.object
-  
+
   user.organizationPromise.then ->
   	user.organization # returns the organization object
 ~~~
+
+### CLI
+
+Install: `yarn global add "https://github.com/mediapeers/chinchilla"`
+
+Run: `chch <env> <affiliation>`, where
+* 'env' defaults to 'development' and
+* 'affiliation' defaults to 'mpx'
+
+Examples
+```bash
+chch
+chch presentation fremantle
+chch production hulu
+```
+
+```js
+chch> login('your@email.com', 'yourpassword')
+chch> result = await chch('um', 'user').$c('query')
+chch> result.objects
+chch> logout()
+```
+
+#### Optional: use `~/.chinchilla.yml` config
+
+```bash
+wget https://raw.githubusercontent.com/mediapeers/chinchilla/master/config/default.yml -O ~/.chinchilla.yml
+```
+
+.. then edit according to your needs.
+
+*HINT* if you use the `login()` function without any arguments, the cli will try to use credentials from your config file if defined.

@@ -120,7 +120,7 @@ export class Action {
       req = req.query({ t: config.settings.timestamp })
 
       // add session by default
-      if (!this.options.withoutSession) {
+      if (!this.options.withoutSession && config.getSessionId()) {
         req = req.set('Session-Id', config.getSessionId())
       }
       if (config.getAffiliationId()) {
