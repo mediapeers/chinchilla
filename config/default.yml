@@ -1,0 +1,59 @@
+production:
+  endpoints:
+    um: "https://um.api.mediapeers.biz/v20140601"
+    pm: "https://pm.api.mediapeers.biz/v20140601"
+    am: "https://am.api.mediapeers.biz/v20140601"
+    ac: "https://ac.api.mediapeers.biz/v20140601"
+    mc: "https://mc.api.mediapeers.biz/v20140601"
+    viscacha: "https://viscacha.api.mediapeers.biz"
+    tuco: "https://tuco.api.mediapeers.biz"
+    pigeon: "https://pigeon.api.mediapeers.biz"
+  credentials:
+    mpx:
+      email: email@mediapeers.com
+      password: p@ssword
+
+presentation:
+  endpoints:
+    um: "https://um.api.mediapeers.us/v20140601"
+    pm: "https://pm.api.mediapeers.us/v20140601"
+    am: "https://am.api.mediapeers.us/v20140601"
+    ac: "https://ac.api.mediapeers.us/v20140601"
+    mc: "https://mc.api.mediapeers.us/v20140601"
+    viscacha: "https://viscacha.api.mediapeers.us"
+    tuco: "https://tuco.api.mediapeers.us"
+    pigeon: "https://pigeon.api.mediapeers.us"
+  credentials:
+    mpx:
+      email: email@mediapeers.com
+      password: p@ssword
+
+staging:
+  endpoints:
+    um: "https://um.api.mediapeers.mobi/v20140601"
+    pm: "https://pm.api.mediapeers.mobi/v20140601"
+    am: "https://am.api.mediapeers.mobi/v20140601"
+    ac: "https://ac.api.mediapeers.mobi/v20140601"
+    mc: "https://mc.api.mediapeers.mobi/v20140601"
+    viscacha: "https://viscacha.api.mediapeers.mobi"
+    tuco: "https://tuco.api.mediapeers.mobi"
+    pigeon: "https://pigeon.api.mediapeers.mobi"
+  credentials:
+    mpx:
+      email: email@mediapeers.com
+      password: p@ssword
+
+development:
+  endpoints:
+    um: "http://um.apps.local:3001/v20140601"
+    pm: "http://pm.apps.local:3002/v20140601"
+    am: "http://am.apps.local:3003/v20140601"
+    ac: "http://ac.apps.local:3004/v20140601"
+    mc: "http://mc.apps.local:3006/v20140601"
+    viscacha: "http://localhost:8080"
+    tuco: "http://localhost:8081"
+    pigeon: "http://localhost:8082"
+  credentials:
+    mpx:
+      email: email@mediapeers.com
+      password: p@ssword

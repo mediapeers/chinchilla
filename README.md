@@ -176,7 +176,17 @@ chch('um', 'user').$m('get', id: 1).then (result) ->
 ### CLI
 
 Install: `yarn global add "https://github.com/mediapeers/chinchilla"`
-Run: e.g. `chch staging`
+
+Run: `chch <env> <affiliation>`, where
+* 'env' defaults to 'development' and
+* 'affiliation' defaults to 'mpx'
+
+Examples
+```bash
+chch
+chch presentation fremantle
+chch production hulu
+```
 
 ```js
 chch> login('your@email.com', 'yourpassword')
@@ -184,3 +194,13 @@ chch> result = await chch('um', 'user').$c('query')
 chch> result.objects
 chch> logout()
 ```
+
+#### Optional: use `~/.chinchilla.yml` config
+
+```bash
+wget https://raw.githubusercontent.com/mediapeers/chinchilla/master/config/default.yml -O ~/.chinchilla.yml
+```
+
+.. then edit according to your needs.
+
+*HINT* if you use the `login()` function without any arguments, the cli will try to use credentials from your config file if defined.
