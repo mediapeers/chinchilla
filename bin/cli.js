@@ -65,7 +65,7 @@ Object.assign(replInstance.context, {
       const credentials = _.get(config, env + '.credentials.' + affiliation)
       if (credentials) {
         console.log('> using credentials from config file')
-        email = credentials.emails
+        email = credentials.email
         password = credentials.password
       }
       else {
