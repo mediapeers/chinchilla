@@ -23167,7 +23167,7 @@ var Extractor = /** @class */ (function () {
             lodash_1.each(values, function (attrs) {
                 if (!attrs[mapping.source])
                     return;
-                if (lodash_1.include(result[mapping.source], attrs[mapping.source]))
+                if (lodash_1.includes(result[mapping.source], attrs[mapping.source]))
                     return;
                 result[mapping.source].push(attrs[mapping.source]);
             });

@@ -1,4 +1,4 @@
-import { clone, each, isEmpty, isArray, compact, include, map } from 'lodash'
+import { clone, each, isEmpty, isArray, compact, includes, map } from 'lodash'
 import * as UriTemplate from 'uri-templates'
 import { Context, ContextAction } from './context'
 
@@ -78,7 +78,7 @@ export class Extractor {
 
       each(values, (attrs) => {
         if (!attrs[mapping.source]) return
-        if (include(result[mapping.source], attrs[mapping.source])) return
+        if (includes(result[mapping.source], attrs[mapping.source])) return
 
         result[mapping.source].push(attrs[mapping.source])
       })
