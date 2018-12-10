@@ -5,6 +5,13 @@ import { Extractor } from './chinchilla/extractor';
 declare const chch: ((one: any, two?: string | Config, three?: Config) => Subject) & {
     config: Config;
     cache: typeof Cache;
+    watcher: {
+        actions: string[];
+        listeners: Function[];
+        start: (id: any) => void;
+        complete: (id: any) => void;
+        performLater: (cb: any) => void;
+    };
     extractor: typeof Extractor;
     new: (app: any, model: any, attrs?: {}, config?: Config) => any;
     contextUrl: (app: any, model: any, config?: Config) => string;

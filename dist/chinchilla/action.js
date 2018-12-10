@@ -3,8 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
 const UriTemplate = require("uri-templates");
 const Promise = require("bluebird");
+const cache_1 = require("./cache");
 const result_1 = require("./result");
 const extractor_1 = require("./extractor");
+const watcher_1 = require("./watcher");
 const tools_1 = require("./tools");
 // cleans the object to be send
 // * rejects attributes starting with $
@@ -51,6 +53,8 @@ class Action {
         this.uriTmpl = new UriTemplate(contextAction.template);
         this.params = extractor_1.Extractor.uriParams(contextAction, params);
         this.options = options || {};
+        this.id = cache_1.Cache.random('action');
+        watcher_1.Watcher.start(this.id);
         if (this.options.raw) {
             console.log(`chinchilla: option 'raw' is deprecated. please use 'rawRequest' instead.`);
             this.options.rawRequest = this.options.raw;
@@ -68,6 +72,7 @@ class Action {
                 if (!this.params[variable]) {
                     const msg = `Required param '${variable}' for '${this.contextAction.template}' missing!`;
                     if (config.settings.devMode) {
+                        watcher_1.Watcher.complete(this.id);
                         return reject(new Error(msg));
                     }
                     else {
@@ -126,6 +131,7 @@ class Action {
                 req = req.timeout(10000);
             }
             req.end((err, res) => {
+                watcher_1.Watcher.complete(this.id);
                 if (err) {
                     const [handled, error] = tools_1.Tools.handleError(err, res, config);
                     return handled ? null : reject(error);
