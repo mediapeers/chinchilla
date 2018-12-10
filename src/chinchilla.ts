@@ -5,6 +5,7 @@ import { Config } from './chinchilla/config'
 import { Context } from './chinchilla/context'
 import { Cache } from './chinchilla/cache'
 import { Extractor } from './chinchilla/extractor'
+import { Watcher } from './chinchilla/watcher'
 
 const chch = Object.assign(
   (one: string|any, two?: string|Config, three?: Config) => {
@@ -15,6 +16,7 @@ const chch = Object.assign(
   {
     config: Config.getInstance(),
     cache: Cache,
+    watcher: Watcher,
     extractor: Extractor,
     new: (app, model, attrs = {}, config?: Config) => {
       config = config || Config.getInstance()
