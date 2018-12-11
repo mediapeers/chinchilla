@@ -7,6 +7,7 @@ const config_1 = require("./chinchilla/config");
 const context_1 = require("./chinchilla/context");
 const cache_1 = require("./chinchilla/cache");
 const extractor_1 = require("./chinchilla/extractor");
+const watcher_1 = require("./chinchilla/watcher");
 const chch = Object.assign((one, two, three) => {
     // detach from existing Subject first before creating a new one..
     one = subject_1.Subject.detachFromSubject(one);
@@ -14,6 +15,7 @@ const chch = Object.assign((one, two, three) => {
 }, {
     config: config_1.Config.getInstance(),
     cache: cache_1.Cache,
+    watcher: watcher_1.Watcher,
     extractor: extractor_1.Extractor,
     new: (app, model, attrs = {}, config) => {
         config = config || config_1.Config.getInstance();

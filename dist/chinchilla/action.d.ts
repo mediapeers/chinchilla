@@ -11,6 +11,7 @@ export declare class Action {
     uriTmpl: UriTemplate;
     contextAction: ContextAction;
     result: Result;
+    id: string;
     constructor(contextAction: ContextAction, params: {}, body: any, config: Config, options?: any);
     private formatBody;
     private remapAttributes;

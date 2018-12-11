@@ -1,10 +1,12 @@
-import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get, filter } from 'lodash'
+import { isEmpty, isArray, each, isFunction, isPlainObject, map, reject, isString, select, first, get, filter} from 'lodash'
 import * as UriTemplate from 'uri-templates'
 import * as Promise from 'bluebird'
 import { Config } from './config'
+import { Cache } from './cache'
 import { Result } from './result'
 import { ContextAction } from './context'
 import { Extractor } from './extractor'
+import { Watcher } from './watcher'
 import { Tools } from './tools'
 
 // cleans the object to be send
@@ -54,12 +56,16 @@ export class Action {
   uriTmpl: UriTemplate
   contextAction: ContextAction
   result: Result = new Result()
+  id: string
 
   constructor(contextAction: ContextAction, params = {}, body: any, config: Config, options?: any) {
     this.contextAction  = contextAction
     this.uriTmpl        = new UriTemplate(contextAction.template)
     this.params         = Extractor.uriParams(contextAction, params)
     this.options        = options || {}
+    this.id             = Cache.random('action')
+
+    Watcher.start(this.id)
 
     if (this.options.raw) {
       console.log(`chinchilla: option 'raw' is deprecated. please use 'rawRequest' instead.`)
@@ -81,6 +87,7 @@ export class Action {
         if (!this.params[variable]) {
           const msg = `Required param '${variable}' for '${this.contextAction.template}' missing!`
           if (config.settings.devMode) {
+            Watcher.complete(this.id)
             return reject(new Error(msg))
           }
           else {
@@ -149,6 +156,8 @@ export class Action {
       }
 
       req.end((err, res) => {
+        Watcher.complete(this.id)
+
         if (err) {
           const [handled, error] = Tools.handleError(err, res, config)
           return handled ? null : reject(error)
