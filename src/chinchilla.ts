@@ -1,7 +1,7 @@
 import * as Promise from 'bluebird'
 import { merge, last, startsWith } from 'lodash'
 import { Subject } from './chinchilla/subject'
-import { Config } from './chinchilla/config'
+import { Config, Cookies } from './chinchilla/config'
 import { Context } from './chinchilla/context'
 import { Cache } from './chinchilla/cache'
 import { Extractor } from './chinchilla/extractor'
@@ -15,6 +15,7 @@ const chch = Object.assign(
   },
   {
     config: Config.getInstance(),
+    cookies: Cookies,
     cache: Cache,
     watcher: Watcher,
     extractor: Extractor,
