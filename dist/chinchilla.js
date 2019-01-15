@@ -14,6 +14,7 @@ const chch = Object.assign((one, two, three) => {
     return new subject_1.Subject(one, two, three);
 }, {
     config: config_1.Config.getInstance(),
+    cookies: config_1.Cookies,
     cache: cache_1.Cache,
     watcher: watcher_1.Watcher,
     extractor: extractor_1.Extractor,
