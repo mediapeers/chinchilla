@@ -154,10 +154,10 @@ export class StorageCache extends BaseCache {
 }
 
 export class NoCache extends BaseCache {
-  setValue(...args) {}
-  removeValue(...args) {}
-  clear(...args) {}
-  getValue(...args) {}
+  setValue(..._args) {}
+  removeValue(..._args) {}
+  clear(..._args) {}
+  getValue(..._args) {}
 }
 
 export class Cache {

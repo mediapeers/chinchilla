@@ -16,30 +16,28 @@ class Cookies {
     }
 }
 exports.Cookies = Cookies;
-<<<<<<< HEAD
-const configNames = ['affiliationId', 'roleId', 'sessionId', 'flavours'];
-const settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor'];
-=======
 class NoCookies {
-    static get(...args) { }
-    static set(...args) { }
-    static expire(...args) { }
+    static get(..._args) { }
+    static set(..._args) { }
+    static expire(..._args) { }
 }
 exports.NoCookies = NoCookies;
->>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
+const configNames = ['affiliationId', 'roleId', 'sessionId', 'flavours'];
+const settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor'];
 class Config {
-    static getInstance() {
-        if (!Config.instance)
-            Config.instance = new Config();
-        return Config.instance;
-    }
     constructor(settings = {}) {
+        this.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
         this.initGetSet();
         this.settings = lodash_1.merge({
             endpoints: {},
             cookieTimeout: 30 * 24 * 60 * 60,
             timestamp: Date.now() / 1000 | 0,
         }, settings);
+    }
+    static getInstance() {
+        if (!Config.instance)
+            Config.instance = new Config();
+        return Config.instance;
     }
     initGetSet() {
         lodash_1.each(settingNames, (prop) => {
@@ -80,7 +78,7 @@ class Config {
         this.settings.errorInterceptor = fn;
     }
     getValue(name) {
-        return this.settings[name] || Cookies.get(this.cookieKey(name));
+        return this.settings[name] || this.cookiesImpl.get(this.cookieKey(name));
     }
     updateCacheKey() {
         let affiliationId, roleId, sessionId, cacheKey;
@@ -100,7 +98,7 @@ class Config {
     }
     setValue(name, value) {
         this.settings[name] = value;
-        Cookies.set(this.cookieKey(name), value, {
+        this.cookiesImpl.set(this.cookieKey(name), value, {
             path: '/',
             domain: this.settings.domain,
             expires: this.settings.cookieTimeout,
@@ -111,7 +109,7 @@ class Config {
     }
     clearValue(name) {
         this.settings[name] = undefined;
-        Cookies.expire(this.cookieKey(name), { domain: this.settings.domain });
+        this.cookiesImpl.expire(this.cookieKey(name), { domain: this.settings.domain });
         if (name !== 'cacheKey')
             this.updateCacheKey();
     }
@@ -137,11 +135,4 @@ class Config {
         return value ? qs.parse(value) : {};
     }
 }
-<<<<<<< HEAD
-=======
-Config.endpoints = {};
-Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
-Config.timestamp = Date.now() / 1000 | 0;
-Config.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
->>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
 exports.Config = Config;

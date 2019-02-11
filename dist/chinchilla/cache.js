@@ -125,10 +125,10 @@ class StorageCache extends BaseCache {
 }
 exports.StorageCache = StorageCache;
 class NoCache extends BaseCache {
-    setValue(...args) { }
-    removeValue(...args) { }
-    clear(...args) { }
-    getValue(...args) { }
+    setValue(..._args) { }
+    removeValue(..._args) { }
+    clear(..._args) { }
+    getValue(..._args) { }
 }
 exports.NoCache = NoCache;
 class Cache {

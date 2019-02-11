@@ -29,10 +29,10 @@ export declare class StorageCache extends BaseCache {
     clear(): void;
 }
 export declare class NoCache extends BaseCache {
-    setValue(...args: any[]): void;
-    removeValue(...args: any[]): void;
-    clear(...args: any[]): void;
-    getValue(...args: any[]): void;
+    setValue(..._args: any[]): void;
+    removeValue(..._args: any[]): void;
+    clear(..._args: any[]): void;
+    getValue(..._args: any[]): void;
 }
 export declare class Cache {
     static storageCacheImpl: typeof StorageCache;

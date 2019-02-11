@@ -15264,7 +15264,6 @@
      */
     var upperFirst = createCaseFirst('toUpperCase');
 
-<<<<<<< HEAD
     /**
      * Splits `string` into an array of its words.
      *
@@ -15287,179 +15286,6 @@
     function words(string, pattern, guard) {
       string = toString(string);
       pattern = guard ? undefined : pattern;
-=======
-Object.defineProperty(exports, "__esModule", { value: true });
-var Kekse = __webpack_require__(9);
-var lodash_1 = __webpack_require__(0);
-var tools_1 = __webpack_require__(4);
-var Cookies = /** @class */ (function () {
-    function Cookies() {
-    }
-    Cookies.get = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        return Kekse.get.apply(null, args);
-    };
-    Cookies.set = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        return Kekse.set.apply(null, args);
-    };
-    Cookies.expire = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-        return Kekse.expire.apply(null, args);
-    };
-    return Cookies;
-}());
-exports.Cookies = Cookies;
-var NoCookies = /** @class */ (function () {
-    function NoCookies() {
-    }
-    NoCookies.get = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-    };
-    NoCookies.set = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-    };
-    NoCookies.expire = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-    };
-    return NoCookies;
-}());
-exports.NoCookies = NoCookies;
-var Config = /** @class */ (function () {
-    function Config() {
-    }
-    Config.setEndpoint = function (name, url) {
-        Config.endpoints[name] = url;
-    };
-    Config.setCookieDomain = function (domain) {
-        Config.domain = domain;
-    };
-    Config.setErrorInterceptor = function (fn) {
-        Config.errorInterceptor = fn;
-    };
-    Config.getValue = function (name) {
-        return Config[name] || Config.cookiesImpl.get(Config.cookieKey(name));
-    };
-    Config.updateCacheKey = function () {
-        var affiliationId, roleId, sessionId, cacheKey;
-        if ((affiliationId = Config.getValue('affiliationId')) && (roleId = Config.getValue('roleId'))) {
-            cacheKey = affiliationId + "-" + roleId;
-        }
-        else if (sessionId = Config.getValue('sessionId')) {
-            cacheKey = sessionId;
-        }
-        else {
-            cacheKey = 'anonymous';
-        }
-        Config.setValue('cacheKey', cacheKey);
-    };
-    Config.setValue = function (name, value) {
-        Config[name] = value;
-        Config.cookiesImpl.set(Config.cookieKey(name), value, { path: '/', domain: Config.domain, expires: Config.cookieTimeout });
-        if (name !== 'cacheKey')
-            Config.updateCacheKey();
-    };
-    Config.clearValue = function (name) {
-        Config[name] = undefined;
-        Config.cookiesImpl.expire(Config.cookieKey(name), { domain: Config.domain });
-        if (name !== 'cacheKey')
-            Config.updateCacheKey();
-    };
-    Config.cookieKey = function (name) {
-        return "chinchilla." + name;
-    };
-    Config.endpoints = {};
-    Config.cookieTimeout = 30 * 24 * 60 * 60; // 1 month
-    Config.timestamp = Date.now() / 1000 | 0;
-    Config.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
-    return Config;
-}());
-exports.Config = Config;
-lodash_1.each(['affiliationId', 'roleId', 'sessionId', 'cacheKey'], function (prop) {
-    var tail = prop.charAt(0).toUpperCase() + prop.slice(1);
-    Config["get" + tail] = function () {
-        return Config.getValue(prop);
-    };
-    Config["set" + tail] = function (value) {
-        Config.setValue(prop, value);
-    };
-    Config["clear" + tail] = function () {
-        Config.clearValue(prop);
-    };
-});
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* WEBPACK VAR INJECTION */(function(process, global, setImmediate) {/* @preserve
- * The MIT License (MIT)
- * 
- * Copyright (c) 2013-2017 Petka Antonov
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- * 
- */
-/**
- * bluebird build version 3.5.0
- * Features enabled: core, race, call_get, generators, map, nodeify, promisify, props, reduce, settle, some, using, timers, filter, any, each
-*/
-!function(e){if(true)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Promise=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof _dereq_=="function"&&_dereq_;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof _dereq_=="function"&&_dereq_;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-"use strict";
-module.exports = function(Promise) {
-var SomePromiseArray = Promise._SomePromiseArray;
-function any(promises) {
-    var ret = new SomePromiseArray(promises);
-    var promise = ret.promise();
-    ret.setHowMany(1);
-    ret.setUnwrap();
-    ret.init();
-    return promise;
-}
-
-Promise.any = function (promises) {
-    return any(promises);
-};
-
-Promise.prototype.any = function () {
-    return any(this);
-};
->>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
 
       if (pattern === undefined) {
         return hasUnicodeWord(string) ? unicodeWords(string) : asciiWords(string);
@@ -17512,12 +17338,43 @@ var StorageCache = /** @class */ (function (_super) {
     return StorageCache;
 }(BaseCache));
 exports.StorageCache = StorageCache;
+var NoCache = /** @class */ (function (_super) {
+    __extends(NoCache, _super);
+    function NoCache() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    NoCache.prototype.setValue = function () {
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+    };
+    NoCache.prototype.removeValue = function () {
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+    };
+    NoCache.prototype.clear = function () {
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+    };
+    NoCache.prototype.getValue = function () {
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+    };
+    return NoCache;
+}(BaseCache));
+exports.NoCache = NoCache;
 var Cache = /** @class */ (function () {
     function Cache() {
     }
     Cache.clear = function () {
-        if (!tools_1.Tools.isNode)
-            Cache.storage.clear();
+        Cache.storage.clear();
         Cache.runtime.clear();
     };
     Cache.random = function (prefix) {
@@ -17529,7 +17386,7 @@ var Cache = /** @class */ (function () {
         get: function () {
             if (Cache._storage)
                 return Cache._storage;
-            return Cache._storage = new StorageCache();
+            return Cache._storage = new Cache.storageCacheImpl();
         },
         enumerable: true,
         configurable: true
@@ -17543,6 +17400,7 @@ var Cache = /** @class */ (function () {
         enumerable: true,
         configurable: true
     });
+    Cache.storageCacheImpl = tools_1.Tools.isNode ? NoCache : StorageCache;
     return Cache;
 }());
 exports.Cache = Cache;
@@ -23404,8 +23262,6 @@ var Cookies = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.get.apply(null, args);
     };
     Cookies.set = function () {
@@ -23413,8 +23269,6 @@ var Cookies = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.set.apply(null, args);
     };
     Cookies.expire = function () {
@@ -23422,18 +23276,41 @@ var Cookies = /** @class */ (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             args[_i] = arguments[_i];
         }
-        if (tools_1.Tools.isNode)
-            return;
         return Kekse.expire.apply(null, args);
     };
     return Cookies;
 }());
 exports.Cookies = Cookies;
+var NoCookies = /** @class */ (function () {
+    function NoCookies() {
+    }
+    NoCookies.get = function () {
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+    };
+    NoCookies.set = function () {
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+    };
+    NoCookies.expire = function () {
+        var _args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            _args[_i] = arguments[_i];
+        }
+    };
+    return NoCookies;
+}());
+exports.NoCookies = NoCookies;
 var configNames = ['affiliationId', 'roleId', 'sessionId', 'flavours'];
 var settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor'];
 var Config = /** @class */ (function () {
     function Config(settings) {
         if (settings === void 0) { settings = {}; }
+        this.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
         this.initGetSet();
         this.settings = lodash_1.merge({
             endpoints: {},
@@ -23486,7 +23363,7 @@ var Config = /** @class */ (function () {
         this.settings.errorInterceptor = fn;
     };
     Config.prototype.getValue = function (name) {
-        return this.settings[name] || Cookies.get(this.cookieKey(name));
+        return this.settings[name] || this.cookiesImpl.get(this.cookieKey(name));
     };
     Config.prototype.updateCacheKey = function () {
         var affiliationId, roleId, sessionId, cacheKey;
@@ -23506,7 +23383,7 @@ var Config = /** @class */ (function () {
     };
     Config.prototype.setValue = function (name, value) {
         this.settings[name] = value;
-        Cookies.set(this.cookieKey(name), value, {
+        this.cookiesImpl.set(this.cookieKey(name), value, {
             path: '/',
             domain: this.settings.domain,
             expires: this.settings.cookieTimeout,
@@ -23517,7 +23394,7 @@ var Config = /** @class */ (function () {
     };
     Config.prototype.clearValue = function (name) {
         this.settings[name] = undefined;
-        Cookies.expire(this.cookieKey(name), { domain: this.settings.domain });
+        this.cookiesImpl.expire(this.cookieKey(name), { domain: this.settings.domain });
         if (name !== 'cacheKey')
             this.updateCacheKey();
     };
@@ -24029,8 +23906,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 							innerArrayValue[j] = decodeURIComponent(innerArrayValue[j]);
 						}
 					}
-<<<<<<< HEAD
-=======
 
 					if ((showVariables || varSpec.suffices['*'])&& resultObj[varName] !== undefined) {
 						if (Array.isArray(resultObj[varName])) {
@@ -24156,449 +24031,6 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 	return UriTemplate;
 });
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var config_1 = __webpack_require__(1);
-var tools_1 = __webpack_require__(4);
-var BaseCache = /** @class */ (function () {
-    function BaseCache() {
-    }
-    BaseCache.prototype.set = function (key, val, expires) {
-        if (expires === void 0) { expires = 60; }
-        var payload = {
-            expires: this.minutesFromNow(expires),
-            value: val
-        };
-        this.setValue(this.extkey(key), payload);
-    };
-    BaseCache.prototype.get = function (key) {
-        var extkey = this.extkey(key);
-        var payload = this.getValue(extkey);
-        if (payload) {
-            if (Date.now() > payload.expires) {
-                this.removeValue(extkey);
-                return null;
-            }
-            return payload.value;
-        }
-        return null;
-    };
-    BaseCache.prototype.extkey = function (suffix) {
-        return config_1.Config.getCacheKey() + "-" + suffix;
-    };
-    BaseCache.prototype.minutesFromNow = function (min) {
-        return Date.now() + min * 60000;
-    };
-    return BaseCache;
-}());
-exports.BaseCache = BaseCache;
-var RuntimeCache = /** @class */ (function (_super) {
-    __extends(RuntimeCache, _super);
-    function RuntimeCache() {
-        var _this = _super.call(this) || this;
-        _this.storage = {};
-        return _this;
-    }
-    RuntimeCache.prototype.setValue = function (extkey, val) {
-        this.storage[extkey] = val;
-    };
-    RuntimeCache.prototype.getValue = function (extkey) {
-        return this.storage[extkey];
-    };
-    RuntimeCache.prototype.removeValue = function (extkey) {
-        delete this.storage[extkey];
-    };
-    RuntimeCache.prototype.clear = function () {
-        this.storage = {};
-    };
-    return RuntimeCache;
-}(BaseCache));
-exports.RuntimeCache = RuntimeCache;
-var StorageCache = /** @class */ (function (_super) {
-    __extends(StorageCache, _super);
-    function StorageCache() {
-        var _this = _super.call(this) || this;
-        _this.storage = window.localStorage;
-        return _this;
-    }
-    StorageCache.prototype.setValue = function (extkey, val) {
-        this.storage.setItem(extkey, JSON.stringify(val));
-    };
-    StorageCache.prototype.getValue = function (extkey) {
-        return JSON.parse(this.storage.getItem(extkey) || null);
-    };
-    StorageCache.prototype.removeValue = function (extkey) {
-        this.storage.removeItem(extkey);
-    };
-    StorageCache.prototype.clear = function () {
-        this.storage.clear();
-    };
-    return StorageCache;
-}(BaseCache));
-exports.StorageCache = StorageCache;
-var NoCache = /** @class */ (function (_super) {
-    __extends(NoCache, _super);
-    function NoCache() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    NoCache.prototype.setValue = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-    };
-    NoCache.prototype.removeValue = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-    };
-    NoCache.prototype.clear = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-    };
-    NoCache.prototype.getValue = function () {
-        var args = [];
-        for (var _i = 0; _i < arguments.length; _i++) {
-            args[_i] = arguments[_i];
-        }
-    };
-    return NoCache;
-}(BaseCache));
-exports.NoCache = NoCache;
-var Cache = /** @class */ (function () {
-    function Cache() {
-    }
-    Cache.clear = function () {
-        Cache.storage.clear();
-        Cache.runtime.clear();
-    };
-    Cache.random = function (prefix) {
-        if (prefix === void 0) { prefix = 'unknown'; }
-        var hash = Math.random().toString(36).substr(2, 9);
-        return prefix + "-" + hash;
-    };
-    Object.defineProperty(Cache, "storage", {
-        get: function () {
-            if (Cache._storage)
-                return Cache._storage;
-            return Cache._storage = new Cache.storageCacheImpl();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Cache, "runtime", {
-        get: function () {
-            if (Cache._runtime)
-                return Cache._runtime;
-            return Cache._runtime = new RuntimeCache();
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Cache.storageCacheImpl = tools_1.Tools.isNode ? NoCache : StorageCache;
-    return Cache;
-}());
-exports.Cache = Cache;
->>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
-
-					if ((showVariables || varSpec.suffices['*'])&& resultObj[varName] !== undefined) {
-						if (Array.isArray(resultObj[varName])) {
-							resultObj[varName] = resultObj[varName].concat(innerArrayValue);
-						} else {
-							resultObj[varName] = [resultObj[varName]].concat(innerArrayValue);
-						}
-					} else {
-						if (innerArrayValue.length == 1 && !varSpec.suffices['*']) {
-							resultObj[varName] = innerArrayValue[0];
-						} else {
-							resultObj[varName] = innerArrayValue;
-						}
-					}
-				}
-			}
-		};
-		subFunction.varNames = varNames;
-		return {
-			prefix: prefix,
-			substitution: subFunction,
-			unSubstitution: guessFunction
-		};
-	}
-
-	function UriTemplate(template) {
-		if (!(this instanceof UriTemplate)) {
-			return new UriTemplate(template);
-		}
-		var parts = template.split("{");
-		var textParts = [parts.shift()];
-		var prefixes = [];
-		var substitutions = [];
-		var unSubstitutions = [];
-		var varNames = [];
-		while (parts.length > 0) {
-			var part = parts.shift();
-			var spec = part.split("}")[0];
-			var remainder = part.substring(spec.length + 1);
-			var funcs = uriTemplateSubstitution(spec);
-			substitutions.push(funcs.substitution);
-			unSubstitutions.push(funcs.unSubstitution);
-			prefixes.push(funcs.prefix);
-			textParts.push(remainder);
-			varNames = varNames.concat(funcs.substitution.varNames);
-		}
-		this.fill = function (valueFunction) {
-			if (valueFunction && typeof valueFunction !== 'function') {
-				var value = valueFunction;
-				valueFunction = function (varName) {
-					return value[varName];
-				};
-			}
-
-			var result = textParts[0];
-			for (var i = 0; i < substitutions.length; i++) {
-				var substitution = substitutions[i];
-				result += substitution(valueFunction);
-				result += textParts[i + 1];
-			}
-			return result;
-		};
-		this.fromUri = function (substituted) {
-			var result = {};
-			for (var i = 0; i < textParts.length; i++) {
-				var part = textParts[i];
-				if (substituted.substring(0, part.length) !== part) {
-					return undefined;
-				}
-				substituted = substituted.substring(part.length);
-				if (i >= textParts.length - 1) {
-					if (substituted == "") {
-						break;
-					} else {
-						return undefined;
-					}
-				}
-				var nextPart = textParts[i + 1];
-				var offset = i;
-				while (true) {
-					if (offset == textParts.length - 2) {
-						var endPart = substituted.substring(substituted.length - nextPart.length);
-						if (endPart !== nextPart) {
-							return undefined;
-						}
-						var stringValue = substituted.substring(0, substituted.length - nextPart.length);
-						substituted = endPart;
-					} else if (nextPart) {
-						var nextPartPos = substituted.indexOf(nextPart);
-						var stringValue = substituted.substring(0, nextPartPos);
-						substituted = substituted.substring(nextPartPos);
-					} else if (prefixes[offset + 1]) {
-						var nextPartPos = substituted.indexOf(prefixes[offset + 1]);
-						if (nextPartPos === -1) nextPartPos = substituted.length;
-						var stringValue = substituted.substring(0, nextPartPos);
-						substituted = substituted.substring(nextPartPos);
-					} else if (textParts.length > offset + 2) {
-						// If the separator between this variable and the next is blank (with no prefix), continue onwards
-						offset++;
-						nextPart = textParts[offset + 1];
-						continue;
-					} else {
-						var stringValue = substituted;
-						substituted = "";
-					}
-					break;
-				}
-				unSubstitutions[i](stringValue, result);
-			}
-			return result;
-		}
-		this.varNames = varNames;
-		this.template = template;
-	}
-	UriTemplate.prototype = {
-		toString: function () {
-			return this.template;
-		},
-		fillFromObject: function (obj) {
-			return this.fill(obj);
-		}
-	};
-
-<<<<<<< HEAD
-	return UriTemplate;
-});
-=======
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
-var lodash_1 = __webpack_require__(0);
-var Promise = __webpack_require__(2);
-var config_1 = __webpack_require__(1);
-var cache_1 = __webpack_require__(6);
-var tools_1 = __webpack_require__(4);
-var ContextAction = /** @class */ (function () {
-    function ContextAction(values) {
-        if (values === void 0) { values = {}; }
-        var _this = this;
-        lodash_1.each(values, function (value, key) {
-            _this[key] = value;
-        });
-    }
-    return ContextAction;
-}());
-exports.ContextAction = ContextAction;
-var ContextMemberAction = /** @class */ (function (_super) {
-    __extends(ContextMemberAction, _super);
-    function ContextMemberAction() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return ContextMemberAction;
-}(ContextAction));
-exports.ContextMemberAction = ContextMemberAction;
-var ContextCollectionAction = /** @class */ (function (_super) {
-    __extends(ContextCollectionAction, _super);
-    function ContextCollectionAction() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    return ContextCollectionAction;
-}(ContextAction));
-exports.ContextCollectionAction = ContextCollectionAction;
-var Context = /** @class */ (function () {
-    function Context(dataPromise) {
-        var _this = this;
-        this.ready = dataPromise.then(function (data) {
-            _this.data = data;
-            lodash_1.each(_this.properties, function (property, name) {
-                property.isAssociation = property.type && /^(http|https)\:/.test(property.type);
-            });
-            return _this;
-        });
-    }
-    Context.get = function (contextUrl) {
-        var key = lodash_1.first(contextUrl.split('?'));
-        var cachedContext;
-        if (cachedContext = cache_1.Cache.runtime.get(key)) {
-            return cachedContext;
-        }
-        var dataPromise;
-        var cachedData;
-        if (cachedData = cache_1.Cache.storage.get(key)) {
-            dataPromise = Promise.resolve(cachedData);
-        }
-        else {
-            dataPromise = new Promise(function (resolve, reject) {
-                var req = tools_1.Tools.req
-                    .get(contextUrl)
-                    .query({ t: config_1.Config.timestamp });
-                if (config_1.Config.getSessionId()) {
-                    req = req.set('Session-Id', config_1.Config.getSessionId());
-                }
-                if (config_1.Config.getAffiliationId()) {
-                    req = req.set('Affiliation-Id', config_1.Config.getAffiliationId());
-                }
-                if (config_1.Config.getRoleId()) {
-                    req = req.set('Role-Id', config_1.Config.getRoleId());
-                }
-                req
-                    .end(function (err, res) {
-                    if (err)
-                        return reject(err);
-                    return resolve(res.body);
-                });
-            });
-        }
-        dataPromise.then(function (data) {
-            return cache_1.Cache.storage.set(key, data);
-        });
-        cachedContext = new Context(dataPromise);
-        cache_1.Cache.runtime.set(key, cachedContext);
-        return cachedContext;
-    };
-    Object.defineProperty(Context.prototype, "context", {
-        get: function () {
-            return this.data && this.data['@context'] || {};
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Context.prototype, "id", {
-        get: function () {
-            return this.context['@id'];
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Context.prototype, "properties", {
-        get: function () {
-            return this.context.properties || {};
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(Context.prototype, "constants", {
-        get: function () {
-            return this.context.constants || {};
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Context.prototype.property = function (name) {
-        return this.properties[name];
-    };
-    Context.prototype.constant = function (name) {
-        return this.constants[name];
-    };
-    Context.prototype.association = function (name) {
-        var property = this.property(name);
-        return property.isAssociation && property;
-    };
-    Context.prototype.memberAction = function (name) {
-        var action = this.context && this.context.member_actions && this.context.member_actions[name];
-        if (!action) {
-            console.log("requested non-existing member action " + name);
-            return;
-        }
-        return new ContextMemberAction(action);
-    };
-    Context.prototype.collectionAction = function (name) {
-        var action = this.context && this.context.collection_actions && this.context.collection_actions[name];
-        if (!action) {
-            console.log("requested non-existing collection action " + name);
-            return;
-        }
-        return new ContextCollectionAction(action);
-    };
-    return Context;
-}());
-exports.Context = Context;
->>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
 
 
 /***/ }),
@@ -26511,7 +25943,6 @@ exports.Subject = Subject;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var lodash_1 = __webpack_require__(0);
-<<<<<<< HEAD
 var actions = [];
 var listeners = [];
 var next = function () {
@@ -26535,34 +25966,6 @@ exports.Watcher = {
             if (actions.length === 0)
                 next();
         }, 100);
-=======
-var subject_1 = __webpack_require__(14);
-var config_1 = __webpack_require__(1);
-exports.NoCookies = config_1.NoCookies;
-var context_1 = __webpack_require__(7);
-var cache_1 = __webpack_require__(6);
-exports.NoCache = cache_1.NoCache;
-var extractor_1 = __webpack_require__(3);
-var chch = function (objectsOrApp, model) {
-    // detach from existing Subject first before creating a new one..
-    objectsOrApp = subject_1.Subject.detachFromSubject(objectsOrApp);
-    return new subject_1.Subject(objectsOrApp, model);
-};
-chch['config'] = config_1.Config;
-chch['cache'] = cache_1.Cache;
-chch['extractor'] = extractor_1.Extractor;
-chch['new'] = function (app, model, attrs) {
-    if (attrs === void 0) { attrs = {}; }
-    return lodash_1.merge({ '@context': config_1.Config.endpoints[app] + "/context/" + model }, attrs);
-};
-chch['contextUrl'] = function (app, model) {
-    return config_1.Config.endpoints[app] + "/context/" + model;
-};
-chch['context'] = function (urlOrApp, model) {
-    if (!model) {
-        // assume first param is the context url
-        return context_1.Context.get(urlOrApp).ready;
->>>>>>> c3b48ca... adds empty cookies and cache implementations to be used optionally
     }
 };
 
@@ -28406,8 +27809,10 @@ var Promise = __webpack_require__(3);
 var lodash_1 = __webpack_require__(0);
 var subject_1 = __webpack_require__(27);
 var config_1 = __webpack_require__(10);
+exports.NoCookies = config_1.NoCookies;
 var context_1 = __webpack_require__(11);
 var cache_1 = __webpack_require__(1);
+exports.NoCache = cache_1.NoCache;
 var extractor_1 = __webpack_require__(6);
 var watcher_1 = __webpack_require__(28);
 var chch = Object.assign(function (one, two, three) {
