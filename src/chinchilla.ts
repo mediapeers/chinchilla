@@ -15,8 +15,8 @@ const chch = Object.assign(
   },
   {
     config: Config.instance,
+    cache: Cache.instance,
     cookies: Cookies,
-    cache: Cache,
     watcher: Watcher,
     extractor: Extractor,
     new: (app, model, attrs = {}, config?: Config) => {
