@@ -4,40 +4,40 @@ const Kekse = require("cookies-js");
 const qs = require("querystringify");
 const lodash_1 = require("lodash");
 const tools_1 = require("./tools");
+class NoCookies {
+    get(..._args) { }
+    set(..._args) { }
+    expire(..._args) { }
+}
+exports.NoCookies = NoCookies;
 class Cookies {
-    static get(...args) {
+    get(...args) {
         return Kekse.get.apply(null, args);
     }
-    static set(...args) {
+    set(...args) {
         return Kekse.set.apply(null, args);
     }
-    static expire(...args) {
+    expire(...args) {
         return Kekse.expire.apply(null, args);
     }
 }
 exports.Cookies = Cookies;
-class NoCookies {
-    static get(..._args) { }
-    static set(..._args) { }
-    static expire(..._args) { }
-}
-exports.NoCookies = NoCookies;
 const configNames = ['affiliationId', 'roleId', 'sessionId', 'flavours'];
 const settingNames = ['endpoints', 'cookieTimeout', 'timestamp', 'domain', 'devMode', 'errorInterceptor'];
 class Config {
+    static get instance() {
+        if (!Config._instance)
+            Config._instance = new Config();
+        return Config._instance;
+    }
     constructor(settings = {}) {
-        this.cookiesImpl = tools_1.Tools.isNode ? NoCookies : Cookies;
         this.initGetSet();
         this.settings = lodash_1.merge({
             endpoints: {},
             cookieTimeout: 30 * 24 * 60 * 60,
             timestamp: Date.now() / 1000 | 0,
         }, settings);
-    }
-    static getInstance() {
-        if (!Config.instance)
-            Config.instance = new Config();
-        return Config.instance;
+        this.cookies = tools_1.Tools.isNode ? new NoCookies() : new Cookies();
     }
     initGetSet() {
         lodash_1.each(settingNames, (prop) => {
@@ -78,7 +78,7 @@ class Config {
         this.settings.errorInterceptor = fn;
     }
     getValue(name) {
-        return this.settings[name] || this.cookiesImpl.get(this.cookieKey(name));
+        return this.settings[name] || this.cookies.get(this.cookieKey(name));
     }
     updateCacheKey() {
         let affiliationId, roleId, sessionId, cacheKey;
@@ -98,7 +98,7 @@ class Config {
     }
     setValue(name, value) {
         this.settings[name] = value;
-        this.cookiesImpl.set(this.cookieKey(name), value, {
+        this.cookies.set(this.cookieKey(name), value, {
             path: '/',
             domain: this.settings.domain,
             expires: this.settings.cookieTimeout,
@@ -109,7 +109,7 @@ class Config {
     }
     clearValue(name) {
         this.settings[name] = undefined;
-        this.cookiesImpl.expire(this.cookieKey(name), { domain: this.settings.domain });
+        this.cookies.expire(this.cookieKey(name), { domain: this.settings.domain });
         if (name !== 'cacheKey')
             this.updateCacheKey();
     }

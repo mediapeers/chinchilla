@@ -3,22 +3,28 @@ import * as qs from 'querystringify'
 import { each, clone, merge, get } from 'lodash'
 import { Tools } from './tools'
 
-export class Cookies {
-  static get(...args) {
-    return Kekse.get.apply(null, args)
-  }
-  static set(...args) {
-    return Kekse.set.apply(null, args)
-  }
-  static expire(...args) {
-    return Kekse.expire.apply(null, args)
-  }
+export interface ICookies {
+  get: Function
+  set: Function
+  expire: Function
 }
 
-export class NoCookies {
-  static get(..._args) {}
-  static set(..._args) {}
-  static expire(..._args) {}
+export class NoCookies implements ICookies {
+  get(..._args) {}
+  set(..._args) {}
+  expire(..._args) {}
+}
+
+export class Cookies implements ICookies {
+  get(...args) {
+    return Kekse.get.apply(null, args)
+  }
+  set(...args) {
+    return Kekse.set.apply(null, args)
+  }
+  expire(...args) {
+    return Kekse.expire.apply(null, args)
+  }
 }
 
 const configNames  = ['affiliationId', 'roleId', 'sessionId', 'flavours']
@@ -47,13 +53,13 @@ export class Config {
   setFlavours: Function
   clearFlavours: Function
   settings: Settings
-  cookiesImpl = Tools.isNode ? NoCookies : Cookies
+  cookies: ICookies
 
-  static instance: Config
+  static _instance: Config
 
-  static getInstance(): Config {
-    if (!Config.instance) Config.instance = new Config()
-    return Config.instance
+  static get instance() {
+    if (!Config._instance) Config._instance = new Config()
+    return Config._instance
   }
 
   constructor(settings = {}) {
@@ -64,6 +70,8 @@ export class Config {
       cookieTimeout: 30*24*60*60, // 1 month
       timestamp: Date.now() / 1000 | 0,
     }, settings)
+
+    this.cookies = Tools.isNode ? new NoCookies() : new Cookies()
   }
 
   initGetSet() {
@@ -114,7 +122,7 @@ export class Config {
   }
 
   getValue(name): string {
-    return this.settings[name] || this.cookiesImpl.get(this.cookieKey(name))
+    return this.settings[name] || this.cookies.get(this.cookieKey(name))
   }
 
   updateCacheKey(): void {
@@ -136,7 +144,7 @@ export class Config {
 
   setValue(name, value): void {
     this.settings[name] = value
-    this.cookiesImpl.set(this.cookieKey(name), value, {
+    this.cookies.set(this.cookieKey(name), value, {
       path: '/',
       domain: this.settings.domain,
       expires: this.settings.cookieTimeout,
@@ -148,7 +156,7 @@ export class Config {
 
   clearValue(name): void {
     this.settings[name] = undefined
-    this.cookiesImpl.expire(this.cookieKey(name), { domain: this.settings.domain })
+    this.cookies.expire(this.cookieKey(name), { domain: this.settings.domain })
 
     if (name !== 'cacheKey') this.updateCacheKey()
   }

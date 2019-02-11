@@ -1,12 +1,17 @@
-export declare class Cookies {
-    static get(...args: any[]): any;
-    static set(...args: any[]): any;
-    static expire(...args: any[]): any;
+export interface ICookies {
+    get: Function;
+    set: Function;
+    expire: Function;
 }
-export declare class NoCookies {
-    static get(..._args: any[]): void;
-    static set(..._args: any[]): void;
-    static expire(..._args: any[]): void;
+export declare class NoCookies implements ICookies {
+    get(..._args: any[]): void;
+    set(..._args: any[]): void;
+    expire(..._args: any[]): void;
+}
+export declare class Cookies implements ICookies {
+    get(...args: any[]): any;
+    set(...args: any[]): any;
+    expire(...args: any[]): any;
 }
 export interface Settings {
     endpoints: any;
@@ -30,9 +35,9 @@ export declare class Config {
     setFlavours: Function;
     clearFlavours: Function;
     settings: Settings;
-    cookiesImpl: typeof Cookies;
-    static instance: Config;
-    static getInstance(): Config;
+    cookies: ICookies;
+    static _instance: Config;
+    static readonly instance: Config;
     constructor(settings?: {});
     initGetSet(): void;
     clone(): Config;

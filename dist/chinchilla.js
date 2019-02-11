@@ -15,21 +15,21 @@ const chch = Object.assign((one, two, three) => {
     one = subject_1.Subject.detachFromSubject(one);
     return new subject_1.Subject(one, two, three);
 }, {
-    config: config_1.Config.getInstance(),
+    config: config_1.Config.instance,
     cookies: config_1.Cookies,
     cache: cache_1.Cache,
     watcher: watcher_1.Watcher,
     extractor: extractor_1.Extractor,
     new: (app, model, attrs = {}, config) => {
-        config = config || config_1.Config.getInstance();
+        config = config || config_1.Config.instance;
         return lodash_1.merge({ '@context': `${config.settings.endpoints[app]}/context/${model}` }, attrs);
     },
     contextUrl: (app, model, config) => {
-        config = config || config_1.Config.getInstance();
+        config = config || config_1.Config.instance;
         return `${config.settings.endpoints[app]}/context/${model}`;
     },
     context: (urlOrApp, model, config) => {
-        config = config || config_1.Config.getInstance();
+        config = config || config_1.Config.instance;
         if (!model) {
             // assume first param is the context url
             return context_1.Context.get(urlOrApp, config).ready;

@@ -34,26 +34,29 @@ class BaseCache {
         this.put(extkey, val, expires);
     }
     set(key, val, expires = 60) {
-        const config = config_1.Config.getInstance();
-        this.put(config.getCacheKey(key), val, expires);
+        this.put(config_1.Config.instance.getCacheKey(key), val, expires);
     }
     get(key) {
-        const config = config_1.Config.getInstance();
-        return this.fetch(config.getCacheKey(key));
+        return this.fetch(config_1.Config.instance.getCacheKey(key));
     }
     remove(key) {
-        const config = config_1.Config.getInstance();
-        this.drop(config.getCacheKey(key));
+        this.drop(config_1.Config.instance.getCacheKey(key));
     }
     update(key, fn, defaultValue, expires = 60) {
-        const config = config_1.Config.getInstance();
-        return this.change(config.getCacheKey(key), fn, defaultValue, expires);
+        return this.change(config_1.Config.instance.getCacheKey(key), fn, defaultValue, expires);
     }
     minutesFromNow(min) {
         return Date.now() + min * 60000;
     }
 }
 exports.BaseCache = BaseCache;
+class NoCache extends BaseCache {
+    setValue(..._args) { }
+    removeValue(..._args) { }
+    clear(..._args) { }
+    getValue(..._args) { }
+}
+exports.NoCache = NoCache;
 class RuntimeCache extends BaseCache {
     constructor() {
         super();
@@ -124,32 +127,23 @@ class StorageCache extends BaseCache {
     }
 }
 exports.StorageCache = StorageCache;
-class NoCache extends BaseCache {
-    setValue(..._args) { }
-    removeValue(..._args) { }
-    clear(..._args) { }
-    getValue(..._args) { }
-}
-exports.NoCache = NoCache;
 class Cache {
-    static clear() {
-        Cache.storage.clear();
-        Cache.runtime.clear();
+    constructor() {
+        this.runtime = new RuntimeCache();
+        this.storage = tools_1.Tools.isNode ? new NoCache() : new StorageCache();
     }
-    static random(prefix = 'unknown') {
+    clear() {
+        this.storage.clear();
+        this.runtime.clear();
+    }
+    random(prefix = 'unknown') {
         const hash = Math.random().toString(36).substr(2, 9);
         return `${prefix}-${hash}`;
     }
-    static get storage() {
-        if (Cache._storage)
-            return Cache._storage;
-        return Cache._storage = new Cache.storageCacheImpl();
-    }
-    static get runtime() {
-        if (Cache._runtime)
-            return Cache._runtime;
-        return Cache._runtime = new RuntimeCache();
+    static get instance() {
+        if (!Cache._instance)
+            Cache._instance = new Cache();
+        return Cache._instance;
     }
 }
-Cache.storageCacheImpl = tools_1.Tools.isNode ? NoCache : StorageCache;
 exports.Cache = Cache;

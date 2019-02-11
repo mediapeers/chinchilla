@@ -14,6 +14,12 @@ export declare abstract class BaseCache {
     update(key: string, fn?: any, defaultValue?: any, expires?: number): void;
     minutesFromNow(min: number): number;
 }
+export declare class NoCache extends BaseCache {
+    setValue(..._args: any[]): void;
+    removeValue(..._args: any[]): void;
+    clear(..._args: any[]): void;
+    getValue(..._args: any[]): void;
+}
 export declare class RuntimeCache extends BaseCache {
     constructor();
     setValue(extkey: string, val: any): void;
@@ -28,18 +34,12 @@ export declare class StorageCache extends BaseCache {
     removeValue(extkey: string): void;
     clear(): void;
 }
-export declare class NoCache extends BaseCache {
-    setValue(..._args: any[]): void;
-    removeValue(..._args: any[]): void;
-    clear(..._args: any[]): void;
-    getValue(..._args: any[]): void;
-}
 export declare class Cache {
-    static storageCacheImpl: typeof StorageCache;
-    private static _storage;
-    private static _runtime;
-    static clear(): void;
-    static random(prefix?: string): string;
-    static readonly storage: any;
-    static readonly runtime: any;
+    storage: BaseCache;
+    runtime: BaseCache;
+    static _instance: Cache;
+    constructor();
+    clear(): void;
+    random(prefix?: string): string;
+    static readonly instance: Cache;
 }

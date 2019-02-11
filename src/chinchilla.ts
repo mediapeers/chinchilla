@@ -14,13 +14,13 @@ const chch = Object.assign(
     return new Subject(one, two, three)
   },
   {
-    config: Config.getInstance(),
+    config: Config.instance,
     cookies: Cookies,
     cache: Cache,
     watcher: Watcher,
     extractor: Extractor,
     new: (app, model, attrs = {}, config?: Config) => {
-      config = config || Config.getInstance()
+      config = config || Config.instance
 
       return merge(
         { '@context': `${config.settings.endpoints[app]}/context/${model}` },
@@ -28,12 +28,12 @@ const chch = Object.assign(
       )
     },
     contextUrl: (app, model, config?: Config) => {
-      config = config || Config.getInstance()
+      config = config || Config.instance
 
       return `${config.settings.endpoints[app]}/context/${model}`
     },
     context: (urlOrApp, model?: string, config?: Config) => {
-      config = config || Config.getInstance()
+      config = config || Config.instance
 
       if (!model) {
         // assume first param is the context url

@@ -53,7 +53,7 @@ class Action {
         this.uriTmpl = new UriTemplate(contextAction.template);
         this.params = extractor_1.Extractor.uriParams(contextAction, params);
         this.options = options || {};
-        this.id = cache_1.Cache.random('action');
+        this.id = cache_1.Cache.instance.random('action');
         watcher_1.Watcher.start(this.id);
         if (this.options.raw) {
             console.log(`chinchilla: option 'raw' is deprecated. please use 'rawRequest' instead.`);

@@ -45,7 +45,7 @@ export class Tools {
 
     // session timed out, reset cookies and caches
     if (error['statusCode'] === 419) {
-      Cache.clear()
+      Cache.instance.clear()
       config.clear()
     }
 
