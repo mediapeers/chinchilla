@@ -4,8 +4,8 @@ import { Cache, NoCache } from './chinchilla/cache';
 import { Extractor } from './chinchilla/extractor';
 declare const chch: ((one: any, two?: string | Config, three?: Config) => Subject) & {
     config: Config;
+    cache: Cache;
     cookies: typeof Cookies;
-    cache: typeof Cache;
     watcher: {
         actions: string[];
         listeners: Function[];
