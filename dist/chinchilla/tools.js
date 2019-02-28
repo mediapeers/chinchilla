@@ -40,7 +40,7 @@ class Tools {
         }
         // session timed out, reset cookies and caches
         if (error['statusCode'] === 419) {
-            cache_1.Cache.clear();
+            cache_1.Cache.instance.clear();
             config.clear();
         }
         if (config.settings.errorInterceptor) {

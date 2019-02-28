@@ -46,28 +46,31 @@ export abstract class BaseCache {
   }
 
   set(key: string, val: any, expires: number = 60) {
-    const config = Config.getInstance()
-    this.put(config.getCacheKey(key), val, expires)
+    this.put(Config.instance.getCacheKey(key), val, expires)
   }
 
   get(key: string) {
-    const config = Config.getInstance()
-    return this.fetch(config.getCacheKey(key))
+    return this.fetch(Config.instance.getCacheKey(key))
   }
 
   remove(key: string) {
-    const config = Config.getInstance()
-    this.drop(config.getCacheKey(key))
+    this.drop(Config.instance.getCacheKey(key))
   }
 
   update(key: string, fn?, defaultValue?, expires: number = 60) {
-    const config = Config.getInstance()
-    return this.change(config.getCacheKey(key), fn, defaultValue, expires)
+    return this.change(Config.instance.getCacheKey(key), fn, defaultValue, expires)
   }
 
   minutesFromNow(min:number) {
     return Date.now() + min*60000
   }
+}
+
+export class NoCache extends BaseCache {
+  setValue(..._args) {}
+  removeValue(..._args) {}
+  clear(..._args) {}
+  getValue(..._args) {}
 }
 
 export class RuntimeCache extends BaseCache {
@@ -154,26 +157,28 @@ export class StorageCache extends BaseCache {
 }
 
 export class Cache {
-  private static _storage
-  private static _runtime
+  public storage: BaseCache
+  public runtime: BaseCache
 
-  static clear() {
-    if (!Tools.isNode) Cache.storage.clear()
-    Cache.runtime.clear()
+  static _instance: Cache
+
+  constructor() {
+    this.runtime = new RuntimeCache()
+    this.storage = Tools.isNode ? new NoCache() : new StorageCache()
   }
 
-  static random(prefix:string = 'unknown') {
+  clear() {
+    this.storage.clear()
+    this.runtime.clear()
+  }
+
+  random(prefix:string = 'unknown') {
     const hash = Math.random().toString(36).substr(2, 9)
     return `${prefix}-${hash}`
   }
 
-  static get storage() {
-    if (Cache._storage) return Cache._storage
-    return Cache._storage = new StorageCache()
-  }
-
-  static get runtime() {
-    if (Cache._runtime) return Cache._runtime
-    return Cache._runtime = new RuntimeCache()
+  static get instance() {
+    if (!Cache._instance) Cache._instance = new Cache()
+    return Cache._instance
   }
 }

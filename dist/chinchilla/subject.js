@@ -24,21 +24,21 @@ class Subject {
         return objects;
     }
     constructor(one, two, three) {
-        this.id = cache_1.Cache.random('subject');
+        this.id = cache_1.Cache.instance.random('subject');
         if (lodash_1.isString(one)) {
             // one -> app, two -> model, three -> config
             if (lodash_1.isEmpty(two) || !lodash_1.isString(two))
                 throw new Error("chinchilla: missing 'model' param");
             if (tools_1.Tools.isNode && lodash_1.isEmpty(three))
                 throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
-            this.config = three || config_1.Config.getInstance();
+            this.config = three || config_1.Config.instance;
             this.contextUrl = `${this.config.settings.endpoints[one]}/context/${two}`;
         }
         else {
             // one -> object(s), two -> config
             if (tools_1.Tools.isNode && lodash_1.isEmpty(two))
                 throw new Error("chinchilla: missing 'config' param (in NodeJs context)");
-            this.config = two || config_1.Config.getInstance();
+            this.config = two || config_1.Config.instance;
             lodash_1.isArray(one) ? this.addObjects(one) : this.addObject(one);
         }
     }

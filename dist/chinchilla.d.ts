@@ -1,11 +1,11 @@
 import { Subject } from './chinchilla/subject';
-import { Config, Cookies } from './chinchilla/config';
-import { Cache } from './chinchilla/cache';
+import { Config, Cookies, NoCookies } from './chinchilla/config';
+import { Cache, NoCache } from './chinchilla/cache';
 import { Extractor } from './chinchilla/extractor';
 declare const chch: ((one: any, two?: string | Config, three?: Config) => Subject) & {
     config: Config;
+    cache: Cache;
     cookies: typeof Cookies;
-    cache: typeof Cache;
     watcher: {
         actions: string[];
         listeners: Function[];
@@ -19,4 +19,5 @@ declare const chch: ((one: any, two?: string | Config, three?: Config) => Subjec
     context: (urlOrApp: any, model?: string, config?: Config) => any;
     unfurl: (app: any, model: any, actionName: any, params: any) => any;
 };
+export { NoCache, NoCookies };
 export default chch;

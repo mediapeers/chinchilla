@@ -23,12 +23,12 @@ class Context {
         config = config;
         let key = lodash_1.first(contextUrl.split('?'));
         let cachedContext;
-        if (cachedContext = cache_1.Cache.runtime.fetch(config.getCacheKey(key))) {
+        if (cachedContext = cache_1.Cache.instance.runtime.fetch(config.getCacheKey(key))) {
             return cachedContext;
         }
         let dataPromise;
         let cachedData;
-        if (!config.settings.devMode && !tools_1.Tools.isNode && (cachedData = cache_1.Cache.storage.fetch(config.getCacheKey(key)))) {
+        if (!config.settings.devMode && !tools_1.Tools.isNode && (cachedData = cache_1.Cache.instance.storage.fetch(config.getCacheKey(key)))) {
             dataPromise = Promise.resolve(cachedData);
         }
         else {
@@ -64,16 +64,16 @@ class Context {
         // to avoid other users by coincidence get returned an error
         if (tools_1.Tools.isNode) {
             dataPromise.then((_data) => {
-                return cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
+                return cache_1.Cache.instance.runtime.put(config.getCacheKey(key), cachedContext);
             });
         }
         else {
             if (!config.settings.devMode) {
                 dataPromise.then((data) => {
-                    return cache_1.Cache.storage.put(config.getCacheKey(key), data);
+                    return cache_1.Cache.instance.storage.put(config.getCacheKey(key), data);
                 });
             }
-            cache_1.Cache.runtime.put(config.getCacheKey(key), cachedContext);
+            cache_1.Cache.instance.runtime.put(config.getCacheKey(key), cachedContext);
         }
         return cachedContext;
     }

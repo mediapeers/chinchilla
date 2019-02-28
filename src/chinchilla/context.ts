@@ -42,13 +42,13 @@ export class Context {
     let key = first(contextUrl.split('?'))
 
     let cachedContext
-    if (cachedContext = Cache.runtime.fetch(config.getCacheKey(key))) {
+    if (cachedContext = Cache.instance.runtime.fetch(config.getCacheKey(key))) {
       return cachedContext
     }
 
     let dataPromise
     let cachedData
-    if (!config.settings.devMode && !Tools.isNode && (cachedData = Cache.storage.fetch(config.getCacheKey(key)))) {
+    if (!config.settings.devMode && !Tools.isNode && (cachedData = Cache.instance.storage.fetch(config.getCacheKey(key)))) {
       dataPromise = Promise.resolve(cachedData)
     }
     else {
@@ -89,17 +89,17 @@ export class Context {
     // to avoid other users by coincidence get returned an error
     if (Tools.isNode) {
       dataPromise.then((_data) => {
-        return Cache.runtime.put(config.getCacheKey(key), cachedContext)
+        return Cache.instance.runtime.put(config.getCacheKey(key), cachedContext)
       })
     }
     else {
       if (!config.settings.devMode) {
         dataPromise.then((data) => {
-          return Cache.storage.put(config.getCacheKey(key), data)
+          return Cache.instance.storage.put(config.getCacheKey(key), data)
         })
       }
 
-      Cache.runtime.put(config.getCacheKey(key), cachedContext)
+      Cache.instance.runtime.put(config.getCacheKey(key), cachedContext)
     }
 
     return cachedContext

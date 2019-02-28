@@ -63,7 +63,7 @@ export class Action {
     this.uriTmpl        = new UriTemplate(contextAction.template)
     this.params         = Extractor.uriParams(contextAction, params)
     this.options        = options || {}
-    this.id             = Cache.random('action')
+    this.id             = Cache.instance.random('action')
 
     Watcher.start(this.id)
 

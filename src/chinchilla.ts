@@ -1,9 +1,9 @@
 import * as Promise from 'bluebird'
 import { merge, last, startsWith } from 'lodash'
 import { Subject } from './chinchilla/subject'
-import { Config, Cookies } from './chinchilla/config'
+import { Config, Cookies, NoCookies } from './chinchilla/config'
 import { Context } from './chinchilla/context'
-import { Cache } from './chinchilla/cache'
+import { Cache, NoCache } from './chinchilla/cache'
 import { Extractor } from './chinchilla/extractor'
 import { Watcher } from './chinchilla/watcher'
 
@@ -14,13 +14,13 @@ const chch = Object.assign(
     return new Subject(one, two, three)
   },
   {
-    config: Config.getInstance(),
+    config: Config.instance,
+    cache: Cache.instance,
     cookies: Cookies,
-    cache: Cache,
     watcher: Watcher,
     extractor: Extractor,
     new: (app, model, attrs = {}, config?: Config) => {
-      config = config || Config.getInstance()
+      config = config || Config.instance
 
       return merge(
         { '@context': `${config.settings.endpoints[app]}/context/${model}` },
@@ -28,12 +28,12 @@ const chch = Object.assign(
       )
     },
     contextUrl: (app, model, config?: Config) => {
-      config = config || Config.getInstance()
+      config = config || Config.instance
 
       return `${config.settings.endpoints[app]}/context/${model}`
     },
     context: (urlOrApp, model?: string, config?: Config) => {
-      config = config || Config.getInstance()
+      config = config || Config.instance
 
       if (!model) {
         // assume first param is the context url
@@ -88,4 +88,5 @@ const chch = Object.assign(
 )
 
 
+export { NoCache, NoCookies }
 export default chch
